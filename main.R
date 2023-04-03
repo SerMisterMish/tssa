@@ -1,3 +1,5 @@
+# implementation with HO-SVD
+
 tssa3 <- function(s, I = (length(s) + 2) %/% 3, L = I) {
   X <- tens3(s, I, L)
   result <- list()
