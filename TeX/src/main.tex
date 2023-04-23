@@ -1,0 +1,181 @@
+% Preamble
+\documentclass[specialist,
+    substylefile = spbu_report.rtx,
+    subf,href,colorlinks=true, 12pt]{disser}
+
+% Packages
+\usepackage[a4paper, includefoot,
+            left=3cm, right=1.5cm,
+            top=2cm, bottom=2cm,
+            headsep=1cm, footskip=1cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[T2A]{fontenc}
+\usepackage[cp1251]{inputenc}
+\usepackage[english, russian]{babel}
+\usepackage{pdfpages}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{amsthm}
+%\usepackage{cnbwp}
+%\usepackage{hyperref}
+
+\setcounter{tocdepth}{2}
+\graphicspath{{./img}}
+\newtheorem{statement}{Утверждение}[section]
+% Document
+\begin{document}
+    \section{Построение тензора и его разложение}\label{sec:tens-construct-decomp}
+    Дан временной ряд $f$ длины $N$
+    \[f=(f_1,f_2,\ldots,f_N).\]
+    Выбираются два натуральных параметра $I, L: I+L-1\leqslant N$, по ним высчитывается третий параметр $J=N-I-L+2$.
+    С учётом этих параметров строится траекторный тензор $\mathcal X$ размерности $I\times L \times J$ следующим образом
+    \[\mathcal X_{i,l,j}=f_{i+l+j-2}\qquad i\in \overline{1:I},\, l \in\overline{1:L},\, j \in\overline{1:J}.\]
+    Слои тензора будут иметь следующий вид
+    \[\mathcal{X}_{,,j}=
+    \begin{pmatrix}
+        f_j       & f_{j+1} & \ldots & f_{j+L-1}   \\
+        f_{j+1}   & \ddots  &        & \vdots      \\
+        \vdots    &         & \ddots & \vdots      \\
+        f_{j+I-1} & \ldots  & \ldots & f_{j+I+L-2}
+    \end{pmatrix},\]
+    \[\mathcal{X}_{,l,}=
+    \begin{pmatrix}
+        f_l       & f_{l+1} & \ldots & f_{l+J-1}   \\
+        f_{l+1}   & \ddots  &        & \vdots      \\
+        \vdots    &         & \ddots & \vdots      \\
+        f_{l+I-1} & \ldots  & \ldots & f_{l+I+J-2}
+    \end{pmatrix},\]
+    \[\mathcal{X}_{i,,}=
+    \begin{pmatrix}
+        f_i       & f_{i+1} & \ldots & f_{i+J-1}   \\
+        f_{i+1}   & \ddots  &        & \vdots      \\
+        \vdots    &         & \ddots & \vdots      \\
+        f_{i+L-1} & \ldots  & \ldots & f_{i+L+J-2}
+    \end{pmatrix}.\]
+
+    К полученному тензору применяется HOSVD~\cite{hosvd} "--- тензорное разложение,
+    являющееся продолжением SVD на большие размерности.
+    Результатом разложения является набор из одного тензора $\mathcal{Z}$ размерности $I\times L\times J$ и трёх
+    ортогональных матриц $\mathbf{U}^{(1)},\, \mathbf{U}^{(2)},\, \mathbf{U}^{(3)}$ размерностей
+    $I\times I,\, L\times L,\, J\times J$ соответственно.
+
+    Этот набор удовлетворяет равенству
+    \[\mathcal{X}=\mathcal{Z}\times_1 \mathbf{U}^{(1)}\times_2 \mathbf{U}^{(2)} \times_3 \mathbf{U}^{(3)},\]
+    где $\times_n$ "--- произведение тензора на матрицу по $n$-му измерению.
+    Оно определяется следующим образом: пусть $\mathcal A$ "--- тензор размерности
+    $I_1\times I_2\times\ldots\times I_K$, $\mathbf U$ "--- матрица размерности $J_n\times I_n$, тогда
+    $\mathcal{A}\times_n \mathbf U$ "--- тензор размерности $I_1\times I_2\times\ldots\times I_{n-1}
+    \times J_n\times I_{n+1}\times \ldots\times I_K$, который считается по формуле
+    \[(\mathcal{A}\times_n \mathbf U)_{i_1 i_2\ldots i_{n-1}j_n i_{n+1}\ldots i_K} = \sum_{i_n=1}^{I_n} a_{i_1 i_2\ldots
+    i_{n-1}i_n i_{n+1} \ldots i_K} u_{j_n i_n}.\]
+
+    Обозначим за $\mathcal Z_{i_n=\alpha}$ подтензор тензора $\mathcal Z$, полученный фиксированием индекса $i_n=\alpha$.
+    Тензор $\mathcal Z$ удовлетворяет следующим свойствам:
+    \begin{enumerate}
+        \item подтензоры $\mathcal Z_{i_n=\alpha}$ и $\mathcal Z_{i_n=\beta}$ ортогональны для всех возомжных значений
+        $n,\, \alpha,\, \beta: \alpha\ne\beta$:
+        \[\langle\mathcal Z_{i_n=\alpha},\mathcal Z_{i_n=\beta}\rangle=0 \qquad \alpha\ne\beta,\]
+        \item подтензоры расположены в порядке убывания их нормы Фробениуса:
+        \[\|\mathcal Z_{i_n=1}\|\geqslant\|\mathcal Z_{i_n=2}\| \geqslant \ldots \geqslant\|\mathcal Z_{i_n=I_n}\|\]
+        для всех возможных значений $n$.
+    \end{enumerate}
+    Обозначим $\sigma_i^{(n)}=\|\mathcal Z_{i_n=i}\|$ и будем называть $\sigma_i^{(n)}$ $i$-м собственным числом
+    тензора $\mathcal X$ по измерению $n$.
+    Векторы $\mathbf U_i^{(n)}$ будем называть $i$-м собственным вектором тензора $\mathcal X$ по измерению $n$.
+
+
+    \section{Свойства TSSA}\label{sec:tssa-properties}
+    Вычисление HOSVD тензора $\mathcal{A}$ с $N$ размерностями сводится к вычислению SVD на $N$ матрицах $\mathbf{A}_{(n)}$,
+    которые вычисляются развёртыванием (?\. unfolding) тензора по $n$-му измерению~\cite{hosvd}.
+    Другими словами, если $\mathcal{A}$ "--- тензор размерности $I_1\times I_2\times\ldots\times I_N$, то его развёртывание
+    по $n$-му измерению "--- это матрица $\mathbf{A}_{(n)}$ размерности $I_n\times I_{n+1}I_{n+2}\ldots I_{N}I_{1}I_{2}\ldots
+    I_{n-1}$, в которой элемент $a_{i_1 i_2\ldots i_N}$ тензора содержится в строке $i_n$ и столбце с номером равным
+    \[\begin{aligned}
+          &(i_{n+1} - 1)I_{n+2}I_{n+3}\ldots I_{N}I_1 I_2\ldots I_{n-1} + (i_{n+2} - 1)I_{n+3}I_{n+4}\ldots I_N I_1 I_2 \ldots
+          I_{n-1} + \dots \\
+          &+(i_N - 1)I_1 I_2 \ldots I_{n-1} + (i_1 - 1)I_2 I_3\ldots I_{n-1} + (i_2 - 1)I_3 I_4\ldots I_{n-1} + \dots + i_{n-1}.
+    \end{aligned}
+    \]
+
+    \begin{figure}[!h]
+        \centering
+        \includegraphics[width=\textwidth]{unfolding}
+        \caption{Развёртывание тензора $\mathcal{A}$ размерности $I_1\times I_2 \times I_3$ в матрицы $\mathbf{A}_{(1)},\,
+        \mathbf{A}_{(2)},\, \mathbf{A}_{(3)}$ размерностей $I_1\times (I_2 I_3),\, I_2\times (I_3 I_1),\, I_3\times (I_1 I_2)$
+            соответственно}
+        \label{fig:unfolding}
+    \end{figure}
+
+    К каждой из полученных матриц применяется SVD, в результате чего получаются $N$ матриц $\mathbf{U}^{(n)}$,
+    составленных из левых сингулярных векторов соответствующих развёртываний.
+    Затем находится тензор сингулярных чисел
+    \[\mathcal{Z}=\mathcal{A}\times_1 \mathbf{U}^{(1)^\mathrm{H}}\times_2 \mathbf{U}^{(2)^\mathrm{H}}\ldots \times_N
+    \mathbf{U}^{(N)^\mathrm{H}}.\]
+    В результате получается искомое разложение
+    \[\mathcal{A} = \mathcal{S}\times_1 \mathbf{U}^{(1)}\times_2 \mathbf{U}^{(2)}\ldots \times_N \mathbf{U}^{(N)}.\]
+
+    Исходя из того, что вычисление HOSVD сводится к вычислению стандартного SVD, многие свойства SSA переносятся
+    на многомерный случай непосредственно.
+    \begin{statement}
+        Пусть ряды $F_1$ и $F_2$ длины $N$ слабо $I$ и $L$-разделимы, $F=F_1+F_2$, тогда существует такое
+        тензорное сингулярное разложение траекторного тензора $\mathcal{X}$ ряда $F$, что его можно
+        разбить на две части, являющиеся тензорными сингулярными разложениями траекторных тензоров рядов $F_1$ и $F_2$.
+    \end{statement}
+    \begin{proof}
+        Рассмотрим развёртывание траекторного тензора $\mathcal{X}$ размерности $I\times L\times J$
+        по первому измерению $I$ "--- $\mathbf{X}_{(I)}$.
+        Самую левую его подматрицу размерности $I\times L$ обозначим $\tilde{\mathbf{X}}_{(I)}$, она является траекторной
+        матрицей ряда $F$, обрезанного по $I+L-1$-й элемент, с длиной окна $I$.
+        Обозначим траекторные матрицы рядов, получаемых из $F_1$ и $F_2$ обрезанием по $I+L-1$-му элемену, с длиной окна
+        $I$ за $\tilde{\mathbf{X}}_{(I)}^1$ и $\tilde{\mathbf{X}}_{(I)}^2$ соответственно.
+
+        Так как по условию ряды $F_1$ и $F_2$ слабо $I$-разделимы, то по свойствам SSA существует сингулярное разложение
+        матрицы $\tilde{\mathbf{X}}_{(I)}$, которое равно сумме сингулярных разложений матриц $\tilde{\mathbf{X}}_{(I)}^1$
+        и $\tilde{\mathbf{X}}_{(I)}^2$.
+        Обозначим матрицы, составленные из левых сингулярных векторов каждого из разложений, за $\mathbf{U}^{(I)}$,
+        $\mathbf{U}^{(I)}_1$ и $\mathbf{U}^{(I)}_2$ соответственно.
+        Тогда столбцы этих матриц также будут левыми сингулярными векторами матриц $\mathbf{X}_{(I)}$, $\mathbf{X}_{(I)}^1$ и
+        $\mathbf{X}_{(I)}^2$ соответственно.
+        Кроме того, сохранятся и ненулевые сингулярные числа, а правые сингулярные векторы однозначно вычисляются через
+        левые сингулярные векторы и сингулярные числа.
+
+        Таким образом для матрицы $\mathbf{X}_{(I)}$ нашли сингулярное разложение, совпадающее с суммой некоторых сингулярных
+        разложений $\mathbf{X}_{(I)}^1$ и $\mathbf{X}_{(I)}^2$.
+        Проделываем аналогичные действия с развёртываниями по оставшимся двум измерениям (в случае развёртывания
+        по измерению $L$ пользуемся слабой $L$-разделимостью рядов, при развёртывании по измерению $J$ "--- сначала
+        транспонируем полученную левую подматрицу, затем пользуемся слабой $I$-разделимостью, и в качестве
+        столбцов $\mathbf{U}^{(J)}, \mathbf{U}^{(J)}_1, \mathbf{U}^{(J)}_2$ берём правые сингулярные тройки
+        в соответствующих разложениях).
+
+        В результате получаем такое тензорное сингулярное разложение $\mathcal{X}$, что
+        \[
+            \begin{aligned}
+                \mathcal{X} &= \mathcal{Z}\times_1 \mathbf{U}^{(I)}\times_2 \mathbf{U}^{(L)} \times_3 \mathbf{U}^{(J)}\\
+                &=\mathcal{Z}_1 \times_1 \mathbf{U}^{(I)}_1\times_2 \mathbf{U}^{(L)}_1 \times_3 \mathbf{U}^{(J)}_1 +
+                \mathcal{Z}_2 \times_1 \mathbf{U}^{(I)}_2\times_2 \mathbf{U}^{(L)}_2 \times_3 \mathbf{U}^{(J)}_2.
+            \end{aligned}
+        \]
+    \end{proof}
+
+    \section{Другие разложения}\label{sec:other-decomp}
+    Помимо HOSVD, существует ещё одно разложение тензора в сумму тензоров 1 ранга: CANDECOMP-PARAFAC
+    (CP)~\cite{parafac1, parafac2}.
+    Это разложение нам не подходит, так как количество компонент в этом разложении равно тензорному рангу, который
+    в общем случае не удовлетворяет одному из основных свойств SSA: ранг траекторного тензора, построенного по
+    сумме двух рядов может оказаться больше, чем сумма рангов траекторных тензоров, построенных на каждом из этих рядов.
+
+    Кроме того можно рассмотреть следующий случай.
+    В терминах CP ряды $f_1^{(i)}=\operatorname{3},\, f_2^{(i)}=\sin{(2\pi i / 3)}$ имеют тензорные ранги 1 и 3
+    соответственно, а у ряда $f^{(i)}=f_1^{(i)}+f_2^{(i)}$ ранг равен 3.
+    Притом ни один из элементов разложения не даёт константный ряд, то есть разделения константного ряда
+    от синуса не произошло, хотя в теории SSA эти ряды являются сильно разделимыми при условии делимости всех
+    измерений на период синуса.
+    \includepdf[pages={1-2}]{../../code/out/part1}
+    Возможно можно добиться лучших результатов, используя CP, если строить тензор по ряду другим образом и подбирать
+    другие параметры разложения, но тогда этот метод будет в меньшей степени похожим на SSA\@.
+
+    \bibliography{main}
+    \bibliographystyle{ugost2008}
+
+\end{document}
