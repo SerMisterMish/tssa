@@ -1,0 +1,16 @@
+\babel@toc {russian}{}
+\contentsline {section}{\numberline {1.\hskip 1em}\IeC {\CYRV }\IeC {\cyrv }\IeC {\cyre }\IeC {\cyrd }\IeC {\cyre }\IeC {\cyrn }\IeC {\cyri }\IeC {\cyre }}{3}{section.0.1}%
+\contentsline {section}{\numberline {2.\hskip 1em}\IeC {\CYRP }\IeC {\cyro }\IeC {\cyrs }\IeC {\cyrt }\IeC {\cyrr }\IeC {\cyro }\IeC {\cyre }\IeC {\cyrn }\IeC {\cyri }\IeC {\cyre } \IeC {\cyrt }\IeC {\cyre }\IeC {\cyrn }\IeC {\cyrz }\IeC {\cyro }\IeC {\cyrr }\IeC {\cyra } \IeC {\cyri } \IeC {\cyre }\IeC {\cyrg }\IeC {\cyro } \IeC {\cyrr }\IeC {\cyra }\IeC {\cyrz }\IeC {\cyrl }\IeC {\cyro }\IeC {\cyrzh }\IeC {\cyre }\IeC {\cyrn }\IeC {\cyri }\IeC {\cyre }}{4}{section.0.2}%
+\contentsline {section}{\numberline {3.\hskip 1em}\IeC {\CYRS }\IeC {\cyrv }\IeC {\cyro }\IeC {\cyrishrt }\IeC {\cyrs }\IeC {\cyrt }\IeC {\cyrv }\IeC {\cyra } TSSA}{6}{section.0.3}%
+\contentsline {subsection}{\numberline {3.1.\hskip 1em}\IeC {\CYRP }\IeC {\cyrr }\IeC {\cyri }\IeC {\cyrm }\IeC {\cyre }\IeC {\cyrr }\IeC {\cyrery } \IeC {\cyrr }\IeC {\cyra }\IeC {\cyrz }\IeC {\cyrd }\IeC {\cyre }\IeC {\cyrl }\IeC {\cyri }\IeC {\cyrm }\IeC {\cyro }\IeC {\cyrs }\IeC {\cyrt }\IeC {\cyri } \IeC {\cyrr }\IeC {\cyrya }\IeC {\cyrd }\IeC {\cyro }\IeC {\cyrv } \IeC {\cyrv } \IeC {\cyrt }\IeC {\cyre }\IeC {\cyrn }\IeC {\cyrz }\IeC {\cyro }\IeC {\cyrr }\IeC {\cyrn }\IeC {\cyro }\IeC {\cyrm } \IeC {\cyrs }\IeC {\cyrl }\IeC {\cyru }\IeC {\cyrch }\IeC {\cyra }\IeC {\cyre }}{8}{subsection.0.3.1}%
+\contentsline {section}{\numberline {4.\hskip 1em}\IeC {\CYRD }\IeC {\cyrr }\IeC {\cyru }\IeC {\cyrg }\IeC {\cyri }\IeC {\cyre } \IeC {\cyrr }\IeC {\cyra }\IeC {\cyrz }\IeC {\cyrl }\IeC {\cyro }\IeC {\cyrzh }\IeC {\cyre }\IeC {\cyrn }\IeC {\cyri }\IeC {\cyrya }}{8}{section.0.4}%
+\contentsline {section}{\IeC {\CYRZ }\IeC {\cyra }\IeC {\cyrk }\IeC {\cyrl }\IeC {\cyryu }\IeC {\cyrch }\IeC {\cyre }\IeC {\cyrn }\IeC {\cyri }\IeC {\cyre }}{12}{section*.3}%
+\contentsline {chapter}{\cyrillictext \CYRS \cyrp \cyri \cyrs \cyro \cyrk \ \cyrl \cyri \cyrt \cyre \cyrr \cyra \cyrt \cyru \cyrr \cyrery }{13}{chapter*.4}%
+\babel@toc {english}{}
+\babel@toc {english}{}
+\babel@toc {english}{}
+\babel@toc {english}{}
+\babel@toc {english}{}
+\babel@toc {english}{}
+\babel@toc {english}{}
+\babel@toc {russian}{}
