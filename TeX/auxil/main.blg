@@ -8,46 +8,44 @@ Reallocating 'wiz_functions' (item size: 4) to 6000 items.
 Reallocating 'singl_function' (item size: 4) to 100 items.
 Database file #1: main.bib
 Reallocating 'singl_function' (item size: 4) to 100 items.
-Warning--empty journal in parafac1
-You've used 4 entries,
+You've used 3 entries,
             5635 wiz_defined-function locations,
-            1602 strings with 13849 characters,
-and the built_in function-call counts, 1733 in all, are:
-= -- 207
-> -- 42
-< -- 8
-+ -- 13
-- -- 9
-* -- 89
-:= -- 181
-add.period$ -- 19
-call.type$ -- 4
+            1599 strings with 13677 characters,
+and the built_in function-call counts, 1226 in all, are:
+= -- 143
+> -- 37
+< -- 7
++ -- 11
+- -- 8
+* -- 70
+:= -- 131
+add.period$ -- 14
+call.type$ -- 3
 change.case$ -- 0
 chr.to.int$ -- 0
-cite$ -- 5
-duplicate$ -- 89
-empty$ -- 188
-format.name$ -- 9
-if$ -- 466
+cite$ -- 3
+duplicate$ -- 62
+empty$ -- 134
+format.name$ -- 8
+if$ -- 324
 int.to.chr$ -- 0
-int.to.str$ -- 4
+int.to.str$ -- 3
 missing$ -- 0
-newline$ -- 42
-num.names$ -- 12
-pop$ -- 26
+newline$ -- 35
+num.names$ -- 9
+pop$ -- 20
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 79
+skip$ -- 47
 stack$ -- 0
-substring$ -- 81
-swap$ -- 62
+substring$ -- 38
+swap$ -- 42
 text.length$ -- 6
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
-warning$ -- 1
-while$ -- 10
-width$ -- 5
-write$ -- 75
-(There was 1 warning)
+warning$ -- 0
+while$ -- 5
+width$ -- 4
+write$ -- 61

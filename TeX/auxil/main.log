@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (MiKTeX 21.2) (preloaded format=pdflatex 2022.11.25)  1 JUN 2023 22:02
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (MiKTeX 21.2) (preloaded format=pdflatex 2022.11.25)  2 JUN 2023 19:51
 entering extended mode
 **./main.tex
 (main.tex
@@ -690,10 +690,11 @@ Package: fancyvrb 2021/01/20 v3.7 verbatim text (tvz,hv)
 \c@corollary=\count296
 \c@definition=\count297
 \c@property=\count298
+\c@example=\count299
 
 (C:\Program Files\MiKTeX 2.9\tex/latex/l3backend\l3backend-pdftex.def
 File: l3backend-pdftex.def 2021-02-18 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count299
+\l__color_backend_stack_int=\count300
 \l__pdf_internal_box=\box53
 )
 
@@ -703,31 +704,31 @@ LaTeX Warning: Unused global option(s):
 (D:/Projects\TeXProjects\NIR5-6\TeX\auxil\main.aux)
 \openout1 = `main.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for T2A/cmr/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for T2A/cmr/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: hyperref package is loaded.
 Package caption Info: wrapfig package is loaded.
 Package caption Info: End \AtBeginDocument code.
-Package hyperref Info: Link coloring OFF on input line 43.
+Package hyperref Info: Link coloring OFF on input line 44.
 
 (C:\Program Files\MiKTeX 2.9\tex/latex/hyperref\nameref.sty
 Package: nameref 2021-04-02 v2.47 Cross-referencing by name of section
@@ -738,11 +739,11 @@ Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
 (C:\Program Files\MiKTeX 2.9\tex/generic/gettitlestring\gettitlestring.sty
 Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
-\c@section@level=\count300
+\c@section@level=\count301
 )
-LaTeX Info: Redefining \ref on input line 43.
-LaTeX Info: Redefining \pageref on input line 43.
-LaTeX Info: Redefining \nameref on input line 43.
+LaTeX Info: Redefining \ref on input line 44.
+LaTeX Info: Redefining \pageref on input line 44.
+LaTeX Info: Redefining \nameref on input line 44.
 
 (D:/Projects\TeXProjects\NIR5-6\TeX\auxil\main.out)
 (D:/Projects\TeXProjects\NIR5-6\TeX\auxil\main.out)
@@ -752,16 +753,16 @@ LaTeX Info: Redefining \nameref on input line 43.
 
 (C:\Program Files\MiKTeX 2.9\tex/context/base/mkii\supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count301
+\scratchcounter=\count302
 \scratchdimen=\dimen184
 \scratchbox=\box54
-\nofMPsegments=\count302
-\nofMParguments=\count303
+\nofMPsegments=\count303
+\nofMParguments=\count304
 \everyMPshowfont=\toks33
-\MPscratchCnt=\count304
+\MPscratchCnt=\count305
 \MPscratchDim=\dimen185
-\MPnumerator=\count305
-\makeMPintoPDFobject=\count306
+\MPnumerator=\count306
+\makeMPintoPDFobject=\count307
 \everyMPtoPDFconversion=\toks34
 ) (C:\Program Files\MiKTeX 2.9\tex/latex/epstopdf-pkg\epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
@@ -802,7 +803,7 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-LaTeX Info: Redefining \th on input line 43.
+LaTeX Info: Redefining \th on input line 44.
 (C:\Program Files\MiKTeX 2.9\tex/latex/pdflscape\pdflscape.sty
 Package: pdflscape 2019/12/05 v0.12 Display of landscape pages in PDF (HO)
 
@@ -819,13 +820,13 @@ Package pdflscape Info: Auto-detected driver: pdftex on input line 81.
 \seventhskip=\skip70
 \eightthskip=\skip71
 <<ot1.cmap>><<oml.cmap>><<oms.cmap>><<omx.cmap>>
-LaTeX Font Info:    Trying to load font information for U+msa on input line 58.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 59.
 
 
 (C:\Program Files\MiKTeX 2.9\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 58.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 59.
 
 
 (C:\Program Files\MiKTeX 2.9\tex/latex/amsfonts\umsb.fd
@@ -843,7 +844,7 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ] [3
 
 ] [4]
-LaTeX Font Info:    Trying to load font information for U+euf on input line 140
+LaTeX Font Info:    Trying to load font information for U+euf on input line 141
 .
 
 (C:\Program Files\MiKTeX 2.9\tex/latex/amsfonts\ueuf.fd
@@ -852,21 +853,28 @@ File: ueuf.fd 2013/01/14 v3.01 Euler Fraktur
 
 pdfTeX warning: pdflatex (file ./img/unfolding.pdf): PDF inclusion: found PDF v
 ersion <1.6>, but at most version <1.5> allowed
-<./img/unfolding.pdf, id=99, 312.92911pt x 266.6763pt>
+<./img/unfolding.pdf, id=113, 312.92911pt x 266.6763pt>
 File: ./img/unfolding.pdf Graphic file (type pdf)
 <use ./img/unfolding.pdf>
-Package pdftex.def Info: ./img/unfolding.pdf  used on input line 179.
+Package pdftex.def Info: ./img/unfolding.pdf  used on input line 180.
 (pdftex.def)             Requested size: 469.47049pt x 400.10706pt.
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-[6] [7 <./img/unfolding.pdf>] [8]
-Overfull \hbox (1.28542pt too wide) in paragraph at lines 296--297
+[6] [7 <./img/unfolding.pdf>] [8] [9]
+Overfull \hbox (1.28542pt too wide) in paragraph at lines 321--322
 []\T2A/cmr/m/n/12 Оставшиеся два условия получаются аналогично из усло
 вий ортогональности остав
  []
 
-[9] [10] [11] (D:/Projects\TeXProjects\NIR5-6\TeX\auxil\main.bbl [12]
+[10] [11] [12]
+Overfull \hbox (11.09868pt too wide) in paragraph at lines 431--437
+[][]\T2A/cmr/bx/n/12 Пример 5.2 \T2A/cmr/m/n/12 (Смешение двух косинусов)\
+T2A/cmr/bx/n/12 . []\T2A/cmr/m/n/12 Рассмотрим ряд с элементами $\OML/cmm/
+m/it/12 f[] \OT1/cmr/m/n/12 = [](2\OML/cmm/m/it/12 n=\OT1/cmr/m/n/12 3) +
+ []
+
+[13] [14] [15] [16] (D:/Projects\TeXProjects\NIR5-6\TeX\auxil\main.bbl [17]
 
 Package hyperref Warning: Glyph not defined in PU encoding,
 (hyperref)                removing `\CYRS' on input line 1.
@@ -937,20 +945,20 @@ Underfull \hbox (badness 1342) in paragraph at lines 19--26
 ti-lin-ear Sin-gu-
  []
 
-) [13
+) [18
 
 ] (D:/Projects\TeXProjects\NIR5-6\TeX\auxil\main.aux)
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 7CE3706B703FC26C80D008F5500088D9;1545.
+(rerunfilecheck)             Checksum: 80546E88BC8DA5551D99B433DC9DC06E;2764.
  ) 
 Here is how much of TeX's memory you used:
- 14618 strings out of 479300
- 215026 string characters out of 2863757
- 543160 words of memory out of 3000000
- 31732 multiletter control sequences out of 15000+200000
- 419641 words of font info for 70 fonts, out of 3000000 for 9000
+ 14653 strings out of 479300
+ 215492 string characters out of 2863757
+ 542640 words of memory out of 3000000
+ 31747 multiletter control sequences out of 15000+200000
+ 421247 words of font info for 72 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 86i,9n,88p,505b,525s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 86i,14n,88p,505b,525s stack positions out of 5000i,500n,10000p,200000b,50000s
 {C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/cm-super/cm-super-ts1.enc}{C:/Pr
 ogram Files/MiKTeX 2.9/fonts/enc/dvips/cm-super/cm-super-t2a.enc}<C:/Program Fi
 les/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Program Files/MiKT
@@ -968,17 +976,18 @@ nts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type
 amsfonts/cm/cmsy8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/
 cm/cmtt12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/euler/eu
 fm10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/symbols/msam1
-0.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/cm-super/sfbx1200.pfb><C:
-/Program Files/MiKTeX 2.9/fonts/type1/public/cm-super/sfbx1440.pfb><C:/Program 
-Files/MiKTeX 2.9/fonts/type1/public/cm-super/sfbx1728.pfb><C:/Program Files/MiK
-TeX 2.9/fonts/type1/public/cm-super/sfcc1440.pfb><C:/Program Files/MiKTeX 2.9/f
-onts/type1/public/cm-super/sfrm1095.pfb><C:/Program Files/MiKTeX 2.9/fonts/type
-1/public/cm-super/sfrm1200.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/
-cm-super/sfti1200.pfb>
-Output written on D:/Projects\TeXProjects\NIR5-6\TeX\out\main.pdf (13 pages, 42
-9102 bytes).
+0.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/symbols/msbm10.p
+fb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/cm-super/sfbx1200.pfb><C:/Pr
+ogram Files/MiKTeX 2.9/fonts/type1/public/cm-super/sfbx1440.pfb><C:/Program Fil
+es/MiKTeX 2.9/fonts/type1/public/cm-super/sfbx1728.pfb><C:/Program Files/MiKTeX
+ 2.9/fonts/type1/public/cm-super/sfcc1440.pfb><C:/Program Files/MiKTeX 2.9/font
+s/type1/public/cm-super/sfrm1095.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/p
+ublic/cm-super/sfrm1200.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/cm-
+super/sfti1200.pfb>
+Output written on D:/Projects\TeXProjects\NIR5-6\TeX\out\main.pdf (18 pages, 45
+6631 bytes).
 PDF statistics:
- 267 PDF objects out of 1000 (max. 8388607)
- 53 named destinations out of 1000 (max. 500000)
- 94 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 317 PDF objects out of 1000 (max. 8388607)
+ 69 named destinations out of 1000 (max. 500000)
+ 118 words of extra memory for PDF output out of 10000 (max. 10000000)
 

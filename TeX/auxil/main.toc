@@ -1,14 +1,15 @@
 \babel@toc {russian}{}
 \contentsline {section}{\numberline {1.\hskip 1em}Введение}{3}{section.0.1}%
-\contentsline {section}{\numberline {2.\hskip 1em}Описание метода TSSA}{4}{section.0.2}%
+\contentsline {section}{\numberline {2.\hskip 1em}Описание метода Tensor SSA}{4}{section.0.2}%
 \contentsline {section}{\numberline {3.\hskip 1em}Свойства HOSVD}{6}{section.0.3}%
-\contentsline {section}{\numberline {4.\hskip 1em}Свойства TSSA}{9}{section.0.4}%
-\contentsline {subsection}{\numberline {4.1.\hskip 1em}Примеры разделимости рядов в тензорном случае}{10}{subsection.0.4.1}%
-\contentsline {section}{\numberline {5.\hskip 1em}Другие разложения}{11}{section.0.5}%
-\contentsline {section}{\numberline {6.\hskip 1em}Заключение}{12}{section.0.6}%
-\contentsline {chapter}{\cyrillictext \CYRS \cyrp \cyri \cyrs \cyro \cyrk \ \cyrl \cyri \cyrt \cyre \cyrr \cyra \cyrt \cyru \cyrr \cyrery }{13}{chapter*.3}%
-\babel@toc {english}{}
-\babel@toc {english}{}
+\contentsline {section}{\numberline {4.\hskip 1em}Свойства Tensor SSA}{9}{section.0.4}%
+\contentsline {subsection}{\numberline {4.1.\hskip 1em}Разделимость рядов в терминах Tensor SSA}{9}{subsection.0.4.1}%
+\contentsline {subsection}{\numberline {4.2.\hskip 1em}Примеры разделимости рядов в тензорном случае}{10}{subsection.0.4.2}%
+\contentsline {subsection}{\numberline {4.3.\hskip 1em}Ранг ряда в терминах Tensor SSA}{11}{subsection.0.4.3}%
+\contentsline {section}{\numberline {5.\hskip 1em}Примеры использования Tensor SSA}{12}{section.0.5}%
+\contentsline {section}{\numberline {6.\hskip 1em}Альтернативные тензорные разложения}{13}{section.0.6}%
+\contentsline {section}{\numberline {7.\hskip 1em}Заключение}{17}{section.0.7}%
+\contentsline {chapter}{\cyrillictext \CYRS \cyrp \cyri \cyrs \cyro \cyrk \ \cyrl \cyri \cyrt \cyre \cyrr \cyra \cyrt \cyru \cyrr \cyrery }{18}{chapter*.3}%
 \babel@toc {english}{}
 \babel@toc {english}{}
 \babel@toc {english}{}

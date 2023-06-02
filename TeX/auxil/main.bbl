@@ -30,21 +30,12 @@ Golyandina~Nina, Nekrutkin~Vladimir, Zhigljavsky~Anatoly. Analysis of time
   series structure: SSA and related techiques. \BibDash
 \newblock Chapman \& Hall/CRC, 2001.
 
-\bibitem{parafac1}
+\bibitem{NP-hard}
 \selectlanguageifdefined{english}
-Harshman~Richard~A. Foundations of the PARAFAC procedure: Models and conditions
-  for an "explanatory" multi-model factor analysis. \BibDash
-\newblock 1970. \BibDash
-\newblock Vol.~16. \BibDash
-\newblock P.~1--84.
-
-\bibitem{parafac2}
-\selectlanguageifdefined{english}
-Carroll~J.~Douglas, Chang~Jih~Jie. Analysis of individual differences in
-  multidimensional scaling via an n-way generalization of "Eckart-Young"
-  decomposition~// \BibEmph{Psychometrika}. \BibDash
-\newblock 1970. \BibDash
-\newblock Vol.~35. \BibDash
-\newblock P.~283--319.
+Hillar~Christopher~J., Lim~Lek-Heng. Most Tensor Problems Are NP-Hard~//
+  \BibEmph{J. ACM}. \BibDash
+\newblock 2013. \BibDash
+\newblock Vol.~60, no.~6. \BibDash
+\newblock Access mode: \BibUrl{https://doi.org/10.1145/2512329}.
 
 \end{thebibliography}
