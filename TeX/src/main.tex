@@ -30,6 +30,7 @@
 
 \theoremstyle{plain}
 \newtheorem{statement}{Утверждение}[section]
+\newtheorem{theorem}{Теорема}
 \newtheorem{corollary}{Следствие}[statement]
 
 \theoremstyle{definition}
@@ -65,99 +66,71 @@
     \newpage
 
 
-    \section{Описание метода Tensor SSA}\label{sec:Tensor SSA-method-description}
-    Дан временной ряд $F$ длины $N$
-    \[F=(f_1,f_2,\ldots,f_N).\]
-    На первом этапе выбираются два натуральных параметра $I, L: I+L-1\leqslant N$, по ним высчитывается третий параметр $J=N-I-L+2$.
-    С учётом этих параметров строится траекторный тензор $\mathcal X$ размерности $I\times L \times J$ следующим образом
-    \[\mathcal{X}_{i,l,j}=f_{i+l+j-2}\qquad i\in \overline{1:I},\, l \in\overline{1:L},\, j \in\overline{1:J}.\]
-    Слои тензора будут иметь следующий вид
-    \[\mathcal{X}_{,,j}=
-    \begin{pmatrix}
-        f_j       & f_{j+1} & \ldots & f_{j+L-1}   \\
-        f_{j+1}   & \ddots  &        & \vdots      \\
-        \vdots    &         & \ddots & \vdots      \\
-        f_{j+I-1} & \ldots  & \ldots & f_{j+I+L-2}
-    \end{pmatrix},\]
-    \[\mathcal{X}_{,l,}=
-    \begin{pmatrix}
-        f_l       & f_{l+1} & \ldots & f_{l+J-1}   \\
-        f_{l+1}   & \ddots  &        & \vdots      \\
-        \vdots    &         & \ddots & \vdots      \\
-        f_{l+I-1} & \ldots  & \ldots & f_{l+I+J-2}
-    \end{pmatrix},\]
-    \[\mathcal{X}_{i,,}=
-    \begin{pmatrix}
-        f_i       & f_{i+1} & \ldots & f_{i+J-1}   \\
-        f_{i+1}   & \ddots  &        & \vdots      \\
-        \vdots    &         & \ddots & \vdots      \\
-        f_{i+L-1} & \ldots  & \ldots & f_{i+L+J-2}
-    \end{pmatrix}.\]
+    \section{HOSVD и его свойства}\label{sec:hosvd}
+    Ключевым этапом в алгоритме Tensor SSA является применение тензорного разложения HOSVD~\cite{hosvd} к некоторому тензору.
+    Приведём определение этого разложения и некоторые его свойства.
 
-    На втором этапе к полученному тензору применяется HOSVD~\cite{hosvd} "--- тензорное разложение,
-    являющееся обобщением SVD на большие размерности.
-    Результатом разложения является набор из одного тензора $\mathcal{Z}$ размерности $I\times L\times J$ и трёх
-    ортогональных матриц $\mathbf{U}^{(1)},\, \mathbf{U}^{(2)},\, \mathbf{U}^{(3)}$ размерностей
-    $I\times I,\, L\times L,\, J\times J$ соответственно.
+    \begin{definition}[Произведение тензора и матрицы по измерению]
+        Пусть $\mathcal A$ "--- тензор размерности $I_1\times I_2\times\ldots\times I_N$, $\mathbf U$
+        "--- матрица размерности $J_n\times I_n$, тогда произведением тензора $\mathcal{A}$ и матрицы $\mathbf{U}$ по
+        измерению $n$ $(\mathcal{A}\times_n \mathbf U)$ называется тензор размерности $I_1\times I_2\times\ldots\times I_{n-1}
+        \times J_n\times I_{n+1}\times \ldots\times I_N$, который считается по формуле
+        \[
+            (\mathcal{A}\times_n \mathbf U)_{i_1 i_2\ldots i_{n-1}j_n i_{n+1}\ldots i_N} = \sum_{i_n=1}^{I_n} a_{i_1 i_2\ldots
+            i_{n-1}i_n i_{n+1} \ldots i_N} u_{j_n i_n}.
+        \]
+    \end{definition}
 
-    Этот набор удовлетворяет равенству
-    \begin{equation}
-        \mathcal{X}=\mathcal{Z}\times_1 \mathbf{U}^{(1)}\times_2 \mathbf{U}^{(2)} \times_3 \mathbf{U}^{(3)},\label{eq:trajectory-hosvd}
-    \end{equation}
-    где $\times_n$ "--- произведение тензора на матрицу по $n$-му измерению.
-    Оно определяется следующим образом: пусть $\mathcal A$ "--- тензор размерности
-    $I_1\times I_2\times\ldots\times I_K$, $\mathbf U$ "--- матрица размерности $J_n\times I_n$, тогда
-    $\mathcal{A}\times_n \mathbf U$ "--- тензор размерности $I_1\times I_2\times\ldots\times I_{n-1}
-    \times J_n\times I_{n+1}\times \ldots\times I_K$, который считается по формуле
-    \[(\mathcal{A}\times_n \mathbf U)_{i_1 i_2\ldots i_{n-1}j_n i_{n+1}\ldots i_K} = \sum_{i_n=1}^{I_n} a_{i_1 i_2\ldots
-    i_{n-1}i_n i_{n+1} \ldots i_K} u_{j_n i_n}.\]
-
-    Обозначим за $\mathcal Z_{i_n=\alpha}$ подтензор тензора $\mathcal Z$, полученный фиксированием индекса $i_n=\alpha$.
-    Тензор $\mathcal Z$ удовлетворяет следующим свойствам:
-    \begin{enumerate}
-        \item подтензоры $\mathcal Z_{i_n=\alpha}$ и $\mathcal Z_{i_n=\beta}$ ортогональны для всех возможных значений
-        $n,\, \alpha,\, \beta: \alpha\ne\beta$:
-        \[\langle\mathcal Z_{i_n=\alpha},\mathcal Z_{i_n=\beta}\rangle=0 \qquad \alpha\ne\beta,\]
-        \item подтензоры расположены в порядке убывания их нормы Фробениуса:
-        \[\|\mathcal Z_{i_n=1}\|\geqslant\|\mathcal Z_{i_n=2}\| \geqslant \ldots \geqslant\|\mathcal Z_{i_n=I_n}\|\]
-        для всех $n\in \{1,\, 2,\, 3\}$, где $I_1=I,\, I_2=L,\, I_3=J$.
-    \end{enumerate}
+    \begin{theorem}
+        [Сингулярное разложение порядка $N$]
+        Любой комплекснозначный тензор $\mathcal{A}$ размерности $I_1\times I_2 \times \ldots \times I_N$ может быть представлен
+        в виде произведения
+        \begin{equation}
+            \mathcal{A} = \mathcal{Z} \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)} \times_3 \ldots \times_N \mathbf{U}^{(N)},\label{eq:hosvd}
+        \end{equation}
+        в котором
+        \begin{enumerate}
+            \item $\mathbf{U}^{(n)}=\left[U_1^{(n)},\, U_2^{(n)},\ldots,\, U_{I_n}^{(n)} \right]$ "--- унитарная матрица,
+            \item $\mathcal{Z}$ "--- комплекснозначный тензор размерности $I_1\times I_2 \times \ldots \times I_N$, в котором
+            каждый подтензор $\mathcal Z_{i_n=\alpha}$, полученный фиксированием индекса $i_n=\alpha$ удовлетворяет следующим свойствам
+            \begin{enumerate}
+                \item полная ортогональность: подтензоры $\mathcal Z_{i_n=\alpha}$ и $\mathcal Z_{i_n=\beta}$ ортогональны для всех возможных значений
+                $n,\, \alpha,\, \beta: \alpha\ne\beta$:
+                \[
+                    \langle\mathcal Z_{i_n=\alpha},\mathcal Z_{i_n=\beta}\rangle=0 \qquad \alpha\ne\beta,
+                \]
+                \item упорядоченность: подтензоры расположены в порядке убывания их норм Фробениуса:
+                \[
+                    \|\mathcal Z_{i_n=1}\|\geqslant\|\mathcal Z_{i_n=2}\| \geqslant \ldots \geqslant\|\mathcal Z_{i_n=I_n}\|
+                \]
+                для всех $n\in \overline{1:N}$.
+            \end{enumerate}
+        \end{enumerate}
+    \end{theorem}
+    \begin{definition}
+        \label{def:hosvd}
+        Разложение вида~\eqref{eq:hosvd} будем называть сингулярным разложением тензора $\mathcal{A}$ порядка $N$ или
+        HOSVD тензора $\mathcal{A}$.
+    \end{definition}
     \begin{definition}
         \label{def:singular-value}
         Обозначим $\sigma_i^{(n)}=\|\mathcal Z_{i_n=i}\|$ и будем называть $\sigma_i^{(n)}$ $i$-м сингулярным числом
-        тензора $\mathcal X$ по измерению $n$.
+        тензора $\mathcal A$ по измерению $n$.
     \end{definition}
     \begin{definition}
         \label{def:singular-tensor}
-        Векторы $\mathbf U_i^{(n)}$ будем называть $i$-м сингулярным вектором тензора $\mathcal X$ по измерению $n$.
+        Векторы $U_i^{(n)}$ будем называть $i$-м сингулярным вектором тензора $\mathcal A$ по измерению $n$.
     \end{definition}
+    \begin{remark}
+        Представление~\eqref{eq:hosvd} можно записать в виде
+        \begin{equation}
+            \mathcal{X}=\sum_{i_1=1}^{I_1} \sum_{i_2=1}^{I_2}\ldots \sum_{i_N=1}^{I_N} \mathcal{Z}_{i_1,i_2,\ldots,i_N}
+            U^{(1)}_{i_1} \circ U^{(2)}_{i_2} \circ \ldots\circ U^{(N)}_{i_N}.\label{eq:sum-hosvd}
+        \end{equation}
+        Такое представление удобнее для описания алгоритма Tensor SSA\@.
+    \end{remark}
 
-    Разложение~\eqref{eq:trajectory-hosvd} можно представить в виде суммы
-    \[
-        \mathcal{X}=\sum_{i=1}^{I} \sum_{l=1}^{L} \sum_{j=1}^{J} \mathcal{Z}_{i,l,j} \mathbf{U}^{(1)}_{i}
-        \circ \mathbf{U}^{(2)}_{l} \circ \mathbf{U}^{(3)}_{j}.
-    \]
-    Такой вид позволяет провести третий этап "--- группировку.
-    Множество индексов $\mathfrak{S}=\{1,\, 2\,\ldots,\, \min(I, L, J)\}$ разбивается по смыслу на непересекающиеся множества
-    \[\mathfrak{S}=\bigcup_{k=1}^{m}\mathfrak{S}_k \qquad \mathfrak{S}_k\cap \mathfrak{S}_l =\emptyset,\, k\ne l.\]
-    По каждой из групп строятся тензоры
-    \begin{equation}
-        \mathcal{X}^{(\mathfrak{S}_k)}=\sum_{i \in \mathfrak{S}_k} \sum_{l\in \mathfrak{S}_k} \sum_{j\in \mathfrak{S}_k}
-        \mathcal{Z}_{i,l,j} \mathbf{U}^{(1)}_{i}\circ \mathbf{U}^{(2)}_{l} \circ \mathbf{U}^{(3)}_{j}.\label{eq:tens-group}
-    \end{equation}
-
-    На четвёртом этапе, по каждому тензору вида~\eqref{eq:tens-group}, полученному после этапа группировки, восстанавливается ряд.
-    По соображениям построения траекторного тензора, компоненты ряда восстанавливаются усреднением вдоль плоскостей $i+l+j=\operatorname{const}$.
-    Другими словами, компоненты восстановленного ряда $F^{(k)}=F^{(\mathfrak{S}_k)}$ высчитываются по формуле
-    \[
-        f^{(k)}_n=\frac{1}{\#\mathfrak{M}_n}\sum_{(i,l,j)\in \mathfrak{M}_n} \mathcal{X}^{(\mathfrak{S}_k)}_{i,l,j},\qquad n\in \overline{1:N},
-    \]
-    где $\mathfrak{M}_n=\{(i,\, l,\, j) | 1\leqslant i \leqslant I,\, 1\leqslant l \leqslant L,\, 1\leqslant j \leqslant J,\, i+l+j-2=n\}$.
-
-    Результатом метода является набор временных рядов $F^{(1)},\ldots,\, F^{(m)}$ такой, что ${F=\sum_{k=1}^{m}F^{(k)}}$.
-
-
-    \section{Свойства HOSVD}\label{sec:hosvd-properties}
+    \subsection{Свойства HOSVD}\label{subsec:hosvd-properties}
     Многие свойства метода SSA являются следствиями свойств SVD\@.
     В свою очередь, многие свойства HOSVD являются аналогами свойств SVD\@.
     Таким образом, аналогичность свойств SSA и Tensor SSA может быть выведена из аналогичности некоторых свойств SVD и HOSVD\@.
@@ -192,7 +165,7 @@
     В результате получается искомое разложение
     \[\mathcal{A} = \mathcal{Z}\times_1 \mathbf{U}^{(1)}\times_2 \mathbf{U}^{(2)}\ldots \times_N \mathbf{U}^{(N)}.\]
 
-    Из-за этой связи HOSVD с обычным матричным SVD для многих свойств SVD существуют аналогичные свойства HOSVD\@.
+    Из-за этой связи HOSVD со стандартным матричным SVD для многих свойств SVD существуют аналогичные свойства HOSVD\@.
     \begin{property}[Единственность]
         \leavevmode
         \begin{enumerate}
@@ -207,10 +180,10 @@
         Соответствующие подтензоры $\{\mathcal{Z}_{i_n=\alpha}\}$ должны быть пересчитаны обратным образом.
         Формально $\mathbf{U}^{(n)}$ можно заменить на $\mathbf{U}^{(n)}\mathbf{Q}$, где $\mathbf{Q}$ "--- блочно-диагональная
         матрица, состоящая из унитарных блоков, в которой блочное разбиение соответствует разбиению $\mathbf{U}^{(n)}$
-        на наборы сингулярных векторов по измерению $n$ соответствующих одинаковым сингулярным значениям по измерению $n$.
+        на наборы сингулярных векторов по измерению $n$, соответствующих одинаковым сингулярным значениям по измерению $n$.
         При этом тензор $\mathcal{Z}$ должен быть заменён на $\mathcal{Z}\times_{n} \mathbf{Q}^{\mathrm{H}}$.
 
-        В случае вещественно-значных тензоров единственность имеется в точности до знака, что соответствует
+        В случае вещественнозначных тензоров единственность имеется в точности до знака, что соответствует
         умножению на унитарную матрицу.
     \end{property}
 
@@ -218,7 +191,7 @@
         HOSVD тензора второго порядка сводится к его матричному SVD\@.
     \end{property}
 
-    Перед формулировкой следующих свойств необходимо ввести определение.
+    Перед формулировкой следующих свойств необходимо ввести несколько определений.
     \begin{definition}[$n$-ранг]
         $n$-рангом тензора $\mathcal{A}$ называется размерность векторного пространства, порождённого векторами измерения $n$ этого тензора.
         Обозначается $R_n=\operatorname{rank}_{n}(\mathcal{A})$.
@@ -235,7 +208,7 @@
             \[
                 \mathcal{A}=a_1\circ a_2\circ \ldots \circ a_N,
             \]
-            где $a_{k} \in \mathbb{C}^{I_k}$.
+            где $a_{k} \in \mathbb{C}^{I_k}$, а $\circ$ обозначает внешнее произведение.
             \item Говорят, что тензор $\mathcal{A}$ имеет ранг $R$, если он представим в виде линейной комбинации $R$ тензоров
             ранга $1$, и такое $R$ минимальное.
             Обозначение: $R=\operatorname{rank}(\mathcal{A})$.
@@ -249,7 +222,7 @@
 
     \begin{property}
         [Связь $n$-ранга тензора и ранга его развёртки по измерению $n$]
-        Векторы размерности $n$ тензора $\mathcal{A}$ являются столбцами его развёртки по измерению $n$ и выполняется равенство
+        Векторы измерения $n$ тензора $\mathcal{A}$ являются столбцами его развёртки по измерению $n$ и выполняется равенство
         \[\operatorname{rank}_{n}(\mathcal{A})=\operatorname{rank}(\mathbf{A}_{(n)}).\]
     \end{property}
 
@@ -268,6 +241,79 @@
     \end{property}
 
     Все утверждения выше и их доказательства приведены в статье~\cite{hosvd}.
+
+
+    \section{Описание метода Tensor SSA}\label{sec:Tensor SSA-method-description}
+    Пусть дан временной ряд $F$ длины $N$
+    \[
+        F=(f_1,f_2,\ldots,f_N).
+    \]
+    \begin{definition}(Траекторный тензор ряда)
+        Траекторным тензором ряда $F$ с параметрами $I,L: 1\leqslant I,L \leqslant N,\, I + L \leqslant N + 1$
+        будем называть тензор $\mathcal{X}$ размерности $I\times L \times J=N-I-L+2$, элементы которого удовлетворяют равенству
+        \[
+            \mathcal{X}_{i,l,j}=f_{i+l+j-2}\qquad i\in \overline{1:I},\, l \in\overline{1:L},\, j \in\overline{1:J}.
+        \]
+    \end{definition}
+    Слои траекторного тензора ряда $F$ с параметрами $I, L$ имеют следующий вид
+    \[
+        \mathcal{X}_{,,j}=
+        \begin{pmatrix}
+            f_j       & f_{j+1} & \ldots & f_{j+L-1}   \\
+            f_{j+1}   & \ddots  &        & \vdots      \\
+            \vdots    &         & \ddots & \vdots      \\
+            f_{j+I-1} & \ldots  & \ldots & f_{j+I+L-2}
+        \end{pmatrix},\]
+    \[
+        \mathcal{X}_{,l,}=
+        \begin{pmatrix}
+            f_l       & f_{l+1} & \ldots & f_{l+J-1}   \\
+            f_{l+1}   & \ddots  &        & \vdots      \\
+            \vdots    &         & \ddots & \vdots      \\
+            f_{l+I-1} & \ldots  & \ldots & f_{l+I+J-2}
+        \end{pmatrix},
+    \]
+    \[
+        \mathcal{X}_{i,,}=
+        \begin{pmatrix}
+            f_i       & f_{i+1} & \ldots & f_{i+J-1}   \\
+            f_{i+1}   & \ddots  &        & \vdots      \\
+            \vdots    &         & \ddots & \vdots      \\
+            f_{i+L-1} & \ldots  & \ldots & f_{i+L+J-2}
+        \end{pmatrix}.
+    \]
+
+    Алгоритм Tensor SSA заключается в проведении следующих четырёх шагов.
+    \begin{enumerate}
+        \item Выбор параметров $I, L$ и построение по ним траекторного тензора $\mathcal{X}$;
+        \item Проведение HOSVD траекторного тензора $\mathcal{X}$, получение его представления в виде~\eqref{eq:sum-hosvd}
+        \begin{equation*}
+            \mathcal{X}=\sum_{i=1}^{I} \sum_{l=1}^{L} \sum_{j=1}^{J} \mathcal{Z}_{i,l,j} \mathbf{U}^{(1)}_{i}
+            \circ \mathbf{U}^{(2)}_{l} \circ \mathbf{U}^{(3)}_{j};
+%            \label{eq:trajectory-hosvd}
+        \end{equation*}
+        \item Группировка: разбиение множества индексов $\mathfrak{S}=\{1,\, 2\,\ldots,\, \min(I, L, J)\}$ по смыслу на
+        непересекающиеся множества
+        \[
+            \mathfrak{S}=\bigcup_{k=1}^{m}\mathfrak{S}_k \qquad \mathfrak{S}_k\cap \mathfrak{S}_l =\emptyset,\, k\ne l,
+        \]
+        и построение тензоров
+        \begin{equation*}
+            \mathcal{X}^{(\mathfrak{S}_k)}=\sum_{i \in \mathfrak{S}_k} \sum_{l\in \mathfrak{S}_k} \sum_{j\in \mathfrak{S}_k}
+            \mathcal{Z}_{i,l,j} \mathbf{U}^{(1)}_{i}\circ \mathbf{U}^{(2)}_{l} \circ \mathbf{U}^{(3)}_{j}.
+%            \label{eq:tens-group}
+        \end{equation*}
+        \item Восстановление рядов $F^{(k)}=F^{(\mathfrak{S}_k)}$ по тензорам $\mathcal{X}^{(\mathfrak{S}_k)}$ посредством их усреднения вдоль
+        плоскостей $i+l+j=\operatorname{const}$:
+        \begin{gather*}
+            f^{(k)}_n=\frac{1}{\#\mathfrak{M}_n}\sum_{(i,l,j)\in \mathfrak{M}_n} \mathcal{X}^{(\mathfrak{S}_k)}_{i,l,j},\qquad n\in \overline{1:N},\\
+            \mathfrak{M}_n=\{(i,\, l,\, j) | 1\leqslant i \leqslant I,\, 1\leqslant l \leqslant L,\, 1\leqslant j \leqslant J,\, i+l+j-2=n\}.
+        \end{gather*}
+    \end{enumerate}
+    Результатом алгоритма является набор временных рядов $F^{(1)},\ldots,\, F^{(m)}$ такой, что
+    \[
+        F=\sum_{k=1}^{m}F^{(k)}.
+    \]
 
 
     \section{Свойства Tensor SSA}\label{sec:Tensor SSA-properties}
@@ -454,10 +500,11 @@
     Помимо HOSVD, существует ещё один тип тензорных разложений: ранговое разложение тензора.
     Идея заключается в представлении тензора $\mathcal{A}$ в виде линейной комбинации $R$ тензоров ранга $1$, где $R=\operatorname{rank}(\mathcal{A})$.
     Однако нахождение этого ранга в общем случае является NP-трудной задачей~\cite{NP-hard}.
-    CANDECOMP-PARAFAC "--- итерационный метод рангового разложения тензора, который по параметру $K$ считает наилучшее приближение
+
+    CANDECOMP-PARAFAC~\cite{parafac1, parafac2} "--- итерационный метод рангового разложения тензора, который по параметру $K$ считает наилучшее приближение
     входного тензора суммой $K$ тензоров ранга $1$.
     Заметим, что из-за отсутствия каких-либо требований к ортогональности в определении рангового разложения тензора,
-    многие свойства, верные в теории SSA, потеряют справедливость при использовании этого разложения.
+    многие свойства, верные в теории SSA, могут потерять справедливость при использовании этого разложения.
 
     Рассмотрим ряды $\tilde{f}_n=3,\, \hat{f}_n=\sin(2\pi n / 3)$, $n \in \overline{0:15}$.
     Построим по этим рядам траекторные тензоры с параметрами $I=L=6$.
@@ -513,30 +560,30 @@
         \lambda_1 =320.17,\, \lambda_2 =120.97,\, \lambda_3 =209.38,\, \lambda_4=648\\
         \mathbf{X}=[X_1,\, X_2,\, X_3,\, X_4] =
         \begin{pmatrix}
-            -0.25 & -0.25 & 0.25 & -0.17 \\
-            0.11 & 0.25 & -0.04 & -0.17 \\
-            0.14 & 0.00 & -0.21 & -0.17 \\
-            -0.25 & -0.25 & 0.25 & -0.17 \\
-            0.11 & 0.25 & -0.04 & -0.17 \\
-            0.14 & 0.00 & -0.21 & -0.17
+            -0.25 & -0.25 & 0.25  & -0.17 \\
+            0.11  & 0.25  & -0.04 & -0.17 \\
+            0.14  & 0.00  & -0.21 & -0.17 \\
+            -0.25 & -0.25 & 0.25  & -0.17 \\
+            0.11  & 0.25  & -0.04 & -0.17 \\
+            0.14  & 0.00  & -0.21 & -0.17
         \end{pmatrix},\\
         \mathbf{Y}=[Y_1,\, Y_2,\, Y_3,\, Y_4] =
         \begin{pmatrix}
-            0.25 & -0.25 & -0.25 & -0.17 \\
-            -0.08 & 0.21 & -0.00 & -0.17 \\
-            -0.17 & 0.04 & 0.25 & -0.17 \\
-            0.25 & -0.25 & -0.25 & -0.17 \\
-            -0.08 & 0.21 & -0.00 & -0.17 \\
-            -0.17 & 0.04 & 0.25 & -0.17
+            0.25  & -0.25 & -0.25 & -0.17 \\
+            -0.08 & 0.21  & -0.00 & -0.17 \\
+            -0.17 & 0.04  & 0.25  & -0.17 \\
+            0.25  & -0.25 & -0.25 & -0.17 \\
+            -0.08 & 0.21  & -0.00 & -0.17 \\
+            -0.17 & 0.04  & 0.25  & -0.17
         \end{pmatrix},\\
         \mathbf{Z}=[Z_1,\, Z_2,\, Z_3,\, Z_4] =
         \begin{pmatrix}
             -0.00 & -0.14 & -0.08 & 0.17 \\
-            -0.25 & -0.11 & 0.25 & 0.17 \\
-            0.25 & 0.25 & -0.17 & 0.17 \\
+            -0.25 & -0.11 & 0.25  & 0.17 \\
+            0.25  & 0.25  & -0.17 & 0.17 \\
             -0.00 & -0.14 & -0.08 & 0.17 \\
-            -0.25 & -0.11 & 0.25 & 0.17 \\
-            0.25 & 0.25 & -0.17 & 0.17
+            -0.25 & -0.11 & 0.25  & 0.17 \\
+            0.25  & 0.25  & -0.17 & 0.17
         \end{pmatrix},
     \end{gather*}
     притом точных приближений тремя тензорами ранга $1$ нет.
