@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (MiKTeX 21.2) (preloaded format=pdflatex 2022.11.25)  5 JUN 2023 21:48
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (MiKTeX 21.2) (preloaded format=pdflatex 2022.11.25)  5 JUN 2023 22:48
 entering extended mode
 **./talk.tex
 (talk.tex
@@ -805,6 +805,9 @@ LaTeX Info: Redefining \addtolength on input line 81.
 \pgfphysicalwidth=\dimen287
 \pgfpages@shipoutbox=\box72
 )
+\pgfpages@box@1=\box73
+\pgfpages@box@2=\box74
+
 (C:\Program Files\MiKTeX 2.9\tex/latex/base\inputenc.sty
 Package: inputenc 2020/08/01 v1.3d Input encoding file
 \inpenc@prehook=\toks47
@@ -859,7 +862,7 @@ Package: pgf 2020/12/27 v3.1.8b (3.1.8b)
 
 (C:\Program Files\MiKTeX 2.9\tex/generic/pgf/modules\pgfmoduleshapes.code.tex
 File: pgfmoduleshapes.code.tex 2020/12/27 v3.1.8b (3.1.8b)
-\pgfnodeparttextbox=\box73
+\pgfnodeparttextbox=\box75
 )
 (C:\Program Files\MiKTeX 2.9\tex/generic/pgf/modules\pgfmoduleplot.code.tex
 File: pgfmoduleplot.code.tex 2020/12/27 v3.1.8b (3.1.8b)
@@ -904,10 +907,10 @@ File: pgflibraryplothandlers.code.tex 2020/12/27 v3.1.8b (3.1.8b)
 \tikz@lastmovetoy=\dimen299
 \tikzleveldistance=\dimen300
 \tikzsiblingdistance=\dimen301
-\tikz@figbox=\box74
-\tikz@figbox@bg=\box75
-\tikz@tempbox=\box76
-\tikz@tempbox@bg=\box77
+\tikz@figbox=\box76
+\tikz@figbox@bg=\box77
+\tikz@tempbox=\box78
+\tikz@tempbox@bg=\box79
 \tikztreelevel=\count334
 \tikznumberofchildren=\count335
 \tikznumberofcurrentchild=\count336
@@ -969,9 +972,9 @@ Package: everysel 2021/01/20 v2.1 EverySelectfont Package (MS)
 )
 (C:\Program Files\MiKTeX 2.9\tex/latex/slashbox\slashbox.sty
 slashbox style by K.Yasuoka, May 1993.
-\@slashboxa=\box78
-\@slashboxb=\box79
-\@slashboxc=\box80
+\@slashboxa=\box80
+\@slashboxb=\box81
+\@slashboxc=\box82
 \@slashboxwd=\count350
 \@slashboxht=\count351
 \@slashsepl=\dimen302
@@ -995,7 +998,7 @@ File: uni-4.def 2022/08/07 UCS: Unicode data U+0400..U+04FF
 (C:\Program Files\MiKTeX 2.9\tex/latex/l3backend\l3backend-pdftex.def
 File: l3backend-pdftex.def 2021-02-18 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count354
-\l__pdf_internal_box=\box81
+\l__pdf_internal_box=\box83
 )
 (D:/Projects\TeXProjects\NIR5-6\TeX\auxil\talk.aux)
 \openout1 = `talk.aux'.
@@ -1065,7 +1068,7 @@ LaTeX Font Info:    ... okay on input line 47.
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count355
 \scratchdimen=\dimen304
-\scratchbox=\box82
+\scratchbox=\box84
 \nofMPsegments=\count356
 \nofMParguments=\count357
 \everyMPshowfont=\toks51
@@ -1139,12 +1142,7 @@ LaTeX Info: Redefining \th on input line 47.
  ABD: EverySelectfont initializing macros
 LaTeX Info: Redefining \selectfont on input line 47.
 
-(D:/Projects\TeXProjects\NIR5-6\TeX\auxil\talk.nav) [1
-
-
-
-
-{C:/Users/hromo/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}]
+(D:/Projects\TeXProjects\NIR5-6\TeX\auxil\talk.nav)
 LaTeX Font Info:    Trying to load font information for U+msa on input line 91.
 
 
@@ -1156,7 +1154,12 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 91.
 
 (C:\Program Files\MiKTeX 2.9\tex/latex/amsfonts\umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) [2
+) [3
+
+
+
+
+{C:/Users/hromo/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}
 
 ]
 
@@ -1176,7 +1179,8 @@ Underfull \hbox (badness 10000) detected at line 135
 [][]
  []
 
-[3
+[5
+
 
 ]
 
@@ -1196,60 +1200,91 @@ Underfull \hbox (badness 10000) detected at line 175
 [][]
  []
 
-[4
+[7
+
 
 ]
-Overfull \hbox (14.54512pt too wide) detected at line 214
+Overfull \hbox (14.54512pt too wide) detected at line 215
 []
  []
 
-[5
+[9
 
-] [6
 
-] [7
+] [11
 
-] [8
+
+] [13
+
+
+] [15
+
 
 ]
-LaTeX Font Info:    Trying to load font information for U+euf on input line 336
+LaTeX Font Info:    Trying to load font information for U+euf on input line 337
 .
  (C:\Program Files\MiKTeX 2.9\tex/latex/amsfonts\ueuf.fd
 File: ueuf.fd 2013/01/14 v3.01 Euler Fraktur
 )
-[9
+[17
 
-] [10
 
-] [11
+] [19
 
-] [12
-
-] [13
-
-] [14
 
 ]
-Overfull \hbox (9.10074pt too wide) detected at line 561
+Overfull \vbox (1.37804pt too high) detected at line 380
+ []
+
+[21
+
+
+]
+
+LaTeX Warning: Citation `hooi' on page 22 undefined on input line 425.
+
+[23
+
+
+] [25
+
+
+] [27
+
+
+]
+Overfull \hbox (23.31755pt too wide) detected at line 562
 []
  []
 
-[15
+[29
+
 
 ]
-Overfull \hbox (6.84952pt too wide) in paragraph at lines 597--597
+Overfull \vbox (4.3834pt too high) detected at line 562
+ []
+
+
+Overfull \hbox (6.84952pt too wide) in paragraph at lines 598--598
  [] 
  []
 
-[16
+[31
 
-] [17
+
+] [33
+
+
+] [35
+
 
 ]
-Overfull \vbox (2.65746pt too high) detected at line 672
- []
+LaTeX Font Info:    Trying to load font information for TS1+cmss on input line 
+675.
+ (C:\Program Files\MiKTeX 2.9\tex/latex/base\ts1cmss.fd
+File: ts1cmss.fd 2019/12/16 v2.5j Standard LaTeX font definitions
+) [37
 
-[18
 
 ]
 \tf@nav=\write7
@@ -1261,51 +1296,65 @@ Overfull \vbox (2.65746pt too high) detected at line 672
 \tf@snm=\write9
 \openout9 = `talk.snm'.
 
- (D:/Projects\TeXProjects\NIR5-6\TeX\auxil\talk.aux)
+
+[39
+
+
+ <C:/Program Files/MiKTeX 2.9/tex/latex/beamer/beamericonarticle.pdf>]
+(D:/Projects\TeXProjects\NIR5-6\TeX\auxil\talk.aux)
+
+LaTeX Warning: There were undefined references.
+
 Package rerunfilecheck Info: File `talk.out' has not changed.
-(rerunfilecheck)             Checksum: 5015BC0E6D8BF1FBFC3B64EA0A81DCE6;1165.
+(rerunfilecheck)             Checksum: 83F383F1FC1CAC7BAA516641B4C42929;1376.
  ) 
 Here is how much of TeX's memory you used:
- 28004 strings out of 479300
- 510601 string characters out of 2863757
- 856191 words of memory out of 3000000
- 44800 multiletter control sequences out of 15000+200000
- 425518 words of font info for 90 fonts, out of 3000000 for 9000
+ 28183 strings out of 479300
+ 514578 string characters out of 2863757
+ 875443 words of memory out of 3000000
+ 44928 multiletter control sequences out of 15000+200000
+ 426688 words of font info for 92 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 131i,15n,132p,419b,721s stack positions out of 5000i,500n,10000p,200000b,50000s
-{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/cm-super/cm-super-t2a.enc}<C:/Pr
-ogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Program Fi
-les/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Program Files/MiKT
-eX 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Program Files/MiKTeX 2.9/f
-onts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Program Files/MiKTeX 2.9/fonts/type
-1/public/amsfonts/cm/cmmi6.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/
-amsfonts/cm/cmmi7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/
-cm/cmmi8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi9.
-pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/P
-rogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Program Fil
-es/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Program Files/MiKTeX 
-2.9/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Program Files/MiKTeX 2.9/fonts/
-type1/public/amsfonts/cm/cmr9.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/publ
-ic/amsfonts/cm/cmss10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfo
-nts/cm/cmsy10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/c
-msy6.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy8.pfb>
-<C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy9.pfb><C:/Progr
-am Files/MiKTeX 2.9/fonts/type1/public/amsfonts/euler/eufm10.pfb><C:/Program Fi
-les/MiKTeX 2.9/fonts/type1/public/amsfonts/latxfont/line10.pfb><C:/Program File
-s/MiKTeX 2.9/fonts/type1/public/amsfonts/symbols/msam10.pfb><C:/Program Files/M
-iKTeX 2.9/fonts/type1/public/amsfonts/symbols/msbm10.pfb><C:/Program Files/MiKT
-eX 2.9/fonts/type1/public/cm-super/sfsi1095.pfb><C:/Program Files/MiKTeX 2.9/fo
-nts/type1/public/cm-super/sfss0600.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1
-/public/cm-super/sfss0800.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/c
-m-super/sfss0900.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/cm-super/s
-fss1000.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/cm-super/sfss1095.p
-fb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/cm-super/sfss1440.pfb><C:/Pr
-ogram Files/MiKTeX 2.9/fonts/type1/public/cm-super/sfsx0900.pfb><C:/Program Fil
-es/MiKTeX 2.9/fonts/type1/public/cm-super/sfsx1095.pfb>
-Output written on D:/Projects\TeXProjects\NIR5-6\TeX\out\talk.pdf (18 pages, 38
-8826 bytes).
+ 131i,15n,132p,419b,722s stack positions out of 5000i,500n,10000p,200000b,50000s
+{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/cm-super/cm-super-ts1.enc}{C:/Pr
+ogram Files/MiKTeX 2.9/fonts/enc/dvips/cm-super/cm-super-t2a.enc}<C:/Program Fi
+les/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Program Files/MiKT
+eX 2.9/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Program Files/MiKTeX 2.9/f
+onts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Program Files/MiKTeX 2.9/fonts/typ
+e1/public/amsfonts/cm/cmmi5.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public
+/amsfonts/cm/cmmi6.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts
+/cm/cmmi7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi8
+.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi9.pfb><C:/
+Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Program F
+iles/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr5.pfb><C:/Program Files/MiKTe
+X 2.9/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Program Files/MiKTeX 2.9/font
+s/type1/public/amsfonts/cm/cmr7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/pu
+blic/amsfonts/cm/cmr8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfo
+nts/cm/cmr9.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cms
+s10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss8.pfb><
+C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss9.pfb><C:/Progra
+m Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files/
+MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy5.pfb><C:/Program Files/MiKTeX 2.
+9/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/Program Files/MiKTeX 2.9/fonts/t
+ype1/public/amsfonts/cm/cmsy8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/publ
+ic/amsfonts/cm/cmsy9.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfon
+ts/euler/eufm10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/la
+txfont/line10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/symb
+ols/msam10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/symbols
+/msbm10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/cm-super/sfsi1095.p
+fb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/cm-super/sfss0600.pfb><C:/Pr
+ogram Files/MiKTeX 2.9/fonts/type1/public/cm-super/sfss0800.pfb><C:/Program Fil
+es/MiKTeX 2.9/fonts/type1/public/cm-super/sfss0900.pfb><C:/Program Files/MiKTeX
+ 2.9/fonts/type1/public/cm-super/sfss1000.pfb><C:/Program Files/MiKTeX 2.9/font
+s/type1/public/cm-super/sfss1095.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/p
+ublic/cm-super/sfss1440.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/cm-
+super/sfsx0800.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/cm-super/sfs
+x0900.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/cm-super/sfsx1095.pfb
+>
+Output written on D:/Projects\TeXProjects\NIR5-6\TeX\out\talk.pdf (19 pages, 51
+4516 bytes).
 PDF statistics:
- 350 PDF objects out of 1000 (max. 8388607)
- 47 named destinations out of 1000 (max. 500000)
- 220 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 501 PDF objects out of 1000 (max. 8388607)
+ 93 named destinations out of 1000 (max. 500000)
+ 228 words of extra memory for PDF output out of 10000 (max. 10000000)
 

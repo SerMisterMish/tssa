@@ -6,8 +6,8 @@
 
 \mode<handout> {
     \usepackage{pgfpages}
-%    \setbeameroption{show notes}
-%    \pgfpagesuselayout{2 on 1}[a4paper, border shrink=5mm]
+    \setbeameroption{show notes}
+    \pgfpagesuselayout{2 on 1}[a4paper, border shrink=5mm]
     \setbeamercolor{note page}{bg=white}
     \setbeamercolor{note title}{bg=gray!10}
     \setbeamercolor{note date}{fg=gray!10}
@@ -95,7 +95,7 @@
                 \bluetext{SSA:} & ряд $\tX \Rightarrow$ & матрица $\mathbf{X} $ & $\Rightarrow$ & SVD $\mathbf{X}$  , \\
                 \bluetext{Tensor SSA:} & ряд $\tX \Rightarrow$ & тензор $\mathcal{X} $ & $\Rightarrow$ & \begin{tabular}{l}
                                                                                                              тензорное\\ разложение
-                \end{tabular} $\mathbf{X}$.
+                \end{tabular} $\mathcal{X}$.
             \end{tabular}
         \end{table}
 
@@ -106,7 +106,7 @@
                 \item Canonical polyadic decomposition (CPD).
             \end{enumerate}
             \item Для выделения сигнала и оценки его параметров в работе Papy et al. (2005) применялось HOSVD, и
-            в работе De Lathauwer et al. (2011) применялось CPD.
+            в работе De~Lathauwer et al. (2011) применялось CPD.
         \end{itemize}
         \item \bluetext{Задача:} изучить различные варианты тензорных разложений, применить их
         в задаче анализа временного ряда и сравнить результаты с SSA\@.
@@ -194,6 +194,7 @@
             \end{gather*}
         \end{itemize}
         \note{
+        \footnotesize
             \begin{enumerate}
                 \item HOSVD является единственным $M$-ортогональным разложением тензора, и сингулярные значения и векторы
                 определяются с точностью до унитарных преобразований.
@@ -228,7 +229,7 @@
             \end{equation*}
         \end{itemize}
         \note{
-            \footnotesize
+            \scriptsize
             \begin{enumerate}
                 \item Векторы тензора $\mathcal{A}$ по измерению $n$ в основном содержат вклады в направлении $U^{(n)}_1$,
                 и вклад в этом направлении равен $\sigma^{(n)^2}_1$.
@@ -491,7 +492,7 @@
     \section{Применение HOSVD SSA}\label{sec:tssa-use}
     \begin{frame}{Примеры слабой разделимости}
         \begin{itemize}
-            \item Экспонента и косинус с экспоненциальной амплитудой: $\tilde{x}_n=e^{-\alpha n}\cos(2\pi n / T + \varphi),\, \hat{x}_n=e^{\alpha n}$, $n \in \overline{1:N}$.
+            \item Экспонента и косинус с экспоненциально-модулированной амплитудой: $\tilde{x}_n=e^{-\alpha n}\cos(2\pi n / T + \varphi),\, \hat{x}_n=e^{\alpha n}$, $n \in \overline{1:N}$.
 
             Если $(N+2)\: \vdots \: T$, то при выборе $I,\, L:\: I+L< N+1$, делящихся нацело на $T$ $\tilde{\tX}$ и $\hat{\tX}$
             слабо разделимы.
@@ -511,7 +512,7 @@
         \note{
             Рассмотрим примеры слабо разделимых в терминах HOSVD SSA рядов.
             \begin{enumerate}
-                \item Ряд косинуса с экспоненциальной амплитудой слабо отделим от ряда экспоненты той же степени, если $N+2$
+                \item Ряд косинуса с экспоненциально-модулированной амплитудой слабо отделим от ряда экспоненты той же степени, если $N+2$
                 делится нацело на период косинуса и выбранные параметры делятся нацело на период.
                 \item Ряды, порождённые косинусами с разными частотами слабо отделимы, если все измерения
                 траекторного тензора имеют размерность больше 2, и делятся нацело на периоды обоих косинусов.
@@ -536,8 +537,8 @@
         Оценка точности --- RMSE по 500 реализациям шума: $\tX$ --- ряд длины $N$, $\tS_i$ --- выделенный
         в $i$-м эксперименте сигнал, тогда
         \begin{gather*}
-            \operatorname{RMSE}(m)=\sqrt{\frac{1}{m} \sum_{i=1}^{m} \operatorname{MSE}(\tS_i, \tX)},\qquad
-            \operatorname{MSE}(\tS, \tX)=\sum_{k=1}^{N} (s_i-x_i)^2.
+        \widehat{\operatorname{RMSE}}(m)=\sqrt{\frac{1}{m} \sum_{i=1}^{m} \widehat{\operatorname{MSE}}(\tS_i, \tX)},\qquad
+        \widehat{\operatorname{MSE}}(\tS, \tX)=\frac 1 N \sum_{k=1}^{N} (s_i-x_i)^2.
         \end{gather*}
 
         Во всех этих случаях метод SSA показал точность отделения сигнала выше, чем HOSVD SSA\@.
@@ -644,15 +645,17 @@
         \end{itemize}
 
         \vspace{0.2cm}
+        {\small
         Остаётся для изучения:
-        \begin{itemize}
-            \item Изучение причин возникновения особого случая.
-            \item Определение точной и приближённой разделимости, нахождение метода отделения компонент при отсутствии точной.
-            \item Возможность применения других тензорных разложений (CPD).
-            \item Подтверждение результатов, утверждающих о преимуществах Tensor SSA над SSA.
-        \end{itemize}
-
+            \begin{itemize}
+                \item Изучение причин возникновения особого случая.
+                \item Определение точной и приближённой разделимости, нахождение метода отделения компонент при отсутствии точной.
+                \item Возможность применения других тензорных разложений (CPD).
+                \item Подтверждение результатов, утверждающих о преимуществах Tensor SSA над SSA.
+            \end{itemize}
+        }
         \note{
+        \footnotesize
             В результате работы
             \begin{itemize}
                 \item был описан и реализован алгоритм HOSVD SSA;
@@ -672,37 +675,37 @@
     \end{frame}
 
 
-%    \section{Список литературы}\label{sec:bib}
-%    \begin{frame}{Список литературы}
-%        \begin{thebibliography}{4}
-%            \bibitem{ssa}
-%            Golyandina Nina, Nekrutkin Vladimir, Zhigljavsky Anatoly.
-%            Analysis of time series structure: SSA and related techiques.
-%            --- Chapman \& Hall/CRC, 2001.
-%
-%            \bibitem{tssa-hosvd}
-%            Papy J. M., De Lathauwer L., Van Hu el S.
-%            Exponential data tting using multilinear algebra: the single-channel
-%            and multi-channel case~//
-%            Numerical Linear Algebra with Applications. --- 2005. --- P. 809--826.
-%
-%            \bibitem{tssa-cpd}
-%            De Lathauwer Lieven.
-%            Blind Separation of Exponential Polynomials and the Decomposition
-%            of a Tensor in Rank-$(L_r, L_r, 1)$ Terms~//
-%            SIAM Journal on Matrix Analysis and Applications. --- 2011. --- P. 1451--1474.
-%
-%            \bibitem{hosvd}
-%            De Lathauwer Lieven, De Moor Bart, Vandewalle Joos.
-%            A Multilinear Singular Value Decomposition~//
-%            SIAM Journal on Matrix Analysis and Applications.
-%            --- 2000. --- P. 1253--1278.
-%
-%        \end{thebibliography}
-%
-%        \note{
-%            На данном слайде представлен список основных источников, используемых в моей работе.
-%        }
-%    \end{frame}
+    \section{Список литературы}\label{sec:bib}
+    \begin{frame}{Список литературы}
+        \begin{thebibliography}{4}
+            \bibitem{ssa}
+            Golyandina Nina, Nekrutkin Vladimir, Zhigljavsky Anatoly.
+            Analysis of time series structure: SSA and related techiques.
+            --- Chapman \& Hall/CRC, 2001.
+
+            \bibitem{tssa-hosvd}
+            Papy J. M., De Lathauwer L., Van Hu el S.
+            Exponential data tting using multilinear algebra: the single-channel
+            and multi-channel case~//
+            Numerical Linear Algebra with Applications. --- 2005. --- P. 809--826.
+
+            \bibitem{tssa-cpd}
+            De Lathauwer Lieven.
+            Blind Separation of Exponential Polynomials and the Decomposition
+            of a Tensor in Rank-$(L_r, L_r, 1)$ Terms~//
+            SIAM Journal on Matrix Analysis and Applications. --- 2011. --- P. 1451--1474.
+
+            \bibitem{hosvd}
+            De Lathauwer Lieven, De Moor Bart, Vandewalle Joos.
+            A Multilinear Singular Value Decomposition~//
+            SIAM Journal on Matrix Analysis and Applications.
+            --- 2000. --- P. 1253--1278.
+
+        \end{thebibliography}
+
+        \note{
+            На данном слайде представлен список основных источников, используемых в моей работе.
+        }
+    \end{frame}
 
 \end{document}
