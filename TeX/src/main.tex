@@ -21,9 +21,14 @@
 \usepackage{xcolor}
 \usepackage{color}
 \usepackage{fancyvrb}
+\usepackage{slashbox}
+\usepackage{multirow}
+%\usepackage{calc}
 %\usepackage{nath}
 %\usepackage{cnbwp}
 %\usepackage{hyperref}
+
+\include{letters_series_mathbb}
 
 \setcounter{tocdepth}{2}
 \graphicspath{{./img}}
@@ -44,8 +49,8 @@
 % Document
 \begin{document}
 
-    \title{Учебная практика 3 (научно-исследовательская работа)}
-    \topic{<<Tensor SSA для анализа временного ряда>>}
+    \title{Учебная практика 3 (научно-исследовательская работа) (семестр 6)}
+    \topic{<<Тензорный анализ сингулярного спектра>>}
     \author{Хромов Никита Андреевич}
     \date{\number\year}
     \institution{
@@ -62,7 +67,21 @@
 
 
     \section{Введение}\label{sec:intro}
-    Здесь должно быть введение.
+    Singular spectrum analysis (SSA)~\cite{ssa} является популярным методом анализа временных рядов.
+    Этот метод используется, в частности, для выделения сигнала и выделения тренда и периодических компонент из временного ряда.
+    Метод SSA основан на сингулярном разложении особой траекторной матрицы построенной по временному ряду
+
+    В работах~\cite{TSSA, TSSA-improved} предлагается обобщение метода SSA, Tensor SSA, который основан на некотором
+    тензорном разложении особого траекторного тензора, построенного по временному ряду.
+    Причём, в этих работах утверждается о преимуществах Tensor SSA над обычным SSA\@.
+
+    Существует множество видов тензорных разложений, например High-Order Singular Value Decomposition (HOSVD)~\cite{hosvd},
+    Canonical Polyadic Decomposition (CPD)~\cite{parafac1, parafac2}, Tucker decomposition~\cite{tucker}.
+    В частности, в работах~\cite{TSSA, TSSA-improved} используется разложение CPD\@.
+
+    Была поставлена задача изучить различные варианты тензорных разложений, реализовать метод Tensor SSA, выбрав некоторые из них
+    и сравнить с методом Basic SSA по точности выделения сигнала и компонент сигнала.
+    В качестве первого метода разложения был выбран метод HOSVD, который является обобщением метода SVD для матриц.
     \newpage
 
 
@@ -71,27 +90,27 @@
     Приведём определение этого разложения и некоторые его свойства.
 
     \begin{definition}[Произведение тензора и матрицы по измерению]
-        Пусть $\mathcal A$ "--- тензор размерности $I_1\times I_2\times\ldots\times I_N$, $\mathbf U$
+        Пусть $\mathcal A$ "--- тензор размерности $I_1\times I_2\times\ldots\times I_M$, $\mathbf U$
         "--- матрица размерности $J_n\times I_n$, тогда произведением тензора $\mathcal{A}$ и матрицы $\mathbf{U}$ по
         измерению $n$ $(\mathcal{A}\times_n \mathbf U)$ называется тензор размерности $I_1\times I_2\times\ldots\times I_{n-1}
-        \times J_n\times I_{n+1}\times \ldots\times I_N$, который считается по формуле
+        \times J_n\times I_{n+1}\times \ldots\times I_M$, который считается по формуле
         \[
-            (\mathcal{A}\times_n \mathbf U)_{i_1 i_2\ldots i_{n-1}j_n i_{n+1}\ldots i_N} = \sum_{i_n=1}^{I_n} a_{i_1 i_2\ldots
-            i_{n-1}i_n i_{n+1} \ldots i_N} u_{j_n i_n}.
+            (\mathcal{A}\times_n \mathbf U)_{i_1 i_2\ldots i_{n-1}j_n i_{n+1}\ldots i_M} = \sum_{i_n=1}^{I_n} a_{i_1 i_2\ldots
+            i_{n-1}i_n i_{n+1} \ldots i_M} u_{j_n i_n}.
         \]
     \end{definition}
 
     \begin{theorem}
-        [Сингулярное разложение порядка $N$]
-        Любой комплекснозначный тензор $\mathcal{A}$ размерности $I_1\times I_2 \times \ldots \times I_N$ может быть представлен
+        [Сингулярное разложение порядка $M$]
+        Любой комплекснозначный тензор $\mathcal{A}$ размерности $I_1\times I_2 \times \ldots \times I_M$ может быть представлен
         в виде произведения
         \begin{equation}
-            \mathcal{A} = \mathcal{Z} \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)} \times_3 \ldots \times_N \mathbf{U}^{(N)},\label{eq:hosvd}
+            \mathcal{A} = \mathcal{Z} \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)} \times_3 \ldots \times_M \mathbf{U}^{(M)},\label{eq:hosvd}
         \end{equation}
         в котором
         \begin{enumerate}
             \item $\mathbf{U}^{(n)}=\left[U_1^{(n)},\, U_2^{(n)},\ldots,\, U_{I_n}^{(n)} \right]$ "--- унитарная матрица,
-            \item $\mathcal{Z}$ "--- комплекснозначный тензор размерности $I_1\times I_2 \times \ldots \times I_N$, в котором
+            \item $\mathcal{Z}$ "--- комплекснозначный тензор размерности $I_1\times I_2 \times \ldots \times I_M$, в котором
             каждый подтензор $\mathcal Z_{i_n=\alpha}$, полученный фиксированием индекса $i_n=\alpha$ удовлетворяет следующим свойствам
             \begin{enumerate}
                 \item полная ортогональность: подтензоры $\mathcal Z_{i_n=\alpha}$ и $\mathcal Z_{i_n=\beta}$ ортогональны для всех возможных значений
@@ -100,16 +119,16 @@
                     \langle\mathcal Z_{i_n=\alpha},\mathcal Z_{i_n=\beta}\rangle=0 \qquad \alpha\ne\beta,
                 \]
                 \item упорядоченность: подтензоры расположены в порядке убывания их норм Фробениуса:
-                \[
-                    \|\mathcal Z_{i_n=1}\|\geqslant\|\mathcal Z_{i_n=2}\| \geqslant \ldots \geqslant\|\mathcal Z_{i_n=I_n}\|
-                \]
-                для всех $n\in \overline{1:N}$.
+                \begin{equation}
+                    \|\mathcal Z_{i_n=1}\|\geqslant\|\mathcal Z_{i_n=2}\| \geqslant \ldots \geqslant\|\mathcal Z_{i_n=I_n}\|\label{eq:order}
+                \end{equation}
+                для всех $n\in \overline{1:M}$.
             \end{enumerate}
         \end{enumerate}
     \end{theorem}
     \begin{definition}
         \label{def:hosvd}
-        Разложение вида~\eqref{eq:hosvd} будем называть сингулярным разложением тензора $\mathcal{A}$ порядка $N$ или
+        Разложение вида~\eqref{eq:hosvd} будем называть сингулярным разложением тензора $\mathcal{A}$ порядка $M$ или
         HOSVD тензора $\mathcal{A}$.
     \end{definition}
     \begin{definition}
@@ -124,8 +143,8 @@
     \begin{remark}
         Представление~\eqref{eq:hosvd} можно записать в виде
         \begin{equation}
-            \mathcal{X}=\sum_{i_1=1}^{I_1} \sum_{i_2=1}^{I_2}\ldots \sum_{i_N=1}^{I_N} \mathcal{Z}_{i_1,i_2,\ldots,i_N}
-            U^{(1)}_{i_1} \circ U^{(2)}_{i_2} \circ \ldots\circ U^{(N)}_{i_N}.\label{eq:sum-hosvd}
+            \mathcal{A}=\sum_{i_1=1}^{I_1} \sum_{i_2=1}^{I_2}\ldots \sum_{i_M=1}^{I_M} \mathcal{Z}_{i_1,i_2,\ldots,i_M}
+            U^{(1)}_{i_1} \circ U^{(2)}_{i_2} \circ \ldots\circ U^{(M)}_{i_M}.\label{eq:sum-hosvd}
         \end{equation}
         Такое представление удобнее для описания алгоритма Tensor SSA\@.
     \end{remark}
@@ -135,16 +154,16 @@
     В свою очередь, многие свойства HOSVD являются аналогами свойств SVD\@.
     Таким образом, аналогичность свойств SSA и Tensor SSA может быть выведена из аналогичности некоторых свойств SVD и HOSVD\@.
     \begin{statement}
-        Вычисление \emph{HOSVD} тензора $\mathcal{A}$ с $N$ размерностями сводится к вычислению \emph{SVD} на $N$ матрицах $\mathbf{A}_{(n)}$,
+        Вычисление \emph{HOSVD} тензора $\mathcal{A}$ с $M$ размерностями сводится к вычислению \emph{SVD} на $M$ матрицах $\mathbf{A}_{(n)}$,
         которые вычисляются развёрткой тензора по $n$-му измерению.
     \end{statement}
-    Другими словами, если $\mathcal{A}$ "--- тензор размерности $I_1\times I_2\times\ldots\times I_N$, то его развёртка
-    по $n$-му измерению "--- это матрица $\mathbf{A}_{(n)}$ размерности $I_n\times I_{n+1}I_{n+2}\ldots I_{N}I_{1}I_{2}\ldots
-    I_{n-1}$, в которой элемент $a_{i_1 i_2\ldots i_N}$ тензора содержится в строке $i_n$ и столбце с номером равным
+    Другими словами, если $\mathcal{A}$ "--- тензор размерности $I_1\times I_2\times\ldots\times I_M$, то его развёртка
+    по $n$-му измерению "--- это матрица $\mathbf{A}_{(n)}$ размерности $I_n\times I_{n+1}I_{n+2}\ldots I_{M}I_{1}I_{2}\ldots
+    I_{n-1}$, в которой элемент $a_{i_1 i_2\ldots i_M}$ тензора содержится в строке $i_n$ и столбце с номером равным
     \[\begin{aligned}
-          &(i_{n+1} - 1)I_{n+2}I_{n+3}\ldots I_{N}I_1 I_2\ldots I_{n-1} + (i_{n+2} - 1)I_{n+3}I_{n+4}\ldots I_N I_1 I_2 \ldots
+          &(i_{n+1} - 1)I_{n+2}I_{n+3}\ldots I_{M}I_1 I_2\ldots I_{n-1} + (i_{n+2} - 1)I_{n+3}I_{n+4}\ldots I_M I_1 I_2 \ldots
           I_{n-1} + \dots \\
-          &+(i_N - 1)I_1 I_2 \ldots I_{n-1} + (i_1 - 1)I_2 I_3\ldots I_{n-1} + (i_2 - 1)I_3 I_4\ldots I_{n-1} + \dots + i_{n-1}.
+          &+(i_M - 1)I_1 I_2 \ldots I_{n-1} + (i_1 - 1)I_2 I_3\ldots I_{n-1} + (i_2 - 1)I_3 I_4\ldots I_{n-1} + \dots + i_{n-1}.
     \end{aligned}
     \]
 
@@ -157,13 +176,13 @@
         \label{fig:unfolding}
     \end{figure}
 
-    К каждой из полученных матриц применяется SVD, в результате чего получаются $N$ матриц $\mathbf{U}^{(n)}$,
+    К каждой из полученных матриц применяется SVD, в результате чего получаются $M$ матриц $\mathbf{U}^{(n)}$,
     составленных из левых сингулярных векторов соответствующих развёрток.
     Затем находится тензор сингулярных чисел
-    \[\mathcal{Z}=\mathcal{A}\times_1 \mathbf{U}^{(1)^\mathrm{H}}\times_2 \mathbf{U}^{(2)^\mathrm{H}}\ldots \times_N
-    \mathbf{U}^{(N)^\mathrm{H}}.\]
+    \[\mathcal{Z}=\mathcal{A}\times_1 \mathbf{U}^{(1)^\mathrm{H}}\times_2 \mathbf{U}^{(2)^\mathrm{H}}\ldots \times_M
+    \mathbf{U}^{(M)^\mathrm{H}}.\]
     В результате получается искомое разложение
-    \[\mathcal{A} = \mathcal{Z}\times_1 \mathbf{U}^{(1)}\times_2 \mathbf{U}^{(2)}\ldots \times_N \mathbf{U}^{(N)}.\]
+    \[\mathcal{A} = \mathcal{Z}\times_1 \mathbf{U}^{(1)}\times_2 \mathbf{U}^{(2)}\ldots \times_M \mathbf{U}^{(M)}.\]
 
     Из-за этой связи HOSVD со стандартным матричным SVD для многих свойств SVD существуют аналогичные свойства HOSVD\@.
     \begin{property}[Единственность]
@@ -190,6 +209,9 @@
     \begin{property}[Обобщение]
         HOSVD тензора второго порядка сводится к его матричному SVD\@.
     \end{property}
+    Это свойство означает, что результат применения HOSVD к тензору с двумя измерениями, т.е. матрице, совпадает
+    с результатом применения SVD к этой же матрице, в точности до унитарных преобразований сингулярных векторов и
+    матрицы сингулярных значений.
 
     Перед формулировкой следующих свойств необходимо ввести несколько определений.
     \begin{definition}[$n$-ранг]
@@ -204,9 +226,9 @@
     \begin{definition}[Тензорный ранг]
         \leavevmode
         \begin{enumerate}
-            \item Говорят, что тензор $\mathcal{A}$ размерности $I_1\times I_2\times \ldots \times I_N$ имеет тензорный ранг равный $1$, если он представим в виде
+            \item Говорят, что тензор $\mathcal{A}$ размерности $I_1\times I_2\times \ldots \times I_M$ имеет тензорный ранг равный $1$, если он представим в виде
             \[
-                \mathcal{A}=a_1\circ a_2\circ \ldots \circ a_N,
+                \mathcal{A}=a_1\circ a_2\circ \ldots \circ a_M,
             \]
             где $a_{k} \in \mathbb{C}^{I_k}$, а $\circ$ обозначает внешнее произведение.
             \item Говорят, что тензор $\mathcal{A}$ имеет ранг $R$, если он представим в виде линейной комбинации $R$ тензоров
@@ -228,11 +250,11 @@
 
     \begin{property}
         [Связь $n$-ранга тензора и его HOSVD]\label{property:n-rank}
-        Пусть имеется HOSVD тензора $\mathcal{A}$ размерности $I_1\times I_2\times \ldots \times I_N$
-        \[\mathcal{A} = \mathcal{Z}\times_1 \mathbf{U}^{(1)}\times_2\mathbf{U}^{(2)}\times_3\ldots \times_{N}\mathbf{U}^{(N)},\]
+        Пусть имеется HOSVD тензора $\mathcal{A}$ размерности $I_1\times I_2\times \ldots \times I_M$
+        \[\mathcal{A} = \mathcal{Z}\times_1 \mathbf{U}^{(1)}\times_2\mathbf{U}^{(2)}\times_3\ldots \times_{M}\mathbf{U}^{(M)},\]
         тогда, по определению, тензор $\mathcal{Z}$ удовлетворяет свойству упорядоченности сингулярных чисел
         \[\|\mathcal{Z}_{i_n=1}\|\geqslant\|\mathcal{Z}_{i_n=2}\|\geqslant\ldots \geqslant \|\mathcal{Z}_{i_n=I_n}\|\]
-        для всех $n\in \overline{1:N}$.
+        для всех $n\in \overline{1:M}$.
         Обозначим $r_n$ "--- наибольший индекс такой, что $\|\mathcal{Z}_{i_n=r_n}\|>0$.
         Тогда
         \begin{equation}
@@ -240,58 +262,116 @@
         \end{equation}
     \end{property}
 
+    \begin{property}[Норма]
+        \label{property:norm}
+        Пусть имеется HOSVD тензора $\mathcal{A}$, представленное в виде~\eqref{eq:hosvd}, и пусть $R_n=\operatorname{rank}_n(\mathcal{A})$,
+        $n\in \overline{1:M}$.
+        Тогда справедливо равенство
+        \begin{align*}
+            \|\mathcal{A}\|^2&=\sum_{i=1}^{R_1}\left( \sigma_i^{(1)} \right)^2=\sum_{i=1}^{R_2}\left( \sigma_i^{(2)} \right)^2
+            =\ldots =\sum_{i=1}^{R_M}\left( \sigma_i^{(M)} \right)^2=\\
+            &= \|\mathcal{Z}\|^2.
+        \end{align*}
+    \end{property}
+
+    \begin{definition}[Ориентированная энергия]
+        Ориентированной по измерению $n$ энергией тензора $\mathcal{A}\in \mathbb{C}^{I_1\times I_2\times \ldots \times I_M}$ в направлении
+        вектора $X\in \mathbb{C}^{I_n}$ единичной нормы называют выражение
+        \[
+            \operatorname{OE}_n(X, \mathcal{A}) = \|X^{\mathrm{H}}\mathbf{A}_{(n)}\|^2.
+        \]
+    \end{definition}
+
+    \begin{property}[Об ориентированной энергии]
+        \label{property:oriented-energy}
+        Направления экстремальной ориентированной энергии по измерению $n$ соответствуют сингулярным векторам по измерению $n$,
+        причем значение экстремальной энергии равно соответствующему квадрату сингулярного значения по измерению $n$.
+    \end{property}
+
+    Это означает, что векторы тензора $\mathcal{A}$ по измерению $n$ в основном содержат вклады в направлении $U^{(n)}_1$;
+    на это направление приходится $\sigma^{(n)^2}_1$ энергии по отношению к общему количеству энергии в тензоре.
+    Затем ориентированная энергия по измерению $n$ достигает экстремума в направлении $U^{(n)}_2$,
+    перпендикулярном $U^{(n)}_1$, с величиной $\sigma^{(n)^2}_2$, и так далее.
+
+    \begin{property}[Приближение]
+        \label{property:approx}
+        Пусть имеется HOSVD тензора $\mathcal{A}$, представленное в виде~\eqref{eq:hosvd}, и пусть $R_n=\operatorname{rank}_n(\mathcal{A})$.
+        Определим тензор $\hat{\mathcal{A}}$ отбрасыванием наименьших сингулярных значений $\sigma_{I_{n}'+1}^{(n)}, \sigma_{I_{n}'+2}^{(n)},\ldots, \sigma_{R_n}^{(n)}$
+        для заданных значений $I_{n}'$, $n \in \overline{1:M}$, то есть заменяя нулями соответствующие части тензора $\mathcal{Z}$.
+        Тогда верно
+        \begin{equation}
+            \|\mathcal{A}-\hat{\mathcal{A}}\|^2\leqslant \sum_{i_1=I_{1}'+1}^{R_1}\left( \sigma_{i_1}^{(1)}\right)^2 +
+            \sum_{i_2=I_{2}'+1}^{R_2}\left( \sigma_{i_2}^{(2)}\right)^2 + \ldots + \sum_{i_M=I_{M}'+1}^{R_M}\left( \sigma_{i_M}^{(M)}\right)^2.\label{eq:approx}
+        \end{equation}
+    \end{property}
+
+    Это свойство является эквивалентом высшего порядка связи между SVD матрицы и ее наилучшим приближением,
+    в смысле наименьших квадратов, матрицей более низкого ранга.
+    Однако для тензоров ситуация совершенно иная.
+    Отбрасывая наименьшие сингулярные значения измерения $n$, мы получаем тензор $\hat{\mathcal{A}}$ с рангом столбцов
+    равным $I_1'$, рангом строк равным $I_2'$ и т.д.
+    Но этот тензор в общем случае не является наилучшим приближением при заданных ограничениях на ранги измерений.
+    Тем не менее, предположение об упорядочении~\eqref{eq:order} подразумевает, что <<энергия>> $\mathcal{A}$ в основном сосредоточена в части,
+    соответствующей малым значениям $i_1, i_2, \ldots, i_M$.
+    Следовательно, если $\sigma^{(n)}_{I_n'} \gg \sigma^{(n)}_{I_n'+1}$ (например, если $I_n'=\operatorname{rank}_n(\mathcal{A})$,
+    то меньшие сингулярные значения по измерению $n$ не существенны), то $\hat{\mathcal{A}}$ всё ещё можно считать хорошим приближением $\mathcal{A}$.
+    Ошибка ограничена выражением~\eqref{eq:approx}.
+
+
     Все утверждения выше и их доказательства приведены в статье~\cite{hosvd}.
 
 
     \section{Описание метода Tensor SSA}\label{sec:Tensor SSA-method-description}
-    Пусть дан временной ряд $F$ длины $N$
+    Пусть дан временной ряд $\tX$ длины $N$
     \[
-        F=(f_1,f_2,\ldots,f_N).
+        \tX=(x_1,x_2,\ldots,x_N).
     \]
     \begin{definition}(Траекторный тензор ряда)
-        Траекторным тензором ряда $F$ с параметрами $I,L: 1\leqslant I,L \leqslant N,\, I + L \leqslant N + 1$
+        Траекторным тензором ряда $\tX$ с параметрами $I,L: 1\leqslant I,L \leqslant N,\, I + L \leqslant N + 1$
         будем называть тензор $\mathcal{X}$ размерности $I\times L \times J=N-I-L+2$, элементы которого удовлетворяют равенству
         \[
-            \mathcal{X}_{i,l,j}=f_{i+l+j-2}\qquad i\in \overline{1:I},\, l \in\overline{1:L},\, j \in\overline{1:J}.
+            \mathcal{X}_{i,l,j}=x_{i+l+j-2}\qquad i\in \overline{1:I},\, l \in\overline{1:L},\, j \in\overline{1:J}.
         \]
     \end{definition}
-    Слои траекторного тензора ряда $F$ с параметрами $I, L$ имеют следующий вид
+    Слои траекторного тензора ряда $\tX$ с параметрами $I, L$ имеют следующий вид
     \[
         \mathcal{X}_{,,j}=
         \begin{pmatrix}
-            f_j       & f_{j+1} & \ldots & f_{j+L-1}   \\
-            f_{j+1}   & \ddots  &        & \vdots      \\
+            x_j       & x_{j+1} & \ldots & x_{j+L-1}   \\
+            x_{j+1}   & \ddots  &        & \vdots      \\
             \vdots    &         & \ddots & \vdots      \\
-            f_{j+I-1} & \ldots  & \ldots & f_{j+I+L-2}
+            x_{j+I-1} & \ldots  & \ldots & x_{j+I+L-2}
         \end{pmatrix},\]
     \[
         \mathcal{X}_{,l,}=
         \begin{pmatrix}
-            f_l       & f_{l+1} & \ldots & f_{l+J-1}   \\
-            f_{l+1}   & \ddots  &        & \vdots      \\
+            x_l       & x_{l+1} & \ldots & x_{l+J-1}   \\
+            x_{l+1}   & \ddots  &        & \vdots      \\
             \vdots    &         & \ddots & \vdots      \\
-            f_{l+I-1} & \ldots  & \ldots & f_{l+I+J-2}
+            x_{l+I-1} & \ldots  & \ldots & x_{l+I+J-2}
         \end{pmatrix},
     \]
     \[
         \mathcal{X}_{i,,}=
         \begin{pmatrix}
-            f_i       & f_{i+1} & \ldots & f_{i+J-1}   \\
-            f_{i+1}   & \ddots  &        & \vdots      \\
+            x_i       & x_{i+1} & \ldots & x_{i+J-1}   \\
+            x_{i+1}   & \ddots  &        & \vdots      \\
             \vdots    &         & \ddots & \vdots      \\
-            f_{i+L-1} & \ldots  & \ldots & f_{i+L+J-2}
+            x_{i+L-1} & \ldots  & \ldots & x_{i+L+J-2}
         \end{pmatrix}.
     \]
 
-    Алгоритм Tensor SSA заключается в проведении следующих четырёх шагов.
+    На вход алгоритму подаётся временной ряд $\tX$ и параметры $I,L: 1\leqslant I,L \leqslant N,\, I + L \leqslant N + 1$.
+    В зависимости от целей определяются разные формулировки алгоритма.
+    Алгоритм Tensor SSA для отделения различных компонент ряда друг от друга заключается в проведении следующих четырёх шагов.
     \begin{enumerate}
         \item Выбор параметров $I, L$ и построение по ним траекторного тензора $\mathcal{X}$;
         \item Проведение HOSVD траекторного тензора $\mathcal{X}$, получение его представления в виде~\eqref{eq:sum-hosvd}
-        \begin{equation*}
+        \begin{equation}
             \mathcal{X}=\sum_{i=1}^{I} \sum_{l=1}^{L} \sum_{j=1}^{J} \mathcal{Z}_{i,l,j} \mathbf{U}^{(1)}_{i}
             \circ \mathbf{U}^{(2)}_{l} \circ \mathbf{U}^{(3)}_{j};
-%            \label{eq:trajectory-hosvd}
-        \end{equation*}
+            \label{eq:trajectory-hosvd}
+        \end{equation}
         \item Группировка: разбиение множества индексов $\mathfrak{S}=\{1,\, 2\,\ldots,\, \min(I, L, J)\}$ по смыслу на
         непересекающиеся множества
         \[
@@ -303,17 +383,60 @@
             \mathcal{Z}_{i,l,j} \mathbf{U}^{(1)}_{i}\circ \mathbf{U}^{(2)}_{l} \circ \mathbf{U}^{(3)}_{j}.
 %            \label{eq:tens-group}
         \end{equation*}
-        \item Восстановление рядов $F^{(k)}=F^{(\mathfrak{S}_k)}$ по тензорам $\mathcal{X}^{(\mathfrak{S}_k)}$ посредством их усреднения вдоль
+        \item Восстановление рядов $\tX^{(k)}=\tX^{(\mathfrak{S}_k)}$ по тензорам $\mathcal{X}^{(\mathfrak{S}_k)}$ посредством их усреднения вдоль
         плоскостей $i+l+j=\operatorname{const}$:
         \begin{gather*}
             f^{(k)}_n=\frac{1}{\#\mathfrak{M}_n}\sum_{(i,l,j)\in \mathfrak{M}_n} \mathcal{X}^{(\mathfrak{S}_k)}_{i,l,j},\qquad n\in \overline{1:N},\\
             \mathfrak{M}_n=\{(i,\, l,\, j) | 1\leqslant i \leqslant I,\, 1\leqslant l \leqslant L,\, 1\leqslant j \leqslant J,\, i+l+j-2=n\}.
         \end{gather*}
     \end{enumerate}
-    Результатом алгоритма является набор временных рядов $F^{(1)},\ldots,\, F^{(m)}$ такой, что
+    Результатом алгоритма является набор временных рядов $\tX^{(1)},\ldots,\, \tX^{(m)}$ такой, что
     \[
-        F=\sum_{k=1}^{m}F^{(k)}.
+        \tX=\sum_{k=1}^{m}\tX^{(k)}.
     \]
+
+    Алгоритм Tensor SSA для выделения в ряде сигнала из шума сводится к получению
+    как можно более точного приближения траекторного тензора тензором меньшего, заданного пользователем, ранга, и
+    может быть проведён двумя различными способами.
+
+    Первый способ заключается в приближении траекторного тензора путём усечения его HOSVD\@.
+    Благодаря свойствам~\ref{property:approx},~\ref{property:oriented-energy} такое приближение можно считать достаточно точным,
+    хоть оно и не оптимально.
+    Первые два шага этого алгоритма совпадают с алгоритмом для отделения компонент ряда, поэтому опишем его, начиная с третьего шага.
+    \begin{enumerate}
+        \setcounter{enumi}{2}
+        \item Третий шаг заключается в выборе ранга сигнала $r$ и усечении тензора сингулярных значений по этому рангу.
+        Другими словами, имея ранг сигнала $r$ и разложение траекторного тензора $\mathcal{X}$ в виде~\eqref{eq:trajectory-hosvd},
+        в тензоре $\mathcal{Z}$ заменим матрицы-слои по каждому измерению с номерами $k>r$ на нулевые, и по полученному тензору $\hat{\mathcal{Z}}$
+        построим приближение траекторного тензора $\hat{\mathcal{X}}$.
+        \item На четвёртом шаге, используя усреднение тензора $\hat{\mathcal{X}}$ вдоль плоскостей $i+l+j=\operatorname{const}$
+        получим ряд $\hat{\tX}$.
+        Этот ряд и будем считать сигналом.
+    \end{enumerate}
+
+    Второй способ использует метод приближения тензора другим тензором с меньшими значениями $n$-рангов "--- High-Order Orthogonal
+    Iteration (HOOI)~\cite{hooi}.
+    При заданных тензоре $\mathcal{A}$ и наборе $n$-рангов $(R_1,\, R_2,\, \ldots,\, R_M)$, результатом метода будет
+    тензор $\hat{\mathcal{A}}$, $n$-ранги которого совпадают с набором $(R_1,\, R_2,\, \ldots,\, R_M)$, и который решает
+    задачу минимизации
+    \[
+        \|\mathcal{A}-\hat{\mathcal{A}}\|\to \min,
+    \]
+    где минимум берётся по классу тензоров с заданными $n$-рангами.
+    Исходя из определения, результат метода HOOI является оптимальным, в связи с чем его можно использовать
+    для приближения траекторного тензора ряда.
+
+    Приведём вторую реализацию алгоритма Tensor SSA для отделения сигнала от шума, используя HOOI\@.
+    Первый шаг алгоритма совпадает с предыдущими алгоритмами, поэтому опишем его начиная со второго шага.
+    \begin{enumerate}
+        \setcounter{enumi}{1}
+        \item На втором шаге выбирается ранг сигнала $r$ и к полученному ранее траекторному тензору $\mathcal{X}$ применяется
+        HOOI с набором $n$-рангов $(r,\, r,\, r)$.
+        В результате получаем оптимальное приближение траекторного тензора $\mathcal{X}$ тензором $\hat{\mathcal{X}}$ со
+        значениями $n$-рангов равными $r$.
+        \item Третий шаг "--- восстановление ряда по тензору $\hat{\mathcal{X}}$ совпадает с четвёртым шагом в первом
+        варианте алгоритма Tensor SSA для выделения в ряде сигнала из шума.
+    \end{enumerate}
 
 
     \section{Свойства Tensor SSA}\label{sec:Tensor SSA-properties}
@@ -322,12 +445,12 @@
     \subsection{Разделимость рядов в терминах Tensor SSA}\label{subsec:tensor-ssa-separability}
     \begin{statement}
         \label{state:separability}
-        $\tilde{F}=(\tilde{f}_1,\ldots , \tilde{f}_N)$, $\hat{F}=(\hat{f}_1,\ldots , \hat{f}_N)$ "--- временные ряды длины $N$.
-        Пусть ряд $F$ является суммой этих рядов.
+        $\tilde{\tX}=(\tilde{f}_1,\ldots , \tilde{f}_N)$, $\hat{\tX}=(\hat{f}_1,\ldots , \hat{f}_N)$ "--- временные ряды длины $N$.
+        Пусть ряд $\tX$ является суммой этих рядов.
         Траекторные тензоры рядов равны соответственно: $\tilde{\mathcal{X}},\, \hat{\mathcal{X}},\, \mathcal{X}$.
         Тогда существует сингулярное разложение тензора $\mathcal{X}$ с параметрами $I, L$, которое можно представить
         в виде суммы сингулярных разложений тензоров $\tilde{\mathcal{X}}$ и $\hat{\mathcal{X}}$ с теми же параметрами
-        в том и только том случае, когда взаимно ортогональны все подряды рядов $\tilde{F}$ и $\hat{F}$
+        в том и только том случае, когда взаимно ортогональны все подряды рядов $\tilde{\tX}$ и $\hat{\tX}$
         длины $I,\, L,\, J=N-I-L+2$, то есть
         \begin{enumerate}
             \item $\tilde{f}_{k}\hat{f}_m + \ldots + \tilde{f}_{k+I-1} \hat{f}_{m+I-1}=0 \qquad \forall k,\, m\in\overline{1:N-I+1}$,
@@ -370,60 +493,64 @@
     Из утверждения~\ref{state:separability} следует, что понятие слабой разделимости ряда из теории SSA
     применимо и к тензорному случаю.
     \begin{corollary}
-        Если временные ряды $\tilde{F}$ и $\hat{F}$ длины $N$ слабо $I$- и $L$-разделимы в смысле теории \emph{SSA},
-        то существует такое \emph{HOSVD} траекторного тензора $\mathcal{X}$ ряда $F=\tilde{F} + \hat{F}$, что его можно разбить
-        на две части, являющиеся \emph{HOSVD} траекторных тензоров, составленных по рядам $\tilde{F}$ и $\hat{F}$.
+        Если временные ряды $\tilde{\tX}$ и $\hat{\tX}$ длины $N$ слабо $I$- и $L$-разделимы в смысле теории \emph{SSA},
+        то существует такое \emph{HOSVD} траекторного тензора $\mathcal{X}$ ряда $\tX=\tilde{\tX} + \hat{\tX}$, что его можно разбить
+        на две части, являющиеся \emph{HOSVD} траекторных тензоров, составленных по рядам $\tilde{\tX}$ и $\hat{\tX}$.
     \end{corollary}
-    \begin{remark}
-        Понятие сильной разделимости можно перенести со стандартного случая на тензорный непосредственно, с поправкой на
-        определение~\ref{def:singular-value} сингулярных чисел для тензора.
-    \end{remark}
 
     \subsection{Примеры разделимости рядов в тензорном случае}\label{subsec:separation-example}
-    Рассмотрим условия разделимости рядов $\tilde{F}=(\tilde{f}_{1},\, \tilde{f}_{2},\ldots,\, \tilde{f}_{N}),\, \hat{F}=
-    (\hat{f}_{1},\, \hat{f}_{2},\ldots,\, \hat{f}_{N})$ в некоторых частных случаях.
+    Рассмотрим условия разделимости рядов $\tilde{\tX}=(\tilde{x}_{1},\, \tilde{x}_{2},\ldots,\, \tilde{x}_{N}),\, \hat{\tX}=
+    (\hat{x}_{1},\, \hat{x}_{2},\ldots,\, \hat{x}_{N})$ в некоторых частных случаях.
     \begin{itemize}
         \item Отделимость от константного ряда
 
-        Пусть $\tilde{f}_n=c\ne 0$ для $n\in\overline{1:N}$.
-        Тогда необходимые и достаточные условия отделимости от него ряда $\hat{F}$ в смысле Tensor SSA следующие:
+        Пусть $\tilde{x}_n=c\ne 0$ для $n\in\overline{1:N}$.
+        Тогда необходимые и достаточные условия отделимости от него ряда $\hat{\tX}$ в смысле Tensor SSA следующие:
         \begin{enumerate}
-            \item Ряд $\hat{F}$ имеет целый период $T$, и $I/T$, $L/T$, $J/T$ "--- целые;
-            \item $\hat{f}_{1}+\hat{f}_2+\ldots+\hat{f}_T=0$.
+            \item Ряд $\hat{\tX}$ имеет целый период $T$, и $I/T$, $L/T$, $J/T$ "--- целые;
+            \item $\hat{x}_{1}+\hat{f}_2+\ldots+\hat{x}_T=0$.
         \end{enumerate}
         \begin{example}
-            Ряд с элементами вида $\tilde{f}_n=\cos(2\pi n / T + \varphi)$ длины $N$ такой, что $N+2$ делится нацело на
+            Ряд с элементами вида $\tilde{x}_n=\cos(2\pi n / T + \varphi)$ длины $N$ такой, что $N+2$ делится нацело на
             $T$, будет слабо отделим от константного ряда при выборе параметров $I,\, L:\: I+L< N+1$, делящихся нацело на $T$.
         \end{example}
         \item Отделимость от экспоненциального ряда
 
-        Пусть $\tilde{f}_n=e^{\alpha n}$ для $n\in\overline{1:N}$.
-        Тогда необходимые и достаточные условия отделимости от него ряда $\hat{F}$ в смысле Tensor SSA следующие:
+        Пусть $\tilde{x}_n=e^{\alpha n}$ для $n\in\overline{1:N}$.
+        Тогда необходимые и достаточные условия отделимости от него ряда $\hat{\tX}$ в смысле Tensor SSA следующие:
         \begin{enumerate}
-            \item Ряд $(\tilde{f}_{1}\hat{f}_{1},\, \tilde{f}_{2}\hat{f}_{2},\ldots,\, \tilde{f}_{N}\hat{f}_{N}$
+            \item Ряд $(\tilde{x}_{1}\hat{x}_{1},\, \tilde{x}_{2}\hat{x}_{2},\ldots,\, \tilde{x}_{N}\hat{x}_{N}$
             имеет целый период $T$, и $I/T$, $L/T$, $J/T$ "--- целые;
-            \item $\tilde{f}_{1}\hat{f}_{1}+\tilde{f}_{2}\hat{f}_2+\ldots+\tilde{f}_{N}\hat{f}_T=0$.
+            \item $\tilde{x}_{1}\hat{x}_{1}+\tilde{x}_{2}\hat{x}_2+\ldots+\tilde{x}_{N}\hat{x}_T=0$.
         \end{enumerate}
         \begin{example}
-            Ряд с элементами вида $\tilde{f}_n=e^{-\alpha n}\cos(2\pi n / T + \varphi)$ длины $N$ такой, что $N+2$ делится нацело на
-            $T$, будет слабо отделим от ряда с элементами вида $\hat{f}_n=e^{\alpha n}$ при выборе параметров $I,\, L:\: I+L< N+1$, делящихся нацело на $T$.
+            Ряд с элементами вида $\tilde{x}_n=e^{-\alpha n}\cos(2\pi n / T + \varphi)$ длины $N$ такой, что $N+2$ делится нацело на
+            $T$, будет слабо отделим от ряда с элементами вида $\hat{x}_n=e^{\alpha n}$ при выборе параметров $I,\, L:\: I+L< N+1$, делящихся нацело на $T$.
         \end{example}
         \item Отделимость от гармонического ряда
 
-        Пусть $\tilde{f}_n=\cos(2\pi \omega n + \varphi)$, где $0 < \omega < 1/2$, и $I, L, J > 2$.
-        Положим $\hat{f}_n=\cos(2\pi \omega' n + \varphi')$,
-        тогда ряд $\tilde{F}$ отделим от ряда $\hat{F}$ в смысле Tensor SSA тогда и только тогда, когда $\omega\ne\omega'$
+        Пусть $\tilde{x}_n=\cos(2\pi \omega n + \varphi)$, где $0 < \omega < 1/2$, и $I, L, J > 2$.
+        Положим $\hat{x}_n=\cos(2\pi \omega' n + \varphi')$,
+        тогда ряд $\tilde{\tX}$ отделим от ряда $\hat{\tX}$ в смысле Tensor SSA тогда и только тогда, когда $\omega\ne\omega'$
         и $I\omega,\, I\omega',\, L\omega,\, L\omega',\, J\omega,\, J\omega'$ "--- целые числа.
     \end{itemize}
 
+    \begin{remark}
+        Результаты выше приведены в случае точной разделимости компонент в смысле теории SSA\@.
+        В случае, когда точной разделимости нет, а есть только приближённая, в тензорном случае возникает такая
+        ситуация, когда одни и те же одноранговые тензоры в HOSVD траекторной матрицы могут быть отнесены
+        сразу к нескольким компонентам.
+        На данный момент это является нерешённой проблемой.
+    \end{remark}
+
     \subsection{Ранг ряда в терминах Tensor SSA}\label{subsec:tensor-ssa-rank}
     \begin{statement}
-        Пусть временной ряд $F$ имеет конечный ранг $d$ в терминах \emph{SSA}\@.
+        Пусть временной ряд $\tX$ имеет конечный ранг $d$ в терминах \emph{SSA}\@.
         Тогда для любых значений параметров $I$ и $L$ таких, что
         \[
             d\leqslant\min(I, L, N-I-L+2),
         \]
-        количество ненулевых собственных чисел по каждому измерению в \emph{HOSVD} траекторного тензора $\mathcal{X}$,
+        количество ненулевых сингулярных чисел по каждому измерению в \emph{HOSVD} траекторного тензора $\mathcal{X}$,
         построенного по этому ряду с параметрами $I$ и $L$, будет равно $d$.
     \end{statement}
     Это утверждение является прямым следствием определения ранга ряда и свойства~\ref{property:n-rank} HOSVD\@.
@@ -438,7 +565,7 @@
     Рассмотрим несколько примеров использования Tensor SSA для анализа временных рядов.
 
     \begin{example}[Разделимость синуса и константы]
-        Рассмотрим ряд с элементами $f_n=3+\sin(2\pi n / 3 + \pi/3)$, где $n\in \overline{0:15}$.
+        Рассмотрим ряд с элементами $x_n=3+\sin(2\pi n / 3 + \pi/3)$, где $n\in \overline{0:15}$.
         После построения траекторного тензора $\mathcal{X}$ с параметрами $I=L=6$ и его разложения получаем тензор
         сингулярных чисел $\mathcal{Z}$ и матрицы сингулярных векторов $\mathbf{U}^{(1)},\, \mathbf{U}^{(2)},\,\mathbf{U}^{(3)}$.
         Так как все размерности траекторного тензора $\mathcal{X}$ равны, его развёртки по всем
@@ -466,15 +593,15 @@
         к гармонической (синус), а остальные проигнорировать.
         После восстановления тензоров, полученных такой группировкой, получаем два ряда
         \begin{gather*}
-            \hat{F}=(3,\, 3,\ldots,\, 3),\\
-            \tilde{F}=(0.86,\, 0,\, -0.86,\,  0.86,\ldots,\, 0,\, -0.86,\, 0.86).
+            \hat{\tX}=(3,\, 3,\ldots,\, 3),\\
+            \tilde{\tX}=(0.86,\, 0,\, -0.86,\,  0.86,\ldots,\, 0,\, -0.86,\, 0.86).
         \end{gather*}
 
         Таким образом, константный ряд отделился от синуса.
     \end{example}
 
     \begin{example}[Смешение двух косинусов]
-        Рассмотрим ряд с элементами $f_n=\cos(2\pi n/3) + \cos(2\pi n/4)$, $n\in\overline{0:33}$.
+        Рассмотрим ряд с элементами $x_n=\cos(2\pi n/3) + \cos(2\pi n/4)$, $n\in\overline{0:33}$.
         Выбрав параметры $I=L=12$, после разложения получаем тензор сингулярных значений $\mathcal{Z}$ и, в силу равенства размерностей
         траекторного тензора, равные между собой матрицы сингулярных векторов $\mathbf{U}^{(1)}=\mathbf{U}^{(2)}=\mathbf{U}^{(3)}=\mathbf{U}$.
         Тензор $\mathcal{Z}$ имеет вид тензорного блока $\mathcal{Z}'$ размерности $4\times 4\times 4$, окаймлённого нулями, в
@@ -495,14 +622,193 @@
         Таким образом, произошло смешение двух косинусов одинаковой амплитуды.
     \end{example}
 
+    \subsection{Сравнение Tensor SSA и SSA}\label{subsec:comparison}
+    Рассмотрим проблему отделения сигнала от шума на примерах различных рядов.
+
+    \begin{example}[Отделение от экспоненты]
+        Пусть сигнал задан временным рядом $x_n = 2e^{0.035n},\, n\in \overline{1:23}$.
+        Подействуем на ряд белым гауссовским шумом с параметром $\sigma^2=2.25$.
+        \begin{table}[!ht]
+            \centering
+            \caption{RMSE восстановленного с помощью SSA сигнала, порождённого экспонентой.}
+            \begin{tabular}{rrrr}
+                \hline
+                $L$ & 4    & 6    & 12            \\
+                \hline
+                MSE & 0.65 & 0.55 & \textbf{0.52} \\
+                \hline
+            \end{tabular}\label{tab:ssa-exp}
+        \end{table}
+    \end{example}
+    \begin{table}[!ht]
+        \centering
+        \caption{RMSE восстановленного с помощью Tensor SSA сигнала, порождённого экспонентой.}
+        \begin{tabular}{r|rrrrr}
+            \hline
+            \backslashbox{Метод приближения}{$I\times L$} & 4$\times$4 & 4$\times$6    & 4$\times$12    & 6$\times$6  & 6$\times$12 \\
+            \hline
+            Усечение HOSVD                                & 0.59       & \textbf{0.56} & \textbf{0.56}  & \textbf{0.56} & 0.57        \\
+            \hline
+            HOOI                                          & 0.58       & 0.55          & \textbf{0.547} & 0.56          & 0.56        \\
+            \hline
+        \end{tabular}\label{tab:tens-ssa-exp}
+    \end{table}
+    В таблицах~\ref{tab:ssa-exp},~\ref{tab:tens-ssa-exp}, приведены значения отклонения восстановленного ряда от исходного
+    ряда для различных значений параметров после использования SSA и двух вариаций Tensor SSA для выделения сигнала\@.
+    RMSE здесь и далее высчитывается по 500 реализациям шума, если не указано иное.
+
+    \begin{example}[Отделение от косинуса]
+        Пусть сигнал задан временным рядом $x_n = 30\cos(2\pi n/12),\, n\in \overline{1:71}$.
+        \begin{table}[ht]
+            \centering
+            \caption{RMSE восстановленного с помощью SSA сигнала, порождённого косинусом.}
+            \begin{tabular}{r|rrrr}
+                \hline
+                \backslashbox{вид шума}{$L$} & 12   & 24   & 30            & 36   \\
+                \hline
+                белый шум, $\sigma^2=25$     & 1.82 & 1.42 & \textbf{1.40} & 1.42 \\\hline
+                красный шум, $\varphi=0.5$   & 1.31 & 1.03 & \textbf{1.01} & 1.03 \\\hline
+                красный шум, $\varphi=0.9$   & 1.88 & 1.37 & \textbf{1.34} & 1.36 \\
+                \hline
+            \end{tabular}\label{tab:ssa-cos}
+        \end{table}
+        \begin{table}[!ht]
+            \centering
+            \caption{RMSE восстановленного с помощью Tensor SSA с использованием усечения HOSVD сигнала, порожённого косинусом.}
+            \begin{tabular}{r|rrrrrr}
+                \hline
+                \backslashbox{вид шума}{$I\times L$} & 12$\times$12 & 12$\times$24  & 12$\times$30 & 24$\times$24 & 24$\times$30 & 30$\times$36 \\
+                \hline
+                белый шум, $\sigma^2=25$             & 1.64         & 1.53          & 1.57         & 1.66         & 1.62         & \textbf{1.49} \\
+                \hline
+                красный шум, $\varphi=0.5$           & 1.18         & 1.12          & 1.14         & 1.21         & 1.19         & \textbf{1.08} \\
+                \hline
+                красный шум, $\varphi=0.9$           & 1.58         & \textbf{1.44} & 1.47         & 1.57         & 1.54         & 1.46          \\
+                \hline
+            \end{tabular}\label{tab:tens-hosvd-ssa-cos}
+        \end{table}
+        \begin{table}[!ht]
+            \centering
+            \caption{RMSE восстановленного с помощью Tensor SSA с использованием HOOI сигнала, порождённого косинусом.}
+            \begin{tabular}{r|rrrrrr}
+                \hline
+                \backslashbox{вид шума}{$I\times L$} & 12$\times$12 & 12$\times$24 & 12$\times$30 & 24$\times$24 & 24$\times$30 & 30$\times$36 \\
+                \hline
+                белый шум, $\sigma^2=25$             & 1.63         & 1.53         & 1.56         & 1.65         & 1.62         & \textbf{1.49} \\
+                \hline
+                красный шум, $\varphi=0.5$           & 1.17         & 1.12         & 1.14         & 1.21         & 1.19         & \textbf{1.08} \\
+                \hline
+                красный шум, $\varphi=0.9$           & 1.56         & 1.42         & 1.44         & 1.54         & 1.51         & \textbf{1.39} \\
+                \hline
+            \end{tabular}\label{tab:tens-hooi-ssa-cos}
+        \end{table}
+        В таблицах~\ref{tab:ssa-cos},~\ref{tab:tens-hosvd-ssa-cos},~\ref{tab:tens-hooi-ssa-cos} приведены значения отклонения восстановленного ряда от исходного
+        ряда для различных вариантов шума и различных значений параметров после использования SSA и Tensor SSA\@.
+        В реализациях красного шума параметр $\delta$ был выбран равным $\sqrt{5}$.
+    \end{example}
+
+    \begin{example}[Отделение от линейного ряда]
+        Пусть сигнал задан временным рядом $x_n = 2 + 0.1n,\, n\in \overline{1:39}$.
+        Будем рассматривать два случая шума и в каждом из этих случаев по два варианта восстановления линейного сигнала из шума:
+        по одной компоненте и по двум.
+        \begin{table}[!ht]
+            \caption{RMSE восстановленного с помощью SSA линейного сигнала для разного количества компонент в восстановлении, случай большого шума.}
+            \centering
+            \begin{tabular}{c|rrr}
+                \hline
+                \backslashbox{Компонент}{$L$} & 10   & 15            & 20            \\
+                \hline
+                1                             & 0.44 & \textbf{0.42} & \textbf{0.42} \\
+                \hline
+                2                             & 0.70 & \textbf{0.66} & 0.68          \\
+                \hline
+            \end{tabular}\label{tab:ssa-lin-big}
+        \end{table}
+        \begin{table}[!ht]
+            \centering
+            \caption{RMSE восстановленного с помощью Tensor SSA линейного сигнала для разного количества компонент
+            в восстановлении и разных методов восстановления, случай большого шума.}
+            \begin{tabular}{r|r|rrrrr}
+                \hline
+                Компонент          & \backslashbox{Метод восстановления}{$I\times L$} & 10$\times$10 & 10$\times$15   & 10$\times$20   & 15$\times$15 & 15$\times$20 \\
+                \hline
+                \multirow{2}{*}{1} & Усечение HOSVD                                   & 0.47         & 0.49         & 0.48         & 0.49         & \textbf{0.46} \\
+                \cline{2-7}
+                & HOOI                                             & 0.47         & 0.48         & 0.47         & 0.49         & \textbf{0.45} \\
+                \hline
+                \multirow{2}{*}{2} & Усечение HOSVD                                   & 0.59         & 0.60         & 0.58         & 0.61         & \textbf{0.57} \\
+                \cline{2-7}
+                & HOOI                                             & 0.62         & 0.64         & 0.62         & 0.64         & \textbf{0.61} \\
+                \hline
+            \end{tabular}\label{tab:tens-ssa-lin-big}
+        \end{table}
+        \begin{table}[!ht]
+            \centering
+            \caption{RMSE восстановленного с помощью SSA линейного сигнала для разного количества компонент в восстановлении, случай малого шума.}
+            \begin{tabular}{c|rrr}
+                \hline
+                \backslashbox{Компонент}{$L$} & 10             & 15             & 20             \\
+                \hline
+                1                             & \textbf{0.09} & 0.108          & 0.118          \\
+                \hline
+                2                             & 0.10          & \textbf{0.093} & \textbf{0.093} \\
+                \hline
+            \end{tabular}\label{tab:ssa-lin-small}
+        \end{table}
+        \begin{table}[!ht]
+            \centering
+            \caption{RMSE восстановленного с помощью Tensor SSA линейного сигнала для разного количества компонент в
+            восстановлении и разных методов восстановления, случай малого шума.}
+            \begin{tabular}{r|r|rrrrr}
+                \hline
+                Компонент          & \backslashbox{Метод восстановления}{$I\times L$} & 10$\times$10 & 10$\times$15   & 10$\times$20   & 15$\times$15 & 15$\times$20 \\
+                \hline
+                \multirow{2}{*}{1} & Усечение HOSVD                                   & 0.133        & 0.145        & 0.136        & 0.147        & \textbf{0.130} \\
+                \cline{2-7}
+                & HOOI                                             & 0.132        & 0.144        & 0.136        & 0.146        & \textbf{0.130} \\
+                \hline
+                \multirow{2}{*}{2} & Усечение HOSVD                                   & 0.123        & 0.130        & 0.125        & 0.133        & \textbf{0.112} \\
+                \cline{2-7}
+                & HOOI                                             & 0.123        & 0.130        & 0.124        & 0.133        & \textbf{0.114} \\
+                \hline
+            \end{tabular}\label{tab:tens-ssa-lin-small}
+        \end{table}
+        В таблицах~\ref{tab:ssa-lin-big},~\ref{tab:tens-ssa-lin-big}~\ref{tab:ssa-lin-small},~\ref{tab:tens-ssa-lin-small}
+        приведены значения отклонения восстановленного линейного ряда от исходного.
+        Таблицам~\ref{tab:ssa-lin-big},~\ref{tab:tens-ssa-lin-big} соответствует гауссовский шум с параметром $\sigma^2=2.25$,
+        таблицам~\ref{tab:ssa-lin-big},~\ref{tab:tens-ssa-lin-big} "--- гауссовский шум с параметром $\sigma^2=0.04$.
+    \end{example}
+
+    \begin{example}[Случай, когда Tensor SSA срабатывает точнее, чем SSA]
+        Пусть сигнал задан временным рядом $x_n = \sin(2\pi n/3 + \pi /2),\, n\in \overline{1:9}$.
+        Подействуем на сигнал красным шумом с параметрами $\varphi=0.9, \delta = 0.1$.
+        \begin{table}[!ht]
+            \centering
+            \caption{RMSE восстановленного с помощью различных методов короткого сигнала, порождённого синусом.}
+            \begin{tabular}{ccc}
+                \hline
+                SSA   & Tensor SSA (HOSVD) & Tensor SSA (HOOI) \\
+                \hline
+                0.116 & 0.110              & \textbf{0.095}    \\
+                \hline
+            \end{tabular}\label{tab:tssa-better-ssa}
+        \end{table}
+        В таблице~\ref{tab:tssa-better-ssa} приведены результаты измерения средних отклонений восстановленного ряда от исходного
+        для разных методов по 1000 реализаций шума.
+
+        Причины того, что в этом примере обе вариации Tensor SSA дают стабильно лучшие результаты, чем SSA, пока неизвестны
+        и остаются для дальнейшего изучения.
+    \end{example}
+
 
     \section{Альтернативные тензорные разложения}\label{sec:other-decomp}
     Помимо HOSVD, существует ещё один тип тензорных разложений: ранговое разложение тензора.
     Идея заключается в представлении тензора $\mathcal{A}$ в виде линейной комбинации $R$ тензоров ранга $1$, где $R=\operatorname{rank}(\mathcal{A})$.
     Однако нахождение этого ранга в общем случае является NP-трудной задачей~\cite{NP-hard}.
 
-    CANDECOMP-PARAFAC~\cite{parafac1, parafac2} "--- итерационный метод рангового разложения тензора, который по параметру $K$ считает наилучшее приближение
-    входного тензора суммой $K$ тензоров ранга $1$.
+    CANDECOMP-PARAFAC~\cite{parafac1, parafac2} "--- итерационный метод приближения тензора суммой заданного
+    пользователем числа тензоров ранга $1$.
+    То есть по параметру $K$ этот метод считает наилучшее приближение входного тензора суммой $K$ тензоров ранга $1$.
     Заметим, что из-за отсутствия каких-либо требований к ортогональности в определении рангового разложения тензора,
     многие свойства, верные в теории SSA, могут потерять справедливость при использовании этого разложения.
 
@@ -551,7 +857,7 @@
     \end{gather*}
     притом точных приближений двумя тензорами ранга $1$ нет.
 
-    Траекторный тензор ряда $f_n=\tilde{f}_n+\hat{f}_n$, построенный с параметрами $I=L=6$ представим в виде суммы
+    Траекторный тензор ряда $x_n=\tilde{f}_n+\hat{f}_n$, построенный с параметрами $I=L=6$ представим в виде суммы
     \[
         \mathcal{X}=\sum_{k=1}^{4}\lambda_i X_i \circ Y_i\circ Z_i,
     \]
@@ -590,7 +896,8 @@
 
     По виду векторов видно, что четвёртая компонента разложения соответствует константному ряду, а остальные три имеют период равный $3$.
     Таким образом, несмотря на отсутствие ограничений на ортогональность в определении ранговых разложений тензора, наблюдается
-    отделимость константного ряда от периодического ряда при наличии условий слабой разделимости в терминах SSA\@.
+    отделимость константного ряда от периодического ряда при наличии условий слабой разделимости в терминах SSA и отсутствия
+    шума.
     Однако понятия ранга в терминах SSA и в терминах CP различаются, так как в терминах SSA синус с периодом $3$ имеет ранг $2$, а в
     терминах рангового разложения, как показано выше, такой синус имеет ранг $3$.
 
@@ -605,7 +912,21 @@
 
 
     \section{Заключение}\label{sec:conclusion}
-    Здесь должно быть заключение.
+    В работе было показано, что по своим свойствам Tensor SSA c использованием HOSVD имеет много общего с Basic SSA с использованием SVD.
+    Однако, есть и особенности, кардинально меняющие свойства методов, которые можно использовать для анализа временных рядов.
+
+    В результате исследования метода Tensor SSA c HOSVD были сделаны следующие выводы:
+    метод можно использовать для выделения сигнала, однако остался неизученным вопрос о том,
+    как с его помощью разделять компоненты сигнала.
+    Также, в большинстве случаев, как Tensor SSA c HOSVD, так и Tensor SSA с мультилинейной аппроксимацией, оказались хуже,
+    чем Basic SSA в точности выделения сигнала.
+    Удалось построить только один пример, где Basic SSA менее точно выделяет сигнал.
+    Это противоречит результатам работы~\cite{hosvd-hooi-separation}, где показано преимущество TSSA с мультилинейной аппроксимацией.
+    Однако, в этой статье сравнение идет для сигнала в виде суммы двух комплексных экспонент по точности оценке частоты сигналов.
+
+    Таким образом, остались открытыми вопросы: подтвердить преимущество Tensor SSA c HOSVD для выделения сигнала,
+    о котором утверждается в статье~\cite{hosvd-hooi-separation} а также найти методы, которые разделяют компоненты сигнала,
+    например в работе~\cite{cpd-separation} предлагается метод CPD для разделения комплексных экспонент.
 
     \bibliography{main}
     \bibliographystyle{ugost2008}

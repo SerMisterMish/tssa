@@ -1,4 +1,4 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
 \def\selectlanguageifdefined#1{
 \expandafter\ifx\csname date#1\endcsname\relax
 \else\selectlanguage{#1}\fi}
@@ -14,6 +14,29 @@
 \cyrdash\hskip.2em plus 0.1em\ignorespaces}
 \renewcommand{\newblock}{\ignorespaces}
 
+\bibitem{ssa}
+\selectlanguageifdefined{english}
+Golyandina~Nina, Nekrutkin~Vladimir, Zhigljavsky~Anatoly. Analysis of time
+  series structure: SSA and related techiques. \BibDash
+\newblock Chapman \& Hall/CRC, 2001.
+
+\bibitem{TSSA}
+\selectlanguageifdefined{english}
+Kouchaki~Samaneh, Sanei~Saeid. Tensor based singular spectrum analysis for
+  nonstationary source separation~// 2013 IEEE International Workshop on
+  Machine Learning for Signal Processing (MLSP). \BibDash
+\newblock IEEE. \BibDash
+\newblock 2013.
+
+\bibitem{TSSA-improved}
+\selectlanguageifdefined{english}
+Improved Tensor-Based Singular Spectrum Analysis Based on Single Channel Blind
+  Source Separation Algorithm and Its Application to Fault Diagnosis~/
+  Yang~Dan, Yi~Cancan, Xu~Zengbin, Zhang~Yi, Ge~Mao, and Liu~Changming~//
+  \BibEmph{Applied Sciences}. \BibDash
+\newblock 2017. \BibDash
+\newblock Vol.~7, no.~4.
+
 \bibitem{hosvd}
 \selectlanguageifdefined{english}
 De~Lathauwer~Lieven, De~Moor~Bart, Vandewalle~Joos. A Multilinear Singular
@@ -23,20 +46,6 @@ De~Lathauwer~Lieven, De~Moor~Bart, Vandewalle~Joos. A Multilinear Singular
 \newblock Vol.~21, no.~4. \BibDash
 \newblock P.~1253--1278. \BibDash
 \newblock Access mode: \BibUrl{https://doi.org/10.1137/S0895479896305696}.
-
-\bibitem{ssa}
-\selectlanguageifdefined{english}
-Golyandina~Nina, Nekrutkin~Vladimir, Zhigljavsky~Anatoly. Analysis of time
-  series structure: SSA and related techiques. \BibDash
-\newblock Chapman \& Hall/CRC, 2001.
-
-\bibitem{NP-hard}
-\selectlanguageifdefined{english}
-Hillar~Christopher~J., Lim~Lek-Heng. Most Tensor Problems Are NP-Hard~//
-  \BibEmph{J. ACM}. \BibDash
-\newblock 2013. \BibDash
-\newblock Vol.~60, no.~6. \BibDash
-\newblock Access mode: \BibUrl{https://doi.org/10.1145/2512329}.
 
 \bibitem{parafac1}
 \selectlanguageifdefined{english}
@@ -54,5 +63,49 @@ Carroll~J.~Douglas, Chang~Jih~Jie. Analysis of individual differences in
 \newblock 1970. \BibDash
 \newblock Vol.~35. \BibDash
 \newblock P.~283--319.
+
+\bibitem{tucker}
+\selectlanguageifdefined{english}
+Tucker~Ledyard~R. Some mathematical notes on three-mode factor analysis~//
+  \BibEmph{Psychometrika}. \BibDash
+\newblock 1966. \BibDash
+\newblock Vol.~31. \BibDash
+\newblock P.~279--311.
+
+\bibitem{hooi}
+\selectlanguageifdefined{english}
+De~Lathauwer~Lieven, De~Moor~Bart, Vandewalle~Joos. On the Best Rank-1 and
+  Rank-$(R_1 ,R_2 ,. . .,R_N)$ Approximation of Higher-Order Tensors~//
+  \href{https://doi.org/10.1137/S0895479898346995}{\BibEmph{SIAM Journal on
+  Matrix Analysis and Applications}}. \BibDash
+\newblock 2000. \BibDash
+\newblock Vol.~21, no.~4. \BibDash
+\newblock P.~1324--1342.
+
+\bibitem{NP-hard}
+\selectlanguageifdefined{english}
+Hillar~Christopher~J., Lim~Lek-Heng. Most Tensor Problems Are NP-Hard~//
+  \BibEmph{J. ACM}. \BibDash
+\newblock 2013. \BibDash
+\newblock Vol.~60, no.~6. \BibDash
+\newblock Access mode: \BibUrl{https://doi.org/10.1145/2512329}.
+
+\bibitem{hosvd-hooi-separation}
+\selectlanguageifdefined{english}
+Papy~J.~M., De~Lathauwer~L., Van~Huffel~S. Exponential data fitting using
+  multilinear algebra: the single-channel and multi-channel case~//
+  \BibEmph{Numerical Linear Algebra with Applications}. \BibDash
+\newblock 2005. \BibDash
+\newblock Vol.~12, no.~8. \BibDash
+\newblock P.~809--826.
+
+\bibitem{cpd-separation}
+\selectlanguageifdefined{english}
+De~Lathauwer~Lieven. Blind Separation of Exponential Polynomials and the
+  Decomposition of a Tensor in Rank-$(L_r,L_r,1)$ Terms~// \BibEmph{SIAM
+  Journal on Matrix Analysis and Applications}. \BibDash
+\newblock 2011. \BibDash
+\newblock Vol.~32, no.~4. \BibDash
+\newblock P.~1451--1474.
 
 \end{thebibliography}
