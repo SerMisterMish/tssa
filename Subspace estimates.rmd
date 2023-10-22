@@ -1,0 +1,70 @@
+---
+title: "R Notebook"
+output: html_document
+---
+```{r}
+N <- 10
+M <- c(16, 16)
+R <- length(M)
+mu <- matrix(c(rep(1, R), rep(-0.5, R)), ncol = 2)
+d <- ncol(mu)
+s <- matrix(rep(40, R * N), ncol = N, byrow = TRUE)
+
+create.vector <- function(mu, size) {
+  exp(0:(size - 1) * mu * 1i)
+}
+
+Y <- array(0, dim = c(M, N))
+for (i in 1:d) {
+  Y <- Y + reduce(imap(mu[, i], function(mu, r) create.vector(mu, M[r])), outer) %o% s[i,]
+}
+# Y.noised <- Y + array(rnorm(prod(M) * N, sd = 1 / sqrt(2)) + 1i * rnorm(prod(M) * N, sd = 1 / sqrt(2)), dim = c(M, N))
+Y.noised <- Y + (array(rnorm(prod(M) * N) + 1i * rnorm(prod(M) * N), dim = c(M, N))) / sqrt(2)
+
+LPA <- function(U1, U2, deg = TRUE) {
+  U1 <- svd(U1)$u
+  U2 <- svd(U2)$u
+  if (deg)
+    acos(min(svd(Conj(t.default(U1)) %*% U2)$d)) * 180 / pi
+  else
+    acos(min(svd(Conj(t.default(U1)) %*% U2)$d))
+}
+
+
+# h1 <- hosvd(as.tensor(Y), c(16, 16, 2))
+h <- hosvd(as.tensor(Y.noised), c(M, R))
+Y.m <- unfold(as.tensor(Y), 1:R, R + 1)@data
+Y.noised.m <- unfold(as.tensor(Y.noised), 1:R, R + 1)@data
+# est1 <- svd(Y.m)$u[,1:2]
+
+u <- svd(Y.noised.m)$u
+est.subspace <- u[, 1:min(d, ncol(u))]
+
+A.r <- list()
+for (r in 1:R) {
+  A.r[[r]] <- reduce(map(mu[r, ], create.vector, size = M[r]), cbind)
+}
+A <- reduce(A.r, khatri_rao)
+
+cropped.matrices <- list()
+for (i in 1:(R + 1)) {
+  cropped.matrices[[i]] <- h$U[[i]][, 1:d]
+}
+
+Z <- do.call(`[`,
+             args = append(h$Z,
+                      lapply(1:(R + 1), function(i) 1:min(d, c(M, N)[i]))))
+
+recreated <- ttl(Z, cropped.matrices, 1:(R+1))
+# recreated <- ttl(h$Z[1:d, 1:d, 1:d, drop = FALSE],
+#                  list(as.matrix(h$U[[1]][, 1:d]),
+#                       as.matrix(h$U[[2]][, 1:d]),
+#                       as.matrix(h$U[[3]][, 1:d])), 1:3)
+
+est.subspace.tens <- t(unfold(recreated, R + 1, 1:R)@data)
+
+cat("LPA for tensor approach: ", LPA(est.subspace.tens, A))
+# LPA(est.subspace.tens, A)
+cat("\n\nLPA for matrix approach: ", LPA(est.subspace, A))
+# LPA(est.subspace, A)
+```
