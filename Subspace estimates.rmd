@@ -7,7 +7,9 @@ library(purrr)
 library(rTensor)
 
 N <- 10
+# Угол в тензорном приближении должен быть меньше:
 M <- c(16, 16)
+# Углы должны быть одинаковы:
 # M <- rep(2, 8)
 R <- length(M)
 mu <- matrix(c(rep(1, R), rep(-0.5, R)), ncol = 2)
