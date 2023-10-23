@@ -3,8 +3,12 @@ title: "R Notebook"
 output: html_document
 ---
 ```{r}
+library(purrr)
+library(rTensor)
+
 N <- 10
 M <- c(16, 16)
+# M <- rep(2, 8)
 R <- length(M)
 mu <- matrix(c(rep(1, R), rep(-0.5, R)), ncol = 2)
 d <- ncol(mu)
