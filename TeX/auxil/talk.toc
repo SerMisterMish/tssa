@@ -1,7 +1,0 @@
-\babel@toc {russian}{}
-\beamer@sectionintoc {1}{Введение}{3}{0}{1}
-\beamer@sectionintoc {2}{Известные результаты и определения}{7}{0}{2}
-\beamer@sectionintoc {3}{Описание HOSVD SSA и его свойства}{13}{0}{3}
-\beamer@sectionintoc {4}{Применение HOSVD SSA}{27}{0}{4}
-\beamer@sectionintoc {5}{Заключение}{35}{0}{5}
-\beamer@sectionintoc {6}{Список литературы}{37}{0}{6}
