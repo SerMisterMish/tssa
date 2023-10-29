@@ -5,72 +5,111 @@ output: html_document
 ```{r}
 library(purrr)
 library(rTensor)
+```
 
+Задача параметров.
+```{r}
 N <- 10
 # Угол в тензорном приближении должен быть меньше:
 M <- c(16, 16)
 # Углы должны быть одинаковы:
 # M <- rep(2, 8)
 R <- length(M)
-mu <- matrix(c(rep(1, R), rep(-0.5, R)), ncol = 2)
+mu <- matrix(c(rep(1, R), rep(0.95, R)), ncol = 2)
 d <- ncol(mu)
 s <- matrix(rep(40, R * N), ncol = N, byrow = TRUE)
+```
+
+Каким образом задаются векторы обозначающие отклик "array steering matrix".
+```{r}
+# create.vector <- function(mu, size) {
+#   exp(0:(size - 1) * mu * 1i)
+# }
+
+# create.vector <- function(mu, size) {
+#   exp(0:(size - 1) * mu)
+# }
 
 create.vector <- function(mu, size) {
-  exp(0:(size - 1) * mu * 1i)
+  mu^(0:(size - 1))
 }
+```
 
+Функция для подсчёта углов между подпространствами, задаваемыми столбцами матриц.
+```{r}
+LPA <- function(U1, U2, deg = TRUE) {
+  U1.svd <- svd(U1)
+  U2.svd <- svd(U2)
+  U1.orth <- U1.svd$u[, U1.svd$d > 1e-8]
+  U2.orth <- U2.svd$u[, U2.svd$d > 1e-8]
+  if (deg)
+    acos(min(svd(Conj(t.default(U1.orth)) %*% U2.orth)$d, 1)) * 180 / pi
+  else
+    acos(min(svd(Conj(t.default(U1.orth)) %*% U2.orth)$d, 1))
+}
+```
+
+Построение входного тензора, входной матрицы и "array steering matrix" (линейная оболочка столбцов этой матрицы задаёт настоящее подпространство сигнала).
+```{r}
 Y <- array(0, dim = c(M, N))
 for (i in 1:d) {
   Y <- Y + reduce(imap(mu[, i], function(mu, r) create.vector(mu, M[r])), outer) %o% s[i,]
 }
 # Y.noised <- Y + array(rnorm(prod(M) * N, sd = 1 / sqrt(2)) + 1i * rnorm(prod(M) * N, sd = 1 / sqrt(2)), dim = c(M, N))
-Y.noised <- Y + (array(rnorm(prod(M) * N) + 1i * rnorm(prod(M) * N), dim = c(M, N))) / sqrt(2)
+# Y.noised <- Y + (array(rnorm(prod(M) * N) + 1i * rnorm(prod(M) * N), dim = c(M, N)))
+Y.noised <- Y + array(rnorm(prod(M) * N, sd = 1), dim = c(M, N))
 
-LPA <- function(U1, U2, deg = TRUE) {
-  U1 <- svd(U1)$u
-  U2 <- svd(U2)$u
-  if (deg)
-    acos(min(svd(Conj(t.default(U1)) %*% U2)$d)) * 180 / pi
-  else
-    acos(min(svd(Conj(t.default(U1)) %*% U2)$d))
-}
-
-
-# h1 <- hosvd(as.tensor(Y), c(16, 16, 2))
-h <- hosvd(as.tensor(Y.noised), c(M, R))
 Y.m <- unfold(as.tensor(Y), 1:R, R + 1)@data
 Y.noised.m <- unfold(as.tensor(Y.noised), 1:R, R + 1)@data
-# est1 <- svd(Y.m)$u[,1:2]
-
-u <- svd(Y.noised.m)$u
-est.subspace <- u[, 1:min(d, ncol(u))]
 
 A.r <- list()
 for (r in 1:R) {
-  A.r[[r]] <- reduce(map(mu[r, ], create.vector, size = M[r]), cbind)
+  A.r[[r]] <- reduce(map(mu[r,], create.vector, size = M[r]), cbind)
 }
 A <- reduce(A.r, khatri_rao)
+```
+
+Случаи без шума и с шумом (.noised) для матричного приближения (u.svd) и тензорного (h)
+```{r}
+# u.svd <- svd(Y.m)
+u.svd <- svd(Y.noised.m)
+
+# h <- hosvd(as.tensor(Y))
+h <- hosvd(as.tensor(Y.noised))
+
+```
+
+Построение приближения подпространства сигнала для матричного случая (d.m -- ранг сигнала)
+```{r}
+d.m <- 1
+est.subspace <- u.svd$u[, 1:d.m, drop = FALSE]
+```
+
+Построение приближения подпространства сигнала для матричного случая (U.bounds -- номера столбцов, отвечающих сигналу, по каждому измерению)
+```{r}
+# U.bounds <- lapply(1:(R + 1), function(i) 1:min(d, c(M, N)[i]))
+# U.bounds <- list(1:2, 1:2, 1)
+U.bounds <- lapply(1:R, function (i) 1:2)
+U.bounds[[R + 1]] <- 1
 
 cropped.matrices <- list()
-for (i in 1:(R + 1)) {
-  cropped.matrices[[i]] <- h$U[[i]][, 1:d]
+for (i in 1:R) {
+  cropped.matrices[[i]] <- h$U[[i]][, U.bounds[[i]], drop = FALSE]
 }
-
+cropped.matrices[[R + 1]] <- h$U[[R + 1]][, U.bounds[[R + 1]], drop = FALSE]
 Z <- do.call(`[`,
-             args = append(h$Z,
-                      lapply(1:(R + 1), function(i) 1:min(d, c(M, N)[i]))))
+             args = append(append(h$Z, U.bounds),
+                           list(drop = FALSE)))
+recreated <- ttl(Z, cropped.matrices, 1:(R + 1))
+est.subspace.tens <- unfold(recreated, 1:R, R + 1)@data
+```
 
-recreated <- ttl(Z, cropped.matrices, 1:(R+1))
-# recreated <- ttl(h$Z[1:d, 1:d, 1:d, drop = FALSE],
-#                  list(as.matrix(h$U[[1]][, 1:d]),
-#                       as.matrix(h$U[[2]][, 1:d]),
-#                       as.matrix(h$U[[3]][, 1:d])), 1:3)
+LPA для тензорного подхода:
+```{r}
+LPA(est.subspace.tens, A)
+```
+LPA для матричного подхода:
+```{r}
+LPA(est.subspace, A)
 
-est.subspace.tens <- t(unfold(recreated, R + 1, 1:R)@data)
-
-cat("LPA for tensor approach: ", LPA(est.subspace.tens, A))
-# LPA(est.subspace.tens, A)
-cat("\n\nLPA for matrix approach: ", LPA(est.subspace, A))
-# LPA(est.subspace, A)
 ```
