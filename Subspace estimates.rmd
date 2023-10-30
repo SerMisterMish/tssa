@@ -9,10 +9,11 @@ library(rTensor)
 
 Задача параметров.
 ```{r}
-N <- 10
+N <- 2
 # Угол в тензорном приближении должен быть меньше:
 M <- c(16, 16)
 # Углы должны быть одинаковы:
+# M <- c(16, 1)
 # M <- rep(2, 8)
 R <- length(M)
 mu <- matrix(c(rep(1, R), rep(0.95, R)), ncol = 2)
@@ -89,7 +90,7 @@ est.subspace <- u.svd$u[, 1:d.m, drop = FALSE]
 ```{r}
 # U.bounds <- lapply(1:(R + 1), function(i) 1:min(d, c(M, N)[i]))
 # U.bounds <- list(1:2, 1:2, 1)
-U.bounds <- lapply(1:R, function (i) 1:2)
+U.bounds <- lapply(1:R, function (i) 1:min(d, M[i]))
 U.bounds[[R + 1]] <- 1
 
 cropped.matrices <- list()
