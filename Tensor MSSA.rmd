@@ -58,7 +58,7 @@ LPA <- function(U1, U2, deg = TRUE) {
 ```{r}
 N <- 23
 L <- 12
-series.number <- 20
+series.number <- 5
 sigma <- 1.5
 iterations <- 1000
 # set.seed(5)
@@ -84,9 +84,9 @@ mse.tens <- matrix(0, ncol = iterations, nrow = series.number)
 pb <- txtProgressBar(max = iterations, style = 3)
 for (i in 1:iterations) {
   # noised case
-  # s.n <- lapply(s, function(x) x + rnorm(N, sd = sigma))
+  s.n <- lapply(s, function(x) x + rnorm(N, sd = sigma))
   # noiseless case
-  s.n <- s
+  # s.n <- s
   s.n.hankel <- lapply(s.n, hankel, L)
   mat.n <- reduce(s.n.hankel, cbind)
   u.n.svd <- svd(mat.n)
@@ -119,5 +119,6 @@ Mean MSE for matrix and tensor approaches:
 ```{r}
 mean(apply(mse.mat, 1, mean))
 mean(apply(mse.tens, 1, mean))
-mean(apply(mse.mat, 1, mean)) - mean(apply(mse.tens, 1, mean))
+mean(apply(mse.mat, 1, mean)) / mean(apply(mse.tens, 1, mean))
+# mean(apply(mse.mat, 1, mean)) - mean(apply(mse.tens, 1, mean))
 ```
