@@ -65,7 +65,10 @@ iterations <- 1000
 
 # rank of the time series
 r <- 1
-s <- map(1:series.number, function(x) runif(1, 1, 4) * exp(1:N * runif(1, 0.001, 0.07)))
+# generating series with ranodm parameters
+# s <- map(1:series.number, function(x) runif(1, 1, 4) * exp(1:N * runif(1, 0.001, 0.07)))
+# generating series by hand
+s <- map(1:series.number, function(x) exp(1:N * x / 1000))
 s.hankel <- lapply(s, hankel, L)
 mat <- reduce(s.hankel, cbind)
 u.svd <- svd(mat)
@@ -81,9 +84,9 @@ mse.tens <- matrix(0, ncol = iterations, nrow = series.number)
 pb <- txtProgressBar(max = iterations, style = 3)
 for (i in 1:iterations) {
   # noised case
-  s.n <- lapply(s, function(x) x + rnorm(N, sd = sigma))
+  # s.n <- lapply(s, function(x) x + rnorm(N, sd = sigma))
   # noiseless case
-  # s.n <- s
+  s.n <- s
   s.n.hankel <- lapply(s.n, hankel, L)
   mat.n <- reduce(s.n.hankel, cbind)
   u.n.svd <- svd(mat.n)
