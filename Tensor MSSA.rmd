@@ -58,17 +58,16 @@ LPA <- function(U1, U2, deg = TRUE) {
 ```{r}
 N <- 23
 L <- 12
-series.number <- 5
+series.number <- 15
 sigma <- 1.5
-iterations <- 1000
 # set.seed(5)
 
 # rank of the time series
 r <- 1
 # generating series with ranodm parameters
-# s <- map(1:series.number, function(x) runif(1, 1, 4) * exp(1:N * runif(1, 0.001, 0.07)))
+s <- map(1:series.number, function(x) runif(1, 1, 4) * exp(1:N * 1e-4))
 # generating series by hand
-s <- map(1:series.number, function(x) exp(1:N * x / 1000))
+# s <- map(1:series.number, function(x) exp(1:N))
 s.hankel <- lapply(s, hankel, L)
 mat <- reduce(s.hankel, cbind)
 u.svd <- svd(mat)
@@ -81,6 +80,8 @@ LPA.mat <- numeric(iterations)
 LPA.tens <- numeric(iterations)
 mse.mat <- matrix(0, ncol = iterations, nrow = series.number)
 mse.tens <- matrix(0, ncol = iterations, nrow = series.number)
+
+iterations <- 1000
 pb <- txtProgressBar(max = iterations, style = 3)
 for (i in 1:iterations) {
   # noised case
