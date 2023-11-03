@@ -76,12 +76,12 @@ true.subspace <- u.svd$u[, 1:min(r, N - L + 1), drop = FALSE]
 ```
 
 ```{r}
+iterations <- 1000
 LPA.mat <- numeric(iterations)
 LPA.tens <- numeric(iterations)
 mse.mat <- matrix(0, ncol = iterations, nrow = series.number)
 mse.tens <- matrix(0, ncol = iterations, nrow = series.number)
 
-iterations <- 1000
 pb <- txtProgressBar(max = iterations, style = 3)
 for (i in 1:iterations) {
   # noised case
