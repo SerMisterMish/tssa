@@ -42,11 +42,11 @@ reconstruct.group3 <- function(X.tens) {
   return(s)
 }
 
-LPA <- function(U1, U2, deg = TRUE) {
+LPA <- function(U1, U2, deg = TRUE, tol = 1e-8) {
   U1.svd <- svd(U1)
   U2.svd <- svd(U2)
-  U1.orth <- U1.svd$u[, U1.svd$d > 1e-8]
-  U2.orth <- U2.svd$u[, U2.svd$d > 1e-8]
+  U1.orth <- U1.svd$u[, U1.svd$d > tol]
+  U2.orth <- U2.svd$u[, U2.svd$d > tol]
   if (deg)
     acos(min(svd(Conj(t.default(U1.orth)) %*% U2.orth)$d, 1)) * 180 / pi
   else
@@ -63,16 +63,16 @@ sigma <- 1.5
 # set.seed(5)
 
 # rank of the time series
-r <- 1
+r <- 2
 # generating series with ranodm parameters
-s <- map(1:series.number, function(x) runif(1, 1, 4) * exp(1:N * 1e-4))
+s <- map(1:series.number, function(x) runif(1, 1, 1) * sin(1:N * pi / 3))
 # generating series by hand
 # s <- map(1:series.number, function(x) exp(1:N))
 s.hankel <- lapply(s, hankel, L)
 mat <- reduce(s.hankel, cbind)
 u.svd <- svd(mat)
 # signal subspace
-true.subspace <- u.svd$u[, 1:min(r, N - L + 1), drop = FALSE]
+true.subspace <- u.svd$u[, 1:r, drop = FALSE]
 ```
 
 ```{r}
@@ -91,7 +91,7 @@ for (i in 1:iterations) {
   s.n.hankel <- lapply(s.n, hankel, L)
   mat.n <- reduce(s.n.hankel, cbind)
   u.n.svd <- svd(mat.n)
-  est.subspace <- u.n.svd$u[, 1:min(r, N - L + 1), drop = FALSE]
+  est.subspace <- u.n.svd$u[, 1:r, drop = FALSE]
   mat.rec <- reconstruct(ssa(s.n, L = L, kind = "mssa"), groups = list(1:r))[[1]]
 
   s.tens <- fold(mat.n, 1, 2:3, modes = c(L, N - L + 1, series.number))
@@ -109,17 +109,61 @@ for (i in 1:iterations) {
 }
 ```
 
-Mean LPA for matrix and tensor approaches:
+Средний LPA для матричного и тензорного подходов
 ```{r}
 mean(LPA.mat)
 mean(LPA.tens)
 mean(LPA.mat) - mean(LPA.tens)
 ```
 
-Mean MSE for matrix and tensor approaches:
+Среднее MSE для матричного и тензорного подходов
 ```{r}
 mean(apply(mse.mat, 1, mean))
 mean(apply(mse.tens, 1, mean))
 mean(apply(mse.mat, 1, mean)) / mean(apply(mse.tens, 1, mean))
 # mean(apply(mse.mat, 1, mean)) - mean(apply(mse.tens, 1, mean))
+```
+
+Пример из статьи
+```{r}
+
+set.seed(1)
+N <- 71
+sigma <- 5
+Ls <- c(12, 24, 36, 48, 60)
+signal1 <- 30 * cos(2 * pi * 1:N / 12)
+# signal2 <- 20 * cos(2 * pi * 1:N / 8 + pi / 4)
+signal2 <- 20 * cos(2 * pi * 1:N / 12 + pi / 4)
+signal <- cbind(signal1, signal2)
+R <- 100
+r <- 2
+mssa.errors <- function(Ls) {
+  f1 <- signal1 + rnorm(N, sd = sigma)
+  f2 <- signal2 + rnorm(N, sd = sigma)
+  f <- list(f1, f2)
+  err.rec <- list(mat = numeric(length(Ls)), tens = numeric(length(Ls)))
+  names(err.rec$mat) <- Ls; names(err.rec$tens) <- Ls
+  for (l in seq_along(Ls)) {
+    L <- Ls[l]
+    s <- ssa(f, L = L, kind = "mssa")
+    rec <- reduce(reconstruct(s, groups = list(1:r))[[1]], cbind)
+    err.rec$mat[l] <- mean((rec - signal)^2)
+
+    f.hankel <- lapply(f, hankel, L)
+    mat.f <- reduce(f.hankel, cbind)
+    s.tens <- fold(mat.f, 1, 2:3, modes = c(L, N - L + 1, 2))
+    capture.output({ h <- rTensor::hosvd(s.tens) })
+    tens <- ttl(h$Z[1:r, 1:r, 1:min(r, 2), drop = FALSE], list(h$U[[1]][, 1:r, drop = FALSE], h$U[[2]][, 1:r, drop = FALSE], h$U[[3]][, 1:min(r, 2), drop = FALSE]), 1:3)
+    rec.tens <- reduce(apply(tens@data, 3, hankel, simplify = FALSE), cbind)
+    err.rec$tens[l] <- mean((rec.tens - signal)^2)
+  }
+  err.rec
+}
+mres <- replicate(R, mssa.errors(Ls))
+```
+
+Среднее MSE для матричного и тензорного подходов для различных длин окна L
+```{r}
+rowMeans(simplify2array(mres[1,]))
+rowMeans(simplify2array(mres[2,]))
 ```
