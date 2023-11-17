@@ -57,8 +57,9 @@ LPA <- function(U1, U2, deg = TRUE, tol = 1e-8) {
 Задача параметров и генерация рядов
 ```{r}
 N <- 23
-L <- 12
-series.number <- 15
+# Ls <- c(8, 12, 14, 16, 18, 20)
+Ls <- 14
+series.number <- 6
 sigma <- 1.5
 # set.seed(5)
 
@@ -66,63 +67,77 @@ sigma <- 1.5
 r <- 2
 # generating series with ranodm parameters
 s <- map(1:series.number, function(x) runif(1, 1, 4) * sin(1:N * pi / 3))
-# generating series by hand
+## generating series by hand
 # s <- map(1:series.number, function(x) exp(1:N))
-s.hankel <- lapply(s, hankel, L)
-mat <- reduce(s.hankel, cbind)
-u.svd <- svd(mat)
-# signal subspace
-true.subspace <- u.svd$u[, 1:r, drop = FALSE]
 ```
 
 ```{r}
-iterations <- 1000
-LPA.mat <- numeric(iterations)
-LPA.tens <- numeric(iterations)
-mse.mat <- matrix(0, ncol = iterations, nrow = series.number)
-mse.tens <- matrix(0, ncol = iterations, nrow = series.number)
+iterations <- 500
+LPA.mat <- list()
+LPA.tens <- list()
+mse.mat <- list()
+mse.tens <- list()
+for (L in Ls) {
+  r_l <- min(r, L)
+  s.hankel <- lapply(s, hankel, L)
+  mat <- reduce(s.hankel, cbind)
+  u.svd <- svd(mat)
+  # signal subspace
+  true.subspace <- u.svd$u[, 1:r_l, drop = FALSE]
 
-pb <- txtProgressBar(max = iterations, style = 3)
-for (i in 1:iterations) {
-  # noised case
-  s.n <- lapply(s, function(x) x + rnorm(N, sd = sigma))
-  # noiseless case
-  # s.n <- s
-  s.n.hankel <- lapply(s.n, hankel, L)
-  mat.n <- reduce(s.n.hankel, cbind)
-  u.n.svd <- svd(mat.n)
-  est.subspace <- u.n.svd$u[, 1:r, drop = FALSE]
-  mat.rec <- reconstruct(ssa(s.n, L = L, kind = "mssa"), groups = list(1:r))[[1]]
+  LPA.mat[[toString(L)]] <- numeric(iterations)
+  LPA.tens[[toString(L)]] <- numeric(iterations)
+  mse.mat[[toString(L)]] <- matrix(0, ncol = iterations, nrow = series.number)
+  mse.tens[[toString(L)]] <- matrix(0, ncol = iterations, nrow = series.number)
 
-  s.tens <- fold(mat.n, 1, 2:3, modes = c(L, N - L + 1, series.number))
-  capture.output({ h <- rTensor::hosvd(s.tens) })
-  tens <- ttl(h$Z[1:r, 1:r, 1, drop = FALSE], list(h$U[[1]][, 1:r, drop = FALSE], h$U[[2]][, 1:r, drop = FALSE], h$U[[3]][, 1, drop = FALSE]), 1:3)
-  # tens <- as.tensor(h$Z@data[1, 1, 1] * (h$U[[1]][, 1] %o% h$U[[2]][, 1] %o% h$U[[3]][, 1]) + h$Z@data[2, 2, 2] * (h$U[[1]][, 2] %o% h$U[[2]][, 2] %o% h$U[[3]][, 2]))
-  est.subspace.tens <- unfold(tens, 1, 2:3)@data
-  tens.rec <- apply(tens@data, 3, hankel, simplify = FALSE)
+  pb <- txtProgressBar(max = iterations, style = 3)
+  for (i in 1:iterations) {
+    # noised case
+    s.n <- lapply(s, function(x) x + rnorm(N, sd = sigma))
+    # noiseless case
+    # s.n <- s
+    s.n.hankel <- lapply(s.n, hankel, L)
+    mat.n <- reduce(s.n.hankel, cbind)
+    u.n.svd <- svd(mat.n)
+    est.subspace <- u.n.svd$u[, 1:r_l, drop = FALSE]
+    mat.rec <- reconstruct(ssa(s.n, L = L, kind = "mssa"), groups = list(1:r_l))[[1]]
 
-  mse.mat[, i] <- map2_dbl(mat.rec, s, mse)
-  mse.tens[, i] <- map2_dbl(tens.rec, s, mse)
-  LPA.mat[i] <- LPA(est.subspace, true.subspace)
-  LPA.tens[i] <- LPA(est.subspace.tens, true.subspace)
-  setTxtProgressBar(pb, i)
+    s.tens <- fold(mat.n, 1, 2:3, modes = c(L, N - L + 1, series.number))
+    capture.output({ h <- rTensor::hosvd(s.tens) })
+    tens <- ttl(h$Z[1:r_l, 1:r_l, 1, drop = FALSE], list(h$U[[1]][, 1:r_l, drop = FALSE], h$U[[2]][, 1:r_l, drop = FALSE], h$U[[3]][, 1, drop = FALSE]), 1:3)
+    est.subspace.tens <- unfold(tens, 1, 2:3)@data
+    tens.rec <- apply(tens@data, 3, hankel, simplify = FALSE)
+
+    mse.mat[[toString(L)]][, i] <- map2_dbl(mat.rec, s, mse)
+    mse.tens[[toString(L)]][, i] <- map2_dbl(tens.rec, s, mse)
+    LPA.mat[[toString(L)]][i] <- LPA(est.subspace, true.subspace)
+    LPA.tens[[toString(L)]][i] <- LPA(est.subspace.tens, true.subspace)
+    setTxtProgressBar(pb, i)
+  }
 }
 ```
 
 Средний LPA для матричного и тензорного подходов
 ```{r}
-mean(LPA.mat)
-mean(LPA.tens)
-mean(LPA.mat) - mean(LPA.tens)
+for (L in Ls) {
+  cat("L = ", L, "\n")
+  cat("Matrix LPA: ", mean(LPA.mat[[toString(L)]]), "\n")
+  cat("Tensor LPA ", mean(LPA.tens[[toString(L)]]), "\n")
+  cat("Matrix - Tensor: ", mean(LPA.mat[[toString(L)]]) - mean(LPA.tens[[toString(L)]]), "\n")
+}
 ```
 
 Среднее MSE для матричного и тензорного подходов
 ```{r}
-mean(apply(mse.mat, 1, mean))
-mean(apply(mse.tens, 1, mean))
-mean(apply(mse.mat, 1, mean)) / mean(apply(mse.tens, 1, mean))
-# mean(apply(mse.mat, 1, mean)) - mean(apply(mse.tens, 1, mean))
+for (L in Ls) {
+  cat("L = ", L, "\n")
+  cat("Matrix RMSE^2: ", mean(apply(mse.mat[[toString(L)]], 1, mean)), "\n")
+  cat("Tensor RMSE^2 ", mean(apply(mse.tens[[toString(L)]], 1, mean)), "\n")
+  cat("Matrix / Tensor: ", mean(apply(mse.mat[[toString(L)]], 1, mean)) / mean(apply(mse.tens[[toString(L)]], 1, mean)), "\n")
+  # mean(apply(mse.mat, 1, mean)) - mean(apply(mse.tens, 1, mean))
+}
 ```
+
 
 Пример из статьи
 ```{r}
@@ -131,6 +146,7 @@ set.seed(1)
 N <- 71
 sigma <- 5
 series.numbers <- c(2, 8, 14, 20)
+series.numbers <- c(2, 14)
 # series.numbers <- 2
 Ls <- c(12, 24, 36, 48, 60)
 r <- 2
@@ -142,14 +158,14 @@ mres <- list()
 for (series.number in series.numbers) {
   signal_l <- replicate(series.number, runif(1, 20, 35) * cos(2 * pi * 1:N + pi / runif(1, 2, 20)), simplify = FALSE)
   signal <- reduce(signal_l, cbind)
-  # signal <- cbind(signal1, signal2, signal3)
-  R <- 100
+  # signal <- cbind(signal1, signal2)#, signal3)
+  R <- 500
 
   mssa.errors <- function(Ls) {
     # f1 <- signal1 + rnorm(N, sd = sigma)
     # f2 <- signal2 + rnorm(N, sd = sigma)
     # f3 <- signal3 + rnorm(N, sd = sigma)
-    # f <- list(f1, f2, f3)
+    # f <- list(f1, f2)#, f3)
     f <- lapply(signal_l, function(x) x + rnorm(N, sd = sigma))
     err.rec <- list(mat = numeric(length(Ls)), tens = numeric(length(Ls)))
     names(err.rec$mat) <- Ls; names(err.rec$tens) <- Ls
@@ -179,13 +195,13 @@ for (series.number in series.numbers) {
 ```{r}
 for (i in series.numbers) {
   print(i)
-  print(rowMeans(simplify2array(mres[[toString(i)]][1,])))
-  print(rowMeans(simplify2array(mres[[toString(i)]][2,])))
+  print(sqrt(rowMeans(simplify2array(mres[[toString(i)]][1,]))))
+  print(sqrt(rowMeans(simplify2array(mres[[toString(i)]][2,]))))
 }
 ```
 
 
 ```{r}
-rowMeans(simplify2array(mres[1,]))
-rowMeans(simplify2array(mres[2,]))
+sqrt(rowMeans(simplify2array(mres[1,])))
+sqrt(rowMeans(simplify2array(mres[2,])))
 ```
