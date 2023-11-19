@@ -7,22 +7,20 @@ set.seed(1)
 N <- 71
 
 signal1 <- 30 * cos(2 * pi * 1:N / 12)
+
 signal2 <- 20 * cos(2 * pi * 1:N / 12) # case 1
+r <- 2
+r3 <- 1
+
 # signal2 <- 20 * cos(2 * pi * 1:N / 12 + pi / 4) # case 2
+# r <- 2
+# r3 <- 2
+
 # signal2 <- 20 * cos(2 * pi * 1:N / 8 + pi / 4) # case 3
+# r <- 4
+# r3 <- 2
 
 series.number <- 2
-
-# series rank
-# cases 1 & 2
-r <- 2
-# case 3
-# r <- 4
-# rank along the third dimension
-# case 1
-r3 <- 1
-# cases 2 & 3
-# r3 <- 2
 
 signal <- cbind(signal1, signal2)
 R <- 500
