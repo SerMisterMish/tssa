@@ -40,8 +40,7 @@
     \small
     Санкт-Петербургский государственный университет\\
     Математико-механический факультет\\
-    Прикладная математика и информатика\\
-    Вычислительная стохастика и статистические модели\\
+    Кафедра статистического моделирования\\
     \vspace{1.25cm}
 }
 
@@ -60,7 +59,7 @@
 
     \section{Введение}\label{sec:intro}
     \begin{frame}{Постановка задачи}
-        Временной ряд длины $N$: $\tX=(x_1, x_2,\ldots, x_N)$.
+        Временной ряд длины $N$: $\tX=(x_1, x_2,\ldots, x_N)$, $x_i\in \mathbb{R}$.
 
         $\tX = \tS + \tP + \tR$.
         \vspace{0.8cm}
@@ -73,7 +72,7 @@
 
         \vspace{0.5cm}
         Одним из методов решения этих задач является метод Singular Spectrum Analysis
-        (\bluetext{SSA}) Golyandina et al. (2001), Analysis of time series structure: SSA and related techiques.
+        (\bluetext{SSA}) \\(Golyandina et al. (2001), Analysis of time series structure: SSA and related techiques)
 
         \vspace{0.4cm}
 
@@ -108,7 +107,7 @@
             \vspace{0.2cm}
 
             \item \bluetext{Восстановление} Матрица $\tilde{\bfX}$ усредняется вдоль побочных диагоналей
-            $\tilde{x_i} = \operatorname{mean}\left\{\tilde{\bfX}_{i,j}~|~i + j - 1 = i\right\}.$
+            $\tilde{x_k} = \operatorname{mean}\left\{(\tilde{\bfX})_{i,j}~|~i + j - 1 = k\right\}.$
         \end{enumerate}
 
         \vspace{0.1cm}
@@ -138,7 +137,7 @@
 
             \vspace{0.4cm}
 
-            \item $x_n = \exp(\alpha n),\qquad n\in\overline{1:N}, \qquad \alpha \in \bbR$
+            \item $x_n = a^n,\qquad n\in\overline{1:N}, \qquad a\neq 0$
 
             \vspace{0.2cm}
 
@@ -178,7 +177,26 @@
         $I, L$ --- параметры
     \end{frame}
 
-    \begin{frame}{Ранг в тензорном варианте}
+
+    \begin{frame}{Разложение и группировка}
+        \begin{itemize}
+            \item HOSVD траекторного тензора $\calX$ имеет вид
+            \[
+                \calX = \sum_{i=1}^{I} \sum_{l=1}^{L} \sum_{j=1}^{N-I-L+2} \mathcal{Z}_{i,l,j} \mathbf{U}^{(1)}_{i}
+                \circ \mathbf{U}^{(2)}_{l} \circ \mathbf{U}^{(3)}_{j}.
+            \]
+
+            \vspace{0.6cm}
+            \itemТогда этап группировки в алгоритме HOSVD SSA имеет вид
+            \[
+                \calX = \sum_{i=1}^{R} \sum_{l=1}^{R} \sum_{j=1}^{R} \mathcal{Z}_{i,l,j} \mathbf{U}^{(1)}_{i}
+                \circ \mathbf{U}^{(2)}_{l} \circ \mathbf{U}^{(3)}_{j},
+            \]
+            $R\leqslant \min(I, L, N - I - L + 2)$ --- параметр алгоритма.
+        \end{itemize}
+    \end{frame}
+    
+        \begin{frame}{Ранг в тензорном варианте}
         \begin{itemize}
             \item \bluetext{$n$-ранг тензора:} размерность пространства, порождённого
             векторами вдоль $n$-го измерения.
@@ -198,27 +216,10 @@
         \end{statement}
     \end{frame}
 
-    \begin{frame}{Разложение и группировка}
-        \begin{itemize}
-            \item HOSVD траекторного тензора $\calX$ имеет вид
-            \[
-                \calX = \sum_{i=1}^{I} \sum_{l=1}^{L} \sum_{j=1}^{N-I-L+2} \mathcal{Z}_{i,l,j} \mathbf{U}^{(1)}_{i}
-                \circ \mathbf{U}^{(2)}_{l} \circ \mathbf{U}^{(3)}_{j}.
-            \]
-
-            \vspace{0.6cm}
-            \itemТогда этап группировки в алгоритме HOSVD SSA имеет вид
-            \[
-                \calX = \sum_{i=1}^{R} \sum_{l=1}^{R} \sum_{j=1}^{R} \mathcal{Z}_{i,l,j} \mathbf{U}^{(1)}_{i}
-                \circ \mathbf{U}^{(2)}_{l} \circ \mathbf{U}^{(3)}_{j},
-            \]
-            $R\leqslant \min(I, L, N - I - L + 2)$ --- параметр алгоритма.
-        \end{itemize}
-    \end{frame}
-
     \begin{frame}{Численное сравнение}
-        $x_i = 30\cos(2\pi i/12)$, шум --- белый гауссовский, $\sigma^2=25$, и красный, $\delta=\sqrt{5},\,
-        \varphi_1=0.5,\, \varphi_2 = 0.9,\, i\in \overline{1:71}$.
+        Сигнал $s_n = 30\cos(2\pi n/12)$, $n\in \overline{1:71}$.
+        Шум гауссовский, белый с $\sigma=5$ и красный с $\delta=\sqrt{5}$,
+        $\varphi_1=0.5$ или $\varphi_2 = 0.9$.
 
         \footnotesize
         \begin{table}[ht]
@@ -228,7 +229,7 @@
                 \hline
                 \backslashbox{вид шума}{$L$} & 12   & 24   & 30            & 36   \\
                 \hline
-                белый, $\sigma^2=25$         & 1.82 & 1.42 & \textbf{1.40} & 1.42 \\\hline
+                белый, $\sigma=5$         & 1.82 & 1.42 & \textbf{1.40} & 1.42 \\\hline
                 красный, $\varphi=0.5$       & 1.31 & 1.03 & \textbf{1.01} & 1.03 \\\hline
                 красный, $\varphi=0.9$       & 1.88 & 1.37 & \textbf{1.34} & 1.36 \\
                 \hline
@@ -241,7 +242,7 @@
                 \hline
                 \backslashbox{вид шума}{$I\times L$} & 12$\times$12 & 12$\times$24  & 12$\times$30 & 24$\times$24 & 24$\times$30 & 30$\times$36 \\
                 \hline
-                белый шум, $\sigma^2=25$             & 1.64         & 1.53          & 1.57         & 1.66         & 1.62         & \textbf{1.49} \\
+                белый шум, $\sigma=5$             & 1.64         & 1.53          & 1.57         & 1.66         & 1.62         & \textbf{1.49} \\
                 \hline
                 красный шум, $\varphi=0.5$           & 1.18         & 1.12          & 1.14         & 1.21         & 1.19         & \textbf{1.08} \\
                 \hline
@@ -269,12 +270,12 @@
 
         \vspace{0.3cm}
 
-        Дальнейшие шаги алгоритма аналогичны стандартному SSA.
+        Дальнейшие шаги алгоритма (разложение траекторной матрицы и восстановление сигнала) аналогичны стандартному SSA.
 
         \vspace{0.6cm}
 
         \begin{itemize}
-            \item В случаях, когда ряды $\tX^{(i)}$ имеют похожую структуру, спользование MSSA даёт
+            \item В случаях, когда ряды $\tX^{(i)}$ имеют похожую структуру, использование MSSA даёт
             лучшие результаты в задаче выделения сигнала, чем применение SSA
             к каждому ряду отдельно.
         \end{itemize}
@@ -345,7 +346,7 @@
 
         \vspace{0.3cm}
 
-        Шум --- белый, с параметром $\sigma^2=25$, RMSE было сосчитано по 500 реализациям зашумлённого ряда,
+        Шум --- белый гауссовский, с параметром $\sigma=5$, RMSE было сосчитано по 500 реализациям зашумлённого ряда,
         сравнение проводилось на одних и тех же реализациях шума.
     \end{frame}
 
@@ -364,22 +365,22 @@
                            $\omega_1 = \omega_2 = \frac 1 {12}$\\
                            $\psi_1 = \psi_2 = 0$\\
                 \end{tabular}
-                } & MSSA & 1.78 & 1.34 & 1.25 & \textbf{1.2} & 1.41 \\ \cline{2-7}
-                  & HOSVD MSSA & 1.35 & \textbf{1.1} & \textbf{1.1} & \textbf{1.1} & 1.35 \\ \hhline{=|=|=====}
+                } & MSSA & 1.78 & 1.34 & 1.25 & \textbf{1.20} & 1.41 \\ \cline{2-7}
+                  & HOSVD MSSA & 1.35 & \bluetext{\textbf{1.10}} & \bluetext{\textbf{1.10}} & \bluetext{\textbf{1.10}} & 1.35 \\ \hhline{=|=|=====}
                 \multirow{2}{*}{
                 \begin{tabular}{r}
                     $\omega_1 = \omega_2 = \frac 1 {12}$\\
                     $\psi_1 = 0,\, \psi_2 = \frac \pi  4$\\
                 \end{tabular}
-                } & MSSA & 1.78 & 1.34 & 1.25 & \textbf{1.2} & 1.41 \\ \cline{2-7}
-                  & HOSVD MSSA & 1.41 & \textbf{1.191} & 1.199 & \textbf{1.191} & 1.41 \\ \hhline{=|=|=====}
+                } & MSSA & 1.78 & 1.34 & 1.25 & \textbf{1.20} & 1.41 \\ \cline{2-7}
+                  & HOSVD MSSA & 1.41 & \bluetext{\textbf{1.19}} & 1.20 & \bluetext{\textbf{1.19}} & 1.41 \\ \hhline{=|=|=====}
                 \multirow{2}{*}{
                 \begin{tabular}{r}
                     $\omega_1 = \frac 1 {12},\, \omega_2 = \frac 1 8$\\
                     $\psi_1 = 0,\, \psi_2 = \frac \pi  4$\\
                 \end{tabular}
                 } & MSSA & 2.63 & 1.94 & 1.74 & \textbf{1.69} & 1.95 \\ \cline{2-7}
-                  & HOSVD MSSA & 1.95 & \textbf{1.67} & 1.69 & \textbf{1.67} & 1.95 \\ \hline
+                  & HOSVD MSSA & 1.95 & \bluetext{\textbf{1.67}} & 1.69 & \bluetext{\textbf{1.67}} & 1.95 \\ \hline
             \end{tabular}
             }
         \end{table}
@@ -389,7 +390,7 @@
     \begin{frame}{Выводы}
         \begin{itemize}
             \item HOSVD SSA и HOSVD MSSA являются прямыми обобщениями SSA и MSSA, однако устроены
-            существенно сложнее.
+            существенно сложнее и имеют б\'{о}льшую трудоемкость.
             \vspace{0.2cm}
             \item Оба расширения усложняют алгоритм необходимостью подбора дополнительного параметра.
             \vspace{0.2cm}
