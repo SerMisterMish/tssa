@@ -16,6 +16,8 @@
 \usepackage[utf8x]{inputenc}
 \usepackage[T2A]{fontenc}
 \usepackage[english, russian]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
 \usepackage{tikz}
 \usepackage{ragged2e}
 \usepackage{wrapfig}
@@ -24,6 +26,7 @@
 \usepackage{hhline}
 \usepackage{multirow}
 \usepackage{graphics}
+\usepackage{color}
 \include{letters_series_mathbb}
 
 \setbeamercolor{bluetext_color}{fg=blue}
@@ -40,8 +43,7 @@
     \small
     Санкт-Петербургский государственный университет\\
     Математико-механический факультет\\
-    Прикладная математика и информатика\\
-    Вычислительная стохастика и статистические модели\\
+    Кафедра статистического моделирования\\
     \vspace{1.25cm}
 }
 
@@ -60,7 +62,7 @@
 
     \section{Введение}\label{sec:intro}
     \begin{frame}{Постановка задачи}
-        Временной ряд длины $N$: $\tX=(x_1, x_2,\ldots, x_N)$.
+        Временной ряд длины $N$: $\tX=(x_1, x_2,\ldots, x_N)$, $x_i\in \mathbb{R}$.
 
         $\tX = \tS + \tP + \tR$.
         \vspace{0.8cm}
@@ -73,7 +75,7 @@
 
         \vspace{0.5cm}
         Одним из методов решения этих задач является метод Singular Spectrum Analysis
-        (\bluetext{SSA}) Golyandina et al. (2001), Analysis of time series structure: SSA and related techiques.
+        (\bluetext{SSA}) \\(Golyandina et al. (2001), Analysis of time series structure: SSA and related techiques)
 
         \vspace{0.4cm}
 
@@ -93,7 +95,7 @@
 
         \bluetext{Схема алгоритма SSA для выделения сигнала}
         \begin{enumerate}
-            \item \bluetext{Вложение} $\tX \mapsto \bfX = [X_1, X_2, \dots, X_K]\in \bbR^{L\times K},$
+            \item \bluetext{Вложение} $\tX \mapsto \bfX = [X_1:X_2: \dots: X_K]\in \bbR^{L\times K},$
 
             $X_i = (x_i, x_{i+1}, \dots, x_{i + L})^{\rmT}$
 
@@ -108,18 +110,20 @@
             \vspace{0.2cm}
 
             \item \bluetext{Восстановление} Матрица $\tilde{\bfX}$ усредняется вдоль побочных диагоналей
-            $\tilde{x_i} = \operatorname{mean}\left\{\tilde{\bfX}_{i,j}~|~i + j - 1 = i\right\}.$
+            $\tilde{x_k} = \operatorname{mean}\left\{(\tilde{\bfX})_{i,j}~|~i + j - 1 = k\right\}.$
         \end{enumerate}
 
         \vspace{0.1cm}
 
-        \bluetext{Результат алгоритма} $\tilde{\tX} = (\tilde{x}_1, \tilde{x}_2, \dots, \tilde{x}_N)$.
+        \bluetext{Результат алгоритма} $\tilde{\tX} = (\tilde{x}_1, \tilde{x}_2, \ldots, \tilde{x}_N)$.
     \end{frame}
 
 
     \section{Ранг}\label{sec:rank}
-    \begin{frame}{Ранг ряда}
-        $\tX$ имеет ранг $r$, если $\forall L:~r \leqslant \min(L, K) \,\,\, \operatorname{rank}{\bfX} = r$.
+    \begin{frame}{Ранг сигнала}
+        $\tX = \tS$.
+
+        $\tS$ имеет ранг $r$, если $\forall L:~r \leqslant \min(L, K) \,\,\, \operatorname{rank}{\bfX} = r$.
 
         Рекомендуемый выбор параметра $R$ в алгоритме: $R=r$.
 
@@ -128,7 +132,7 @@
         \bluetext{Примеры}
         \begin{itemize}
 
-            \item $x_n = \cos(2\pi n \omega + \psi),\qquad n\in\overline{1:N}$,
+            \item $s_n = \cos(2\pi n \omega + \psi),\qquad n\in\overline{1:N}$,
 
             $0 < \omega < \frac 1 2,\, \psi\in [0;2\pi)$
 
@@ -138,7 +142,7 @@
 
             \vspace{0.4cm}
 
-            \item $x_n = \exp(\alpha n),\qquad n\in\overline{1:N}, \qquad \alpha \in \bbR$
+            \item $s_n = a^n,\qquad n\in\overline{1:N}, \qquad a\neq 0$
 
             \vspace{0.2cm}
 
@@ -159,7 +163,7 @@
         \end{table}
 
         \vspace{0.4cm}
-        \bluetext{Проблема:} есть несколько тензорных разложений, расширяющих SVD, среди них:
+        Но существует несколько тензорных разложений, расширяющих SVD, среди них:
         \begin{itemize}
             \item High-order singular value decomposition (\bluetext{HOSVD})
             \item Canonical polyadic decomposition (CPD)
@@ -178,25 +182,6 @@
         $I, L$ --- параметры
     \end{frame}
 
-    \begin{frame}{Ранг в тензорном варианте}
-        \begin{itemize}
-            \item \bluetext{$n$-ранг тензора:} размерность пространства, порождённого
-            векторами вдоль $n$-го измерения.
-
-            \item В отличие от матричного случая, $n$-ранги тензора произвольной размерности могут в общем случае
-            не совпадать.
-        \end{itemize}
-
-        \begin{statement}
-            Пусть временной ряд $\tX$ имеет конечный ранг $r$ в терминах \emph{SSA}\@.
-            Тогда для любых значений параметров $I$ и $L$ таких, что
-            \[
-                r\leqslant\min(I, L, N-I-L+2),
-            \]
-            все $n$-ранги траекторного тензора $\mathcal{X}$
-            этого ряда с параметрами $I$ и $L$ будут равны $r$.
-        \end{statement}
-    \end{frame}
 
     \begin{frame}{Разложение и группировка}
         \begin{itemize}
@@ -209,16 +194,37 @@
             \vspace{0.6cm}
             \itemТогда этап группировки в алгоритме HOSVD SSA имеет вид
             \[
-                \calX = \sum_{i=1}^{R} \sum_{l=1}^{R} \sum_{j=1}^{R} \mathcal{Z}_{i,l,j} \mathbf{U}^{(1)}_{i}
+                \tilde{\calX} = \sum_{i=1}^{R} \sum_{l=1}^{R} \sum_{j=1}^{R} \mathcal{Z}_{i,l,j} \mathbf{U}^{(1)}_{i}
                 \circ \mathbf{U}^{(2)}_{l} \circ \mathbf{U}^{(3)}_{j},
             \]
             $R\leqslant \min(I, L, N - I - L + 2)$ --- параметр алгоритма.
         \end{itemize}
     \end{frame}
+    
+        \begin{frame}{Ранг в тензорном варианте}
+        \begin{itemize}
+            \item \bluetext{$n$-ранг тензора:} размерность пространства, порождённого
+            векторами вдоль $n$-го измерения.
+
+            \item В отличие от матричного случая, $n$-ранги тензора произвольной размерности могут в общем случае
+            не совпадать.
+        \end{itemize}
+
+        \begin{statement}
+            Пусть сигнал $\tS$ имеет конечный ранг $r$ в терминах \emph{SSA}\@.
+            Тогда для любых значений параметров $I$ и $L$ таких, что
+            \[
+                r\leqslant\min(I, L, N-I-L+2),
+            \]
+            все $n$-ранги траекторного тензора $\mathcal{X}$
+            этого сигнала с параметрами $I$ и $L$ будут равны $r$.
+        \end{statement}
+    \end{frame}
 
     \begin{frame}{Численное сравнение}
-        $x_i = 30\cos(2\pi i/12)$, шум --- белый гауссовский, $\sigma^2=25$, и красный, $\delta=\sqrt{5},\,
-        \varphi_1=0.5,\, \varphi_2 = 0.9,\, i\in \overline{1:71}$.
+        Сигнал $s_n = 30\cos(2\pi n/12)$, $n\in \overline{1:71}$.
+        Шум гауссовский, белый с $\sigma=5$ и красный с $\delta=\sqrt{5}$,
+        $\varphi_1=0.5$ или $\varphi_2 = 0.9$.
 
         \footnotesize
         \begin{table}[ht]
@@ -228,7 +234,7 @@
                 \hline
                 \backslashbox{вид шума}{$L$} & 12   & 24   & 30            & 36   \\
                 \hline
-                белый, $\sigma^2=25$         & 1.82 & 1.42 & \textbf{1.40} & 1.42 \\\hline
+                белый, $\sigma=5$         & 1.82 & 1.42 & \textbf{1.40} & 1.42 \\\hline
                 красный, $\varphi=0.5$       & 1.31 & 1.03 & \textbf{1.01} & 1.03 \\\hline
                 красный, $\varphi=0.9$       & 1.88 & 1.37 & \textbf{1.34} & 1.36 \\
                 \hline
@@ -241,7 +247,7 @@
                 \hline
                 \backslashbox{вид шума}{$I\times L$} & 12$\times$12 & 12$\times$24  & 12$\times$30 & 24$\times$24 & 24$\times$30 & 30$\times$36 \\
                 \hline
-                белый шум, $\sigma^2=25$             & 1.64         & 1.53          & 1.57         & 1.66         & 1.62         & \textbf{1.49} \\
+                белый шум, $\sigma=5$             & 1.64         & 1.53          & 1.57         & 1.66         & 1.62         & \textbf{1.49} \\
                 \hline
                 красный шум, $\varphi=0.5$           & 1.18         & 1.12          & 1.14         & 1.21         & 1.19         & \textbf{1.08} \\
                 \hline
@@ -263,25 +269,25 @@
 
         \bluetext{Траекторная матрица этого ряда:}
 
-        $\bfX = [\bfX^{(1)}; \bfX^{(2)}; \dots; \bfX^{(p)}],$
+        $\bfX = [\bfX^{(1)}: \bfX^{(2)}: \ldots: \bfX^{(p)}],$
 
         $\bfX^{(i)}$ --- траекторная матрица $\tX^{(i)}$.
 
         \vspace{0.3cm}
 
-        Дальнейшие шаги алгоритма аналогичны стандартному SSA.
+        Дальнейшие шаги алгоритма MSSA (разложение траекторной матрицы и восстановление сигнала) аналогичны стандартному SSA.
 
         \vspace{0.6cm}
 
         \begin{itemize}
-            \item В случаях, когда ряды $\tX^{(i)}$ имеют похожую структуру, спользование MSSA даёт
+            \item В случаях, когда сигналы $\tS^{(i)}$ имеют похожую структуру, использование MSSA даёт
             лучшие результаты в задаче выделения сигнала, чем применение SSA
             к каждому ряду отдельно.
         \end{itemize}
     \end{frame}
 
     \begin{frame}{Тензорная модификация MSSA}
-        Вместо матрицы $\bfX = [\bfX^{(1)}; \bfX^{(2)}; \dots; \bfX^{(p)}]$
+        Вместо матрицы $\bfX = [\bfX^{(1)}:\bfX^{(2)}: \ldots: \bfX^{(p)}]$
 
         тензор $\calX:~\calX_{,,i} = \bfX^{(i)}$
 
@@ -291,12 +297,12 @@
     \end{frame}
 
     \begin{frame}{Тензорная модификация MSSA}
-        Утверждение, позволяющее перенести понятие ранга ряда на тензорный вариант MSSA.
+        Утверждение, позволяющее перенести понятие ранга сигнала на тензорный вариант MSSA.
 
         \vspace{0.2cm}
 
         \begin{statement}
-            Пусть $\mathbf{A} = [\mathbf{H}_1; \mathbf{H}_2; \ldots; \mathbf{H}_p] \in \mathbb{C}^{L\times Kp}$,
+            Пусть $\mathbf{A} = [\mathbf{H}_1: \mathbf{H}_2: \ldots: \mathbf{H}_p] \in \mathbb{C}^{L\times Kp}$,
             её SVD имеет вид:
             \[
                 \mathbf{A} =\mathbf{U} \mathbf{\Lambda} \mathbf{V},
@@ -313,21 +319,23 @@
 
     \begin{frame}{Ранги в тензорном MSSA}
         \begin{itemize}
-            \item Если ряд $\tX$ имеет ранг $r$ в терминах SSA, то при $r \leqslant \min(L, K)$ выполнено
+            \item Если сигнал $\tS$ имеет ранг $r$ в терминах SSA, то при $r \leqslant \min(L, K)$ выполнено
             $\operatorname{rank}_1(\calX) = r$.
             \item По симметричности построения, в этих предположениях $\operatorname{rank}_2(\calX) = r$.
             \item Однако ранг третьего измерения приобретает иной смысл.
         \end{itemize}
 
+        \vspace{0.1cm}
+
         В тензорном варианте алгоритма к параметрам $L$ и $R$ \bluetext{добавляется} параметр~$R_3$.
 
-        \vspace{0.5cm}
+        \vspace{0.4cm}
 
         \bluetext{Примеры}
 
         \vspace{0.1cm}
 
-        $x_n^{(m)}=a_m \sin(2\pi n \omega_m + \psi_m),\, m \in \{1,\, 2\},\, n\in \overline{1:N},$
+        $s_n^{(m)}=a_m \cos(2\pi n \omega_m + \psi_m),\, m \in \{1,\, 2\},\, n\in \overline{1:N},$
 
        $a_m\ne 0,\, 0<\omega_m<\frac 1 2,\, 0 \leqslant \psi < 2 \pi$
 
@@ -341,11 +349,11 @@
     \end{frame}
 
     \begin{frame}{Численные сравнения}
-        $x_n^{(m)} = a_m \cos(2\pi n \omega_m + \psi_m),\, n\in\overline{1:71},\, a_1 = 30,\, a_2 = 20$.
+        $s_n^{(m)} = a_m \cos(2\pi n \omega_m + \psi_m),\, n\in\overline{1:71},\, a_1 = 30,\, a_2 = 20$.
 
         \vspace{0.3cm}
 
-        Шум --- белый, с параметром $\sigma^2=25$, RMSE было сосчитано по 500 реализациям зашумлённого ряда,
+        Шум --- белый гауссовский, с параметром $\sigma=5$, RMSE было сосчитано по 500 реализациям зашумлённого ряда,
         сравнение проводилось на одних и тех же реализациях шума.
     \end{frame}
 
@@ -364,22 +372,22 @@
                            $\omega_1 = \omega_2 = \frac 1 {12}$\\
                            $\psi_1 = \psi_2 = 0$\\
                 \end{tabular}
-                } & MSSA & 1.78 & 1.34 & 1.25 & \textbf{1.2} & 1.41 \\ \cline{2-7}
-                  & HOSVD MSSA & 1.35 & \textbf{1.1} & \textbf{1.1} & \textbf{1.1} & 1.35 \\ \hhline{=|=|=====}
+                } & MSSA & 1.78 & 1.34 & 1.24 & \textbf{1.20} & 1.42 \\ \cline{2-7}
+                  & HOSVD MSSA & 1.35 & \bluetext{\textbf{1.10}} & \bluetext{\textbf{1.10}} & \bluetext{\textbf{1.10}} & 1.35 \\ \hhline{=|=|=====}
                 \multirow{2}{*}{
                 \begin{tabular}{r}
                     $\omega_1 = \omega_2 = \frac 1 {12}$\\
                     $\psi_1 = 0,\, \psi_2 = \frac \pi  4$\\
                 \end{tabular}
-                } & MSSA & 1.78 & 1.34 & 1.25 & \textbf{1.2} & 1.41 \\ \cline{2-7}
-                  & HOSVD MSSA & 1.41 & \textbf{1.191} & 1.199 & \textbf{1.191} & 1.41 \\ \hhline{=|=|=====}
+                } & MSSA & 1.78 & 1.34 & 1.25 & \textbf{1.20} & 1.41 \\ \cline{2-7}
+                  & HOSVD MSSA & 1.41 & \bluetext{\textbf{1.19}} & 1.20 & \bluetext{\textbf{1.19}} & 1.41 \\ \hhline{=|=|=====}
                 \multirow{2}{*}{
                 \begin{tabular}{r}
                     $\omega_1 = \frac 1 {12},\, \omega_2 = \frac 1 8$\\
                     $\psi_1 = 0,\, \psi_2 = \frac \pi  4$\\
                 \end{tabular}
                 } & MSSA & 2.63 & 1.94 & 1.74 & \textbf{1.69} & 1.95 \\ \cline{2-7}
-                  & HOSVD MSSA & 1.95 & \textbf{1.67} & 1.69 & \textbf{1.67} & 1.95 \\ \hline
+                  & HOSVD MSSA & 1.95 & \bluetext{\textbf{1.67}} & 1.69 & \bluetext{\textbf{1.67}} & 1.95 \\ \hline
             \end{tabular}
             }
         \end{table}
@@ -389,7 +397,7 @@
     \begin{frame}{Выводы}
         \begin{itemize}
             \item HOSVD SSA и HOSVD MSSA являются прямыми обобщениями SSA и MSSA, однако устроены
-            существенно сложнее.
+            существенно сложнее и имеют б\'{о}льшую трудоемкость.
             \vspace{0.2cm}
             \item Оба расширения усложняют алгоритм необходимостью подбора дополнительного параметра.
             \vspace{0.2cm}
