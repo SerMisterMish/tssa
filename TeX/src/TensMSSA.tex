@@ -1,0 +1,224 @@
+% Preamble
+\documentclass[11pt]{article}
+
+% Packages
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english, russian]{babel}
+\usepackage{graphicx}
+\usepackage{slashbox}
+\usepackage{hhline}
+\usepackage{multirow}
+
+\include{letters_series_mathbb}
+
+\theoremstyle{plain}
+\newtheorem{statement}{Утверждение}
+\newtheorem{theorem}{Теорема}
+\newtheorem{corollary}{Следствие}[statement]
+
+\theoremstyle{definition}
+\newtheorem{definition}{Определение}
+\newtheorem{example}{Пример}[section]
+
+\theoremstyle{remark}
+\newtheorem*{remark}{Замечание}
+
+% Document
+\begin{document}
+
+    \section{Описание метода Tensor MSSA}\label{sec:Tensor-MSSA-method-description}
+    Пусть дан многомерный временной ряд $\tX$ длины $N$ размерности $P$, то есть
+    \begin{gather*}
+        \tX = (\tX^{(1)}, \tX^{(2)}, \ldots, \tX^{(P)})^{\rmT},\\
+        \tX^{(p)} = (x_{p1}, x_{p2}, \ldots, x_{pN}).
+    \end{gather*}
+    Рассматривается задача выделения сигнала из ряда с шумом.
+
+    \begin{definition}(Траекторный тензор многомерного ряда)
+        Траекторным тензором многомерного ряда $\tX$ с параметром $L: 1\leqslant L \leqslant N$
+        будем называть тензор $\mathcal{X}$ размерности $L\times K \times P$, где $K = N - L + 1$,
+        слои вдоль третьего измерения которого удовлетворяют равенству
+        \[
+            \mathcal{X}_{,,p}=
+            \begin{pmatrix}
+                x_{p1} & x_{p2} & \ldots & x_{pK} \\
+                x_{p2} & \ddots &        & \vdots \\
+                \vdots &        & \ddots & \vdots \\
+                x_{pL} & \ldots & \ldots & x_{pN}
+            \end{pmatrix},
+            \qquad p\in \overline{1:P}.
+        \]
+    \end{definition}
+
+    Алгоритм Tensor MSSA для выделения сигнала из ряда с шумом сводится к получению
+    как можно более точного приближения траекторного тензора тензором меньших $n$-рангов, задаваемых пользователем.
+
+    \subsection{Ранг ряда в терминах Tensor MSSA}\label{subsec:tensor-mssa-rank}
+    Следующее утверждение позволяет определить принцип выбора $n$-рангов в алгоритме Tensor MSSA.
+    \begin{statement}
+        Пусть $X_1, X_2, \ldots, X_P$ - временные ряды длины $N$.
+        Пусть $\mathbf{H}_1, \ldots, \mathbf{H}_P$ - траекторные матрицы этих рядов с параметром $L \leqslant N$.
+        Обозначим $K = N - L + 1$.
+
+        Построим матрицу $\mathbf{X} = [\mathbf{H}_1: \mathbf{H}_2: \ldots: \mathbf{H}_P] \in
+        \mathbb{R}^{L\times KP}$.
+        Её \emph{SVD} имеет вид:
+        \begin{gather}
+            \mathbf{X} =\mathbf{U} \mathbf{\Lambda} \mathbf{V}.\label{mat-svd}
+        \end{gather}
+
+        Построим тензор $\mathcal{X} \in \mathbb{R}^{L\times K \times P}: \mathcal{X}_{,,p} = \mathbf{H}_p$
+        ($p$-й слой тензора по 3-му измерению берём равным $\mathbf{H}_p$).
+        Его \emph{HOSVD} имеет вид:
+        \begin{gather}
+            \mathcal{X}=\mathcal{Z} \times_1 \hat{\mathbf{U}}_1 \times_2 \hat{\mathbf{U}}_2 \times_3 \hat{\mathbf{U}}_3.\label{tens-hosvd}
+        \end{gather}
+
+        Существуют такие \emph{SVD} матрицы $\mathbf{X}$ и \emph{HOSVD} тензора $\mathcal{X}$, что
+        $\mathbf{U} = \hat{\mathbf{U}}_1$.
+    \end{statement}
+    \begin{proof}
+        Из свойств HOSVD известно, что в качестве $\hat{\mathbf{U}}_1$ можно выбрать матрицу $\hat{\mathbf{U}}$
+        левых сингулярных векторов из SVD матрицы $[\mathcal{X}]_{(1)}$ -
+        развёртки тензора $\mathcal{A}$ по первому измерению.
+        Эта развёртка имеет вид
+        \[
+            [\mathcal{X}]_{(1)} = [\mathbf{H}_1: \mathbf{H}_2: \ldots: \mathbf{H}_P] = \mathbf{A},
+        \]
+        откуда и следует искомое утверждение.
+    \end{proof}
+
+    \begin{corollary}
+        Из этого утверждения и из того, что разложения \emph{SVD} и \emph{HOSVD} единственны с точностью до, возможно,
+        некоторых ортогональных преобразований матриц сингулярных векторов, следует,
+        что пространства, порождаемые левыми сингулярными векторами матрицы $\mathbf{X}$
+        и сингулярными векторами первого измерения тензора $\mathcal{X}$, совпадают.
+    \end{corollary}
+    \begin{remark}
+        На практике при вычислении HOSVD тензора используется алгоритм, который последовательно
+        вычисляет SVD развёрток этого тензора по каждому измерению, и получившиеся матрицы левых сингулярных векторов
+        используются в качестве матриц сингулярных векторов соответствующего измерения в формуле~\eqref{tens-hosvd}.
+        Таким образом, на практике совпадают не только пространства, порождаемые описанными выше сингулярными векторами,
+        но и сами матрицы этих векторов.
+    \end{remark}
+
+    \begin{corollary}
+        Пусть многомерный ряд $\tX$ длины $N$ имеет ранг $r$ в терминах \emph{MSSA}, и число $L \in \overline{1:N}$
+        таково, что $r \leqslant \min(L, K)$, где $K = N - L + 1$, и пусть $\calX$ "--- траекторный тензор этого ряда.
+        Тогда
+        \[
+            \operatorname{rank}_1(\calX) = r, \qquad \operatorname{rank}_2(\calX) = r.
+        \]
+    \end{corollary}
+    \begin{remark}
+        Ранг третьего измерения $\operatorname{rank}_3(\calX)$ имеет смысл отличный от смысла ранга ряда
+        в теории MSSA.
+        Этот ранг имеет смысл меры структурного отличия рядов друг от друга.
+    \end{remark}
+
+    \begin{example}[Ранги рядов]
+        Пусть многомерный ряд $\tX$ имеет следующий вид:
+        \begin{gather*}
+            s_n^{(m)}=a_m \cos(2\pi n \omega_m + \psi_m),\, m \in \{1,\, 2\},\, n\in \overline{1:N},\\
+            N > 7,\, a_m\ne 0,\, 0<\omega_m<\frac 1 2,\, 0 \leqslant \psi < 2 \pi.
+        \end{gather*}
+        Обозначим $r$ "--- ранг ряда $\tX$ в терминах MSSA,
+        $r_i = \operatorname{rank}_i(\calX)$, где $\calX$ "--- траекторный тензор, построенный
+        по ряду $\tX$ с длиной окна $L$ такой, что $r \leqslant \min(L, K),\, K = N - L + 1$.
+        Тогда
+        \begin{enumerate}
+            \item если $\psi_1 = \psi_2,\, \omega_1 = \omega_2$, то $r = r_1 = r_2 = 2,\, r_3 = 1$,
+            \item если $\psi_1 \ne \psi_2,\, \omega_1 = \omega_2$, то $r = r_1 = r_2 = 2,\, r_3 = 2$,
+            \item если $\omega_1 \ne \omega_2$, то $r = r_1 = r_2 = 4,\, r_3 = 2$.
+        \end{enumerate}
+    \end{example}
+
+    \subsection{Алгоритм HOSVD MSSA для выделения сигнала}\label{subsec:tensor-mssa-description}
+    На вход алгоритму подаётся многомерный временной ряд $\tX$ длины $N$ и размерности $P$.
+    Параметры алгоритма: $L:\: 1\leqslant L \leqslant N,\, R,\, R_3:\: R \leqslant \min(L, K),\, R_3 \leqslant P$,
+    где $K = N - L + 1$.
+    Алгоритм Tensor MSSA для выделения сигнала из ряда с шумом заключается в проведении следующих четырёх шагов.
+    \begin{enumerate}
+        \item Выбор параметра $L$ и построение по нему траекторного тензора $\mathcal{X}$;
+        \item Проведение HOSVD траекторного тензора $\mathcal{X}$, получение его представления в виде
+        \begin{equation}
+            \mathcal{X}=\sum_{l=1}^{L} \sum_{k=1}^{K} \sum_{p=1}^{P} \mathcal{Z}_{l,k,p} \mathbf{U}^{(1)}_{l}
+            \circ \mathbf{U}^{(2)}_{k} \circ \mathbf{U}^{(3)}_{p};
+            \label{eq:trajectory-hosvd}
+        \end{equation}
+        \item Группировка: выбор параметров $R,\, R_3$ имеющих смысл числа компонент, относимых к сигналу,
+        и построение тензора
+        \begin{equation*}
+            \hat{\mathcal{X}}=\sum_{l=1}^R \sum_{k=1}^R \sum_{p=1}^{R_3}
+            \mathcal{Z}_{l,k,p} \mathbf{U}^{(1)}_{l}\circ \mathbf{U}^{(2)}_{k} \circ \mathbf{U}^{(3)}_{p}.
+%            \label{eq:tens-m-group}
+        \end{equation*}
+        \item Восстановление сигнала $\hat{\tX}$ по тензору $\hat{\mathcal{X}}$ посредством его усреднения вдоль
+        плоскостей $l+k+p=\operatorname{const}$:
+        \begin{gather*}
+            \hat{x}_n=\frac{1}{\#\mathfrak{M}_n}\sum_{(l,k,p)\in \mathfrak{M}_n} \hat{\mathcal{X}}_{l,k,p},
+            \qquad n\in \overline{1:N},\\
+            \mathfrak{M}_n=\{(l,\, k,\, p) \:|\: 1\leqslant l \leqslant L,\, 1\leqslant k \leqslant K,\, 1\leqslant p \leqslant P,\, l+k+p-2=n\}.
+        \end{gather*}
+    \end{enumerate}
+    Результатом алгоритма является временной ряд $\hat{\tX}$, принимаемый за оценку сигнала.
+
+    \begin{remark}
+        В качестве параметра $R$ в общем случае рекомендуется выбирать ранг искомого сигнала, а в качестве
+        параметра $R_3$ "--- ранг траекторного тензора сигнала по третьему измерению.
+    \end{remark}
+
+    \subsection{Сравнение HOSVD MSSA и MSSA}\label{subsec:mssa-comparison}
+    Пусть сигнал задан многомерным временным рядом
+    \begin{gather*}
+        \tS =
+        \begin{pmatrix}
+            s_1^{(1)}, & s_2^{(1)}, & \ldots, s_N^{(1)} \\
+            s_1^{(2)}, & s_2^{(2)}, & \ldots, s_N^{(2)}
+        \end{pmatrix}\\
+        s_n^{(m)} = a_m \cos(2\pi n \omega_m + \psi_m),\, N = 71,\, a_1 = 30,\, a_2 = 20.
+    \end{gather*}
+    На сигнал подействовали белым гауссовским шумом, с параметром ${\sigma=5}$.
+     \begin{table}[!ht]
+            \centering
+            \caption{RMSE восстановленных с помощью MSSA и HOSVD MSSA сигналов для каждого набора параметров
+            сигнала.}
+            \def\arraystretch{1.7}
+            \resizebox{\columnwidth}{!}{
+            \begin{tabular}{r|r|rrrrr}
+                \hline
+                Условия & \backslashbox{Метод}{$L$}  & 12   & 24   & 36   & 48           & 60   \\ \hline
+                \multirow{2}{*}{
+                \begin{tabular}{r}
+                           $\omega_1 = \omega_2 = \frac 1 {12}$\\
+                           $\psi_1 = \psi_2 = 0$\\
+                \end{tabular}
+                } & MSSA & 1.78 & 1.34 & 1.24 & \textbf{1.20} & 1.42 \\ \cline{2-7}
+                  & HOSVD MSSA & 1.35 & \textbf{1.10} & \textbf{1.10} & \textbf{1.10} & 1.35 \\ \hhline{=|=|=====}
+                \multirow{2}{*}{
+                \begin{tabular}{r}
+                    $\omega_1 = \omega_2 = \frac 1 {12}$\\
+                    $\psi_1 = 0,\, \psi_2 = \frac \pi  4$\\
+                \end{tabular}
+                } & MSSA & 1.78 & 1.34 & 1.25 & \textbf{1.20} & 1.41 \\ \cline{2-7}
+                  & HOSVD MSSA & 1.41 & \textbf{1.19} & 1.20 & \textbf{1.19} & 1.41 \\ \hhline{=|=|=====}
+                \multirow{2}{*}{
+                \begin{tabular}{r}
+                    $\omega_1 = \frac 1 {12},\, \omega_2 = \frac 1 8$\\
+                    $\psi_1 = 0,\, \psi_2 = \frac \pi  4$\\
+                \end{tabular}
+                } & MSSA & 2.63 & 1.94 & 1.74 & \textbf{1.69} & 1.95 \\ \cline{2-7}
+                  & HOSVD MSSA & 1.95 & \textbf{1.67} & 1.69 & \textbf{1.67} & 1.95 \\ \hline
+            \end{tabular}
+            }\label{tab:tens-mssa-comparison}
+     \end{table}
+
+    В таблице~\ref{tab:tens-mssa-comparison} приведены значения отклонения восстановленного ряда от исходного
+    ряда для различных значений параметров после использования алгоритмов MSSA и HOSVD MSSA для выделения сигнала\@.
+    RMSE посчитан по 500 реализациям шума, методы сравнивались на одних и тех же наборах реализаций шума.
+
+\end{document}
