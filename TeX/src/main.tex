@@ -23,10 +23,8 @@
 \usepackage{fancyvrb}
 \usepackage{slashbox}
 \usepackage{multirow}
-%\usepackage{calc}
-%\usepackage{nath}
-%\usepackage{cnbwp}
-%\usepackage{hyperref}
+\usepackage{mdwtab}
+\usepackage{subcaption}
 
 \include{letters_series_mathbb}
 
@@ -49,7 +47,7 @@
 % Document
 \begin{document}
 
-    \title{Учебная практика 3 (научно-исследовательская работа) (семестр 6)}
+    \title{Учебная практика 4 (научно-исследовательская работа) (семестр 7)}
     \topic{<<Тензорный анализ сингулярного спектра>>}
     \author{Хромов Никита Андреевич}
     \date{\number\year}
@@ -71,17 +69,26 @@
     Этот метод используется, в частности, для выделения сигнала и выделения тренда и периодических компонент из временного ряда.
     Метод SSA основан на сингулярном разложении особой траекторной матрицы построенной по временному ряду
 
-    В работах~\cite{TSSA, TSSA-improved} предлагается обобщение метода SSA, Tensor SSA, который основан на некотором
+    В работах~\cite{TSSA, TSSA-improved, hosvd-hooi-separation} предлагается обобщение метода SSA, Tensor SSA, который основан на некотором
     тензорном разложении особого траекторного тензора, построенного по временному ряду.
     Причём, в этих работах утверждается о преимуществах Tensor SSA над обычным SSA\@.
 
     Существует множество видов тензорных разложений, например High-Order Singular Value Decomposition (HOSVD)~\cite{hosvd},
     Canonical Polyadic Decomposition (CPD)~\cite{parafac1, parafac2}, Tucker decomposition~\cite{tucker}.
-    В частности, в работах~\cite{TSSA, TSSA-improved} используется разложение CPD\@.
+    В частности, в работах~\cite{TSSA, TSSA-improved} используется разложение CPD, а в
+    работе~\cite{hosvd-hooi-separation} "--- HOSVD\@.
 
     Была поставлена задача изучить различные варианты тензорных разложений, реализовать метод Tensor SSA, выбрав некоторые из них
-    и сравнить с методом Basic SSA по точности выделения сигнала и компонент сигнала.
+    и сравнить с методом Basic SSA по точности выделения сигнала и компонент сигнала, а также
+    рассмотреть расширение метода SSA на многомерные ряды "--- метод MSSA~\cite{ssa-2020},
+    сформулировать и реализовать тензорную модификацию этого метода и сравнить её с другими методами
+    семейства SSA по точности выделения сигнала.
     В качестве первого метода разложения был выбран метод HOSVD, который является обобщением метода SVD для матриц.
+
+    В ходе работы в этом семестре были добавлены
+    разделы~\ref{sec:Tensor-MSSA-method-description},~\ref{sec:hosvd-mssa-properties} и~\ref{sec:numerical-compar},
+    в которых описывается тензорная модификация метода MSSA "--- HOSVD MSSA и проводятся численные сравнения этого метода
+    с известными.
     \newpage
 
 
@@ -101,7 +108,7 @@
     \end{definition}
 
     \begin{theorem}
-        [Сингулярное разложение порядка $M$]
+    [Сингулярное разложение порядка $M$]
         Любой комплекснозначный тензор $\mathcal{A}$ размерности $I_1\times I_2 \times \ldots \times I_M$ может быть представлен
         в виде произведения
         \begin{equation}
@@ -126,17 +133,17 @@
             \end{enumerate}
         \end{enumerate}
     \end{theorem}
-    \begin{definition}
+    \begin{definition}[Сингулярное разложение тензора]
         \label{def:hosvd}
         Разложение вида~\eqref{eq:hosvd} будем называть сингулярным разложением тензора $\mathcal{A}$ порядка $M$ или
         HOSVD тензора $\mathcal{A}$.
     \end{definition}
-    \begin{definition}
+    \begin{definition}[Сингулярное число тензора]
         \label{def:singular-value}
         Обозначим $\sigma_i^{(n)}=\|\mathcal Z_{i_n=i}\|$ и будем называть $\sigma_i^{(n)}$ $i$-м сингулярным числом
         тензора $\mathcal A$ по измерению $n$.
     \end{definition}
-    \begin{definition}
+    \begin{definition}[Сингулярный вектор тензора]
         \label{def:singular-tensor}
         Векторы $U_i^{(n)}$ будем называть $i$-м сингулярным вектором тензора $\mathcal A$ по измерению $n$.
     \end{definition}
@@ -155,7 +162,7 @@
     Таким образом, аналогичность свойств SSA и Tensor SSA может быть выведена из аналогичности некоторых свойств SVD и HOSVD\@.
     \begin{statement}
         Вычисление \emph{HOSVD} тензора $\mathcal{A}$ с $M$ размерностями сводится к вычислению \emph{SVD} на $M$ матрицах $\mathbf{A}_{(n)}$,
-        которые вычисляются развёрткой тензора по $n$-му измерению.
+        которые вычисляются развёрткой тензора по $n$-му измерению.\label{state:hosvd-to-svd}
     \end{statement}
     Другими словами, если $\mathcal{A}$ "--- тензор размерности $I_1\times I_2\times\ldots\times I_M$, то его развёртка
     по $n$-му измерению "--- это матрица $\mathbf{A}_{(n)}$ размерности $I_n\times I_{n+1}I_{n+2}\ldots I_{M}I_{1}I_{2}\ldots
@@ -191,8 +198,8 @@
             \item Все сингулярные числа по каждому измерению определяются однозначно.
             \item Если сингулярные числа по измерению $n$ различны, то сингулярные векторы по измерению $n$ определены
             в точности до умножения на коэффициент единичной нормы.
-            Если $U_\alpha^{(n)}$ умножается на $e^{j\theta}$, то $\mathcal{Z}_{i_n=\alpha}$ должен быть умножен на обратный
-            коэффициент $e^{-j\theta}$.
+            Если $U_\alpha^{(n)}$ умножается на $e^{i\theta}$, то $\mathcal{Z}_{i_n=\alpha}$ должен быть умножен на обратный
+            коэффициент $e^{-i\theta}$.
         \end{enumerate}
         Сингулярные векторы по измерению $n$, соответствующие одному и тому же сингулярному числу по измерению $n$,
         могут быть заменены любой унитарной линейной комбинацией.
@@ -243,13 +250,14 @@
     \end{remark}
 
     \begin{property}
-        [Связь $n$-ранга тензора и ранга его развёртки по измерению $n$]
+    [Связь $n$-ранга тензора и ранга его развёртки по измерению $n$]
         Векторы измерения $n$ тензора $\mathcal{A}$ являются столбцами его развёртки по измерению $n$ и выполняется равенство
         \[\operatorname{rank}_{n}(\mathcal{A})=\operatorname{rank}(\mathbf{A}_{(n)}).\]
     \end{property}
 
     \begin{property}
-        [Связь $n$-ранга тензора и его HOSVD]\label{property:n-rank}
+    [Связь $n$-ранга тензора и его HOSVD]
+        \label{property:n-rank}
         Пусть имеется HOSVD тензора $\mathcal{A}$ размерности $I_1\times I_2\times \ldots \times I_M$
         \[\mathcal{A} = \mathcal{Z}\times_1 \mathbf{U}^{(1)}\times_2\mathbf{U}^{(2)}\times_3\ldots \times_{M}\mathbf{U}^{(M)},\]
         тогда, по определению, тензор $\mathcal{Z}$ удовлетворяет свойству упорядоченности сингулярных чисел
@@ -326,7 +334,7 @@
     \[
         \tX=(x_1,x_2,\ldots,x_N).
     \]
-    \begin{definition}(Траекторный тензор ряда)
+    \begin{definition}[Траекторный тензор ряда]
         Траекторным тензором ряда $\tX$ с параметрами $I,L: 1\leqslant I,L \leqslant N,\, I + L \leqslant N + 1$
         будем называть тензор $\mathcal{X}$ размерности $I\times L \times J=N-I-L+2$, элементы которого удовлетворяют равенству
         \[
@@ -386,7 +394,7 @@
         \item Восстановление рядов $\tX^{(k)}=\tX^{(\mathfrak{S}_k)}$ по тензорам $\mathcal{X}^{(\mathfrak{S}_k)}$ посредством их усреднения вдоль
         плоскостей $i+l+j=\operatorname{const}$:
         \begin{gather*}
-            f^{(k)}_n=\frac{1}{\#\mathfrak{M}_n}\sum_{(i,l,j)\in \mathfrak{M}_n} \mathcal{X}^{(\mathfrak{S}_k)}_{i,l,j},\qquad n\in \overline{1:N},\\
+            x^{(k)}_n=\frac{1}{\#\mathfrak{M}_n}\sum_{(i,l,j)\in \mathfrak{M}_n} \mathcal{X}^{(\mathfrak{S}_k)}_{i,l,j},\qquad n\in \overline{1:N},\\
             \mathfrak{M}_n=\{(i,\, l,\, j) | 1\leqslant i \leqslant I,\, 1\leqslant l \leqslant L,\, 1\leqslant j \leqslant J,\, i+l+j-2=n\}.
         \end{gather*}
     \end{enumerate}
@@ -445,7 +453,7 @@
     \subsection{Разделимость рядов в терминах Tensor SSA}\label{subsec:tensor-ssa-separability}
     \begin{statement}
         \label{state:separability}
-        $\tilde{\tX}=(\tilde{f}_1,\ldots , \tilde{f}_N)$, $\hat{\tX}=(\hat{f}_1,\ldots , \hat{f}_N)$ "--- временные ряды длины $N$.
+        $\tilde{\tX}=(\tilde{x}_1,\ldots , \tilde{x}_N)$, $\hat{\tX}=(\hat{x}_1,\ldots , \hat{x}_N)$ "--- временные ряды длины $N$.
         Пусть ряд $\tX$ является суммой этих рядов.
         Траекторные тензоры рядов равны соответственно: $\tilde{\mathcal{X}},\, \hat{\mathcal{X}},\, \mathcal{X}$.
         Тогда существует сингулярное разложение тензора $\mathcal{X}$ с параметрами $I, L$, которое можно представить
@@ -453,9 +461,9 @@
         в том и только том случае, когда взаимно ортогональны все подряды рядов $\tilde{\tX}$ и $\hat{\tX}$
         длины $I,\, L,\, J=N-I-L+2$, то есть
         \begin{enumerate}
-            \item $\tilde{f}_{k}\hat{f}_m + \ldots + \tilde{f}_{k+I-1} \hat{f}_{m+I-1}=0 \qquad \forall k,\, m\in\overline{1:N-I+1}$,
-            \item $\tilde{f}_{k}\hat{f}_m + \ldots + \tilde{f}_{k+L-1} \hat{f}_{m+L-1}=0 \qquad \forall k,\, m\in\overline{1:N-L+1}$,
-            \item $\tilde{f}_{k}\hat{f}_m + \ldots + \tilde{f}_{k+J-1} \hat{f}_{m+J-1}=0 \qquad \forall k,\, m\in\overline{1:N-J+1}$.
+            \item $\tilde{x}_{k}\hat{x}_m + \ldots + \tilde{x}_{k+I-1} \hat{x}_{m+I-1}=0 \qquad \forall k,\, m\in\overline{1:N-I+1}$,
+            \item $\tilde{x}_{k}\hat{x}_m + \ldots + \tilde{x}_{k+L-1} \hat{x}_{m+L-1}=0 \qquad \forall k,\, m\in\overline{1:N-L+1}$,
+            \item $\tilde{x}_{k}\hat{x}_m + \ldots + \tilde{x}_{k+J-1} \hat{x}_{m+J-1}=0 \qquad \forall k,\, m\in\overline{1:N-J+1}$.
         \end{enumerate}
     \end{statement}
     \begin{proof}
@@ -508,7 +516,7 @@
         Тогда необходимые и достаточные условия отделимости от него ряда $\hat{\tX}$ в смысле Tensor SSA следующие:
         \begin{enumerate}
             \item Ряд $\hat{\tX}$ имеет целый период $T$, и $I/T$, $L/T$, $J/T$ "--- целые;
-            \item $\hat{x}_{1}+\hat{f}_2+\ldots+\hat{x}_T=0$.
+            \item $\hat{x}_{1}+\hat{x}_2+\ldots+\hat{x}_T=0$.
         \end{enumerate}
         \begin{example}
             Ряд с элементами вида $\tilde{x}_n=\cos(2\pi n / T + \varphi)$ длины $N$ такой, что $N+2$ делится нацело на
@@ -538,13 +546,14 @@
     \begin{remark}
         Результаты выше приведены в случае точной разделимости компонент в смысле теории SSA\@.
         В случае, когда точной разделимости нет, а есть только приближённая, в тензорном случае возникает такая
-        ситуация, когда одни и те же одноранговые тензоры в HOSVD траекторной матрицы могут быть отнесены
+        ситуация, когда одни и те же одноранговые тензоры в HOSVD траекторного тензора могут быть отнесены
         сразу к нескольким компонентам.
         На данный момент это является нерешённой проблемой.
     \end{remark}
 
     \subsection{Ранг ряда в терминах Tensor SSA}\label{subsec:tensor-ssa-rank}
     \begin{statement}
+        \label{state:tens-ssa-rank}
         Пусть временной ряд $\tX$ имеет конечный ранг $d$ в терминах \emph{SSA}\@.
         Тогда для любых значений параметров $I$ и $L$ таких, что
         \[
@@ -618,7 +627,6 @@
                 \vdots & \vdots & \vdots & \vdots & \ddots
             \end{pmatrix}.
         \]
-
         Таким образом, произошло смешение двух косинусов одинаковой амплитуды.
     \end{example}
 
@@ -747,7 +755,7 @@
             \caption{RMSE восстановленного с помощью SSA линейного сигнала для разного количества компонент в восстановлении, случай малого шума.}
             \begin{tabular}{c|rrr}
                 \hline
-                \backslashbox{Компонент}{$L$} & 10             & 15             & 20             \\
+                \backslashbox{Компонент}{$L$} & 10            & 15             & 20             \\
                 \hline
                 1                             & \textbf{0.09} & 0.108          & 0.118          \\
                 \hline
@@ -782,6 +790,9 @@
     \begin{example}[Случай, когда Tensor SSA срабатывает точнее, чем SSA]
         Пусть сигнал задан временным рядом $x_n = \sin(2\pi n/3 + \pi /2),\, n\in \overline{1:9}$.
         Подействуем на сигнал красным шумом с параметрами $\varphi=0.9, \delta = 0.1$.
+        В таблице~\ref{tab:tssa-better-ssa} приведены результаты измерения средних отклонений восстановленного ряда от исходного
+        для разных методов по 1000 реализаций шума.
+
         \begin{table}[!ht]
             \centering
             \caption{RMSE восстановленного с помощью различных методов короткого сигнала, порождённого синусом.}
@@ -793,26 +804,642 @@
                 \hline
             \end{tabular}\label{tab:tssa-better-ssa}
         \end{table}
-        В таблице~\ref{tab:tssa-better-ssa} приведены результаты измерения средних отклонений восстановленного ряда от исходного
-        для разных методов по 1000 реализаций шума.
 
         Причины того, что в этом примере обе вариации Tensor SSA дают стабильно лучшие результаты, чем SSA, пока неизвестны
         и остаются для дальнейшего изучения.
     \end{example}
 
 
+    \section{Описание метода Tensor MSSA для выделения сигнала}\label{sec:Tensor-MSSA-method-description}
+    Пусть дан $P$-мерный временной ряд $\tX$ длины $N$
+    \begin{gather*}
+        \tX = (\tX^{(1)}, \ldots, \tX^{(P)})^{\rmT},\\
+        \tX^{(i)} = (x_1^{(i)}, \ldots, x_N^{(i)}),\, i \in \overline{1:N}.
+    \end{gather*}
+
+    \begin{definition}[Траекторный тензор многомерного ряда]
+        Траекторным тензором ряда $\tX$ с длиной окна $L:\: 1\leqslant L \leqslant N$ будем называть тензор $\calX$
+        размерности ${L \times K \times P}$, ${K = N - L + 1}$, элементы которого удовлетворяют равенству
+        \[
+            \calX_{l,k,p}=x_{l+k-1}^{(p)} \qquad l \in \overline{1:L},\, k \in \overline{1:K},\, p \in \overline{1:P}.
+        \]\label{def:trajectory-tensor-mssa}
+    \end{definition}
+
+    Из определения следует, что $p$-й слой вдоль третьего измерения траекторного тензора $\calX$ с длиной окна $L$
+    является траекторной матрицей ряда $\tX^{(p)}$, построенной по длине окна $L$, то есть
+    \[
+        \calX_{,,p} =
+        \begin{pmatrix}
+            x_1^{(p)} & x_2^{(p)} & \cdots & x_K^{(p)} \\
+            x_2^{(p)} & x_3^{(p)} &        & \vdots    \\
+            \vdots    &           & \ddots & \vdots    \\
+            x_L^{(p)} & \cdots    & \cdots & x_N^{(p)}
+        \end{pmatrix}.
+    \]
+
+    Алгоритм Tensor MSSA для выделения в ряде сигнала из шума, по аналогии с алгоритмом Tensor SSA,
+    сводится к получению как можно более точного приближения траекторного тензора тензором меньших,
+    заданных пользователем, $n$-рангов.
+    Для получения такого приближения можно использовать усечение HOSVD траекторного тензора.
+%    Благодаря свойствам~\ref{property:oriented-energy},~\ref{property:approx} такое приближение можно считать
+%    достаточно точным, хоть оно и не является оптимальным.
+
+    На вход алгоритму подаётся многомерный временной ряд $\tX$ и параметр $L:\: {1\leqslant L\leqslant N}$.
+    Алгоритм HOSVD MSSA для выделения в многомерном ряде сигнала из шума заключается в проведении следуюшщих
+    четырёх шагов.
+    \begin{enumerate}
+        \item Построение по $P$-мерному временному ряду $\tX$ траекторного тензора $\calX$ с длиной окна $L$;
+        \item Проведение HOSVD траекторного тензора $\calX$, получение его представления в виде~\eqref{eq:sum-hosvd}
+        \begin{equation}
+            \calX = \sum_{l=1}^{L} \sum_{k=1}^{K} \sum_{p=1}^{P} \calZ_{l,k,p} \bfU_l^{(1)}\circ \bfU_k^{(2)} \circ \bfU_p^{(3)};
+            \label{eq:hosvd-mssa}
+        \end{equation}
+        \item Выбор параметров $R_1 \in \overline{1:L},\, R_2\in \overline{1:K},\, R_3\in \overline{1:P}$ и
+        построение усечённого тензора
+        \[
+            \tilde{\calX}=\sum_{l=1}^{R_1} \sum_{k=1}^{R_2} \sum_{p=1}^{R_3} \calZ_{l,k,p} \bfU_l^{(1)}\circ \bfU_k^{(2)} \circ \bfU_p^{(3)};
+        \]
+        \item Восстановление многомерного ряда $\tilde{\tX}=(\tilde{\tX}^{(1)}, \ldots, \tilde{\tX}^{(P)})$ по тензору
+        $\tilde{\calX}$ происходит следующим образом:
+        ряды $\tilde{\tX}^{(p)}$ получаются усреднением матриц-слоёв $\tilde{\calX}_{,,p}$ вдоль
+        псевдодиагоналей $l+k=\operatorname{const}$.
+    \end{enumerate}
+    Полученный в результате алгоритма ряд $\tilde{\tX}$ будем считать оценкой сигнала.
+
+    Так как шаг разложения является самым трудоёмким шагом в алгоритме, то для оценки трудоёмкости алгоритма
+    достаточно оценить трудоёмкость HOSVD траекторного тензора.
+    Из утверждения~\ref{state:hosvd-to-svd} следует, что вычисление HOSVD траекторного тензора размерности ${L\times K \times P}$
+    сводится к вычислению SVD на трёх матрицах размерностей $L\times KP,\, K\times LP,\, P\times LK$.
+    Вычисление SVD матрицы размерности $m\times n$ имеет асимптотическую трудоёмкость, равную $O(\min(mn^2, m^2 n)).$
+    Таким образом, асимптотическая сложность HOSVD траекторного тензора, а следовательно и всего алгоритма, имеет вид
+    $O\left(LKP(\min(L, KP) + \min(K, LP) + \min(P, LK))\right)$.
+
+
+    \section{Свойства HOSVD MSSA}\label{sec:hosvd-mssa-properties}
+    Пусть $\tX^{(1)}, \tX^{(2)}, \ldots, \tX^{(P)}$ "--- временные ряды длины $N$,
+    $\tX = (\tX^{(1)},\ldots, \tX^{(P)})^{\rmT}$ "--- многомерный временной ряд длины $N$,
+    $\mathbf{H}_p$ "--- траекторные матрицы рядов $\tX^{(p)}$ с длиной окна $L < N$, $p\in \overline{1:P}$.
+    Обозначим $K = N - L + 1$.
+
+    Построим траекторную матрицу многомерного ряда $\tX$:
+    $\mathbf{X} = [\mathbf{H}_1: \mathbf{H}_2: \ldots: \mathbf{H}_P] \in \mathbb{R}^{L\times KP}$,
+    её SVD имеет вид
+    \begin{gather*}
+        \mathbf{X} =\mathbf{U} \mathbf{\Lambda} \mathbf{V}.
+    \end{gather*}
+    Теперь построим траекторный тензор $\mathcal{X}\in \mathbb{R}^{L\times K \times P}$ этого многомерного ряда
+    с длиной окна $L$, как описано в определении~\ref{def:trajectory-tensor-mssa}:
+    $\mathcal{X}_{,,p} = \mathbf{H}_p,\, p\in \overline{1:P}$,
+    его HOSVD имеет вид
+    \begin{gather}
+        \mathcal{X}=\mathcal{Z} \times_1 \hat{\mathbf{U}}_1 \times_2 \hat{\mathbf{U}}_2 \times_3 \hat{\mathbf{U}}_3.
+        \label{eq:subspace-tens-hosvd}
+    \end{gather}
+
+    \begin{statement}
+        Существуют такие \emph{SVD} матрицы $\mathbf{X}$ и \emph{HOSVD} тензора $\mathcal{X}$ разложения, что
+        $\mathbf{U} = \hat{\mathbf{U}}_1$.\label{state:tens-mssa-rank}
+    \end{statement}
+
+    \begin{proof}
+        Из свойства~\ref{state:hosvd-to-svd} известно, что в качестве $\hat{\mathbf{U}}_1$ можно выбрать матрицу
+        $\hat{\mathbf{U}}$ левых сингулярных векторов из SVD развёртки тензора $\mathcal{X}$ по первому измерению $[\mathcal{X}]_{1}$.
+        В свою очередь, $[\mathcal{X}]_{1} = [\mathbf{H}_1: \mathbf{H}_2: \ldots: \mathbf{H}_P] = \mathbf{X}$.
+    \end{proof}
+
+    Из этого утверждения и из того, что разложения SVD и HOSVD единственны с точностью
+    до, возможно, некоторых ортогональных преобразований матриц сингулярных векторов,
+    следует, что пространства, порождаемые левыми сингулярными векторами матрицы $\mathbf{X}$
+    и сингулярными векторами первого измерения тензора $\mathcal{X}$ совпадают.
+
+    При вычислении HOSVD тензора используется алгоритм, который последовательно вычисляет SVD развёрток этого тензора
+    по каждому измерению, и получившиеся матрицы левых сингулярных векторов использует в качестве матриц сингулярных
+    векторов соответствующего измерения в представлении~\eqref{eq:subspace-tens-hosvd}.
+    Таким образом, на практике совпадают не только пространства, порождаемые описанными выше сингулярными векторами,
+    но и сами матрицы этих векторов.
+
+    В теории MSSA для выделения сигнала из ряда с шумом важным понятием является понятие ранга ряда.
+    \begin{definition}[Ранг многомерного ряда в теории MSSA]
+        Число $d$ называется рангом $P$-мерного ряда $\tX$, если для любой длины окна
+        $L:\: d \leqslant\min(L, N-L+1)$ ранг траекторной матрицы $\bfX$, построенной по этой длине окна,
+        будер равен $d$.
+    \end{definition}
+
+    Таким образом, исходя из утверждения~\ref{state:tens-mssa-rank}, ранг первого измерения траекторного тензора
+    $\calX$, построенного по многомерному ряду $\tX$ с длиной окна $L:\: {d \leqslant\min(L, N-L+1)}$,
+    будет равен рангу $d$ этого ряда из теории MSSA.
+    Кроме того, для таких $L$ ранг второго измерения этого траекторного тензора
+    тоже будет равен $d$, так как $\operatorname{rank}_2 \calX = \operatorname{rank}[\calX]_2$,
+    а матрица $[\calX]_2$ по построению совпадает с траекторной матрицей ряда $\tX$, построенной по длине
+    окна $K = N - L - 1$.
+    Однако, ранг третьего измерения траекторного тензора $\calX$ не связан с рангом ряда и имеет смысл
+    структурного различия рядов между собой.
+
+    \begin{definition}[HOSVD MSSA-ранг многомерного ряда]
+        \label{def:hosvd-mssa-rank}
+        Рангом многомерного ряда в терминах HOSVD MSSA будем называть его ранг в терминах MSSA.
+    \end{definition}
+
+    \begin{definition}[Ранг третьего измерения многомерного ряда]
+        Рангом третьего измерения многомерного ряда будем назвать ранг третьего измерения
+        траекторного тензора этого ряда.
+    \end{definition}
+
+    \begin{remark}
+        Ранг третьего измерения определён корректно, так как по построению траекторного тензора
+        набор векторов вдоль третьего измерения этого тензора не зависит от выбора длины окна $L$.
+    \end{remark}
+
+    \begin{example}
+        Пусть двумерный временной ряд $\tX=(\tX^{(1)}, \tX^{(2)})^{\rmT}$ состоит из временных рядов следующего вида:
+        \[
+            x_n^{(m)}=a_m \sin(2\pi n \omega_m + \psi_m),
+        \]
+        где $m \in \{1,\, 2\},\, n\in \overline{1:N},\, a_m\ne 0,\, 0<\omega_m<1 / 2,\,
+        0 \leqslant \psi < 2 \pi$.
+        Обозначим за $r$ ранг ряда $\tX$, а за $r_3$ ранг третьего измерения этого ряда.
+        В таблице~\ref{tab:hosvd-mssa-ranks} представлены значения рангов этого ряда в терминах HOSVD MSSA в
+        зависимости от различных значений параметров $\psi_m$ и $\omega_m$.
+        \begin{table}[!ht]
+            \centering
+            \caption{Ранги рядов в зависимости от параметров.}
+            \begin{tabular}{c|ccc}
+                \hline
+                Параметры &
+                \begin{tabular}{c}
+                    $\psi_1 = \psi_2$ \\ $\omega_1 = \omega_2$
+                \end{tabular}
+                & \begin{tabular}{c}
+                      $\psi_1 \ne \psi_2$ \\ $\omega_1 = \omega_2$
+                \end{tabular}
+                & $\omega_1 \ne \omega_2$ \\
+                \hline
+                $r$   & 2 & 2 & 4 \\
+                \hline
+                $r_3$ & 1 & 2 & 2 \\
+                \hline
+            \end{tabular}\label{tab:hosvd-mssa-ranks}
+        \end{table}
+    \end{example}
+
+    \begin{statement}
+        \emph{(О симметричности относительно замены длины окна)}
+        Пусть дан $P$-мерный временной ряд $\tX$ длины $N$ и выбрана некоторая длина окна $L$,
+        $\calX$ "--- траекторный тензор этого ряда, построенный по длине окна $L$, а
+        $\calY$ "--- по длине окна ${K = N - L + 1}$, и пусть
+        $R_1,\, R_2,\, R_3$ "--- параметры, выбранные в третьем шаге алгоритма \emph{HOSVD MSSA}, соответствующие $\calX$,
+        а $R_1',\, R_2',\, R_3'$ "--- соответствующие $\calY$.
+        Тогда если $R_1 = R_2',\, R_2 = R_1',\,  R_3 = R_3'$, то
+        оценки сигнала $\tilde{\tX}$ и $\tilde{\tY}$, построенные по $\calX$ и $\calY$ соответственно,
+        совпадут.
+    \end{statement}
+    \begin{proof}
+        По построению $\calX_{l,k,p} = x_{l+k-1}^{(p)} = x_{k+l-1}^{(p)} = \calY_{k,l,p}$, где ${l\in \overline{1:L}}$,
+        ${k \in \overline{1:K}}$, ${p\in \overline{1:P}}$.
+        Это означает, что $[\calX]_1 = [\calY]_2$ и $[\calX]_2 = [\calY]_1$, а $[\calX]_3 = [\calY]_3$.
+        Пусть усечение HOSVD $\calX$, описанное в третьем шаге алгоритма, имеет вид
+        \[
+            \tilde{\calX} = \sum_{l=1}^{R_1} \sum_{k=1}^{R_2} \sum_{p=1}^{R_3}
+            \calZ_{l,k,p} \bfU_l^{(1)}\circ \bfU_k^{(2)} \circ \bfU_p^{(3)},
+        \]
+        тогда усечение HOSVD $\calY$ будет иметь вид
+        \[
+            \tilde{\calY} = \sum_{l=1}^{R_1'} \sum_{k=1}^{R_2'} \sum_{p=1}^{R_3'}
+            \calZ_{l,k,p} \bfU_l^{(2)}\circ \bfU_k^{(1)} \circ \bfU_p^{(3)}
+            = \sum_{k=1}^{R_2} \sum_{l=1}^{R_1} \sum_{p=1}^{R_3}
+            \calZ_{k,l,p} \bfU_k^{(2)}\circ \bfU_l^{(1)} \circ \bfU_p^{(3)},
+        \]
+        Отсюда следует, что $[\tilde{\calX}]_1 = [\tilde{\calY}]_2$, $[\tilde{\calX}]_2 = [\tilde{\calY}]_1$ и
+        $[\tilde{\calX}]_3 = [\tilde{\calY}]_3$, а значит выполнено равенство
+        $\tilde{\calX}_{l,k,p}=\tilde{\calY}_{k,l,p}$ или по другому $\tilde{\calX}_{,,p} = \tilde{\calY}_{,,p}^{\rmT}$,
+        следовательно усреднения матриц $\tilde{\calX}_{,,p}$ и $\tilde{\calY}_{,,p}$ вдоль песвдодиагоналей совпадут
+        для всех $p$.
+    \end{proof}
+
+
+    \section{Численные сравнения полученных методов с известными}\label{sec:numerical-compar}
+    В этой части представлены сравнения методов SSA, MSSA, 2D-SSA~\cite{ssa-2020}, HOOI SSA и HOSVD MSSA
+    по точности восстановления сигнала из многомерных рядов вида
+    \begin{gather}
+        \tX = (\tX^{(1)}, \ldots, \tX^{(P)}), \nonumber \\
+        \tX^{(p)} = (s_1^{(p)} + \varepsilon_1^{(p)}, \ldots, s_N^{(p)} + \varepsilon_N^{(p)}),\nonumber \\
+        s_n^{(p)} = a_p \cos(2\pi n \omega_p + \psi_p), \label{eq:general-signal-example}
+    \end{gather}
+    где $\varepsilon_n^{(p)}$ "--- независимые $\rmN(0, 25)$ величины (белый гауссовский шум), а
+    $s_n^{(p)}$ "--- элементы искомого сигнала.
+    В качестве оценки точности восстановления сигнала было взято среднеквадратичное отклонение (RMSE)
+    восстановленного сигнала от истинного его значения по 500 реализациям шума.
+    Под применением одномерных методов (SSA и HOOI SSA) для выделения многомерного сигнала $\tX$ понимается
+    применение этих методов к каждому из рядов $\tX^{(p)}$ отдельно.
+
+    \subsection{Принцип выбора числа компонент, относимых к сигналу}\label{subsec:example-signal-ranks}
+    В каждом из методов семейства SSA важным этапом является выбор числа компонент разложения траекторной матрицы
+    или тензора ряда, по которым будет восстанавливаться сигнал.
+    В теории SSA утверждается, что в общем случае для получения наибольшей точности восстановления
+    сигнала нужно брать число компонент, равное рангу этого сигнала в терминах конкретного метода.
+    Приведём выражения, позволяющие находить ранги сигналов вида~\eqref{eq:general-signal-example}, для каждого
+    рассматриваемого метода.
+    Ранг сигнала в терминах метода $\rmT$ будем обозначать $r_\rmT$, например: $r_\text{SSA}$ "---
+    ранг сигнала в терминах SSA, $r_\text{HOSVD-MSSA}$ "--- в терминах HOSVD MSSA и т.д.
+
+    \begin{description}
+        \item[SSA] В терминах SSA любой одномерный сигнал вида $s_n = a \cos(2\pi n \omega + \psi)$, где $a\ne 0$,
+        $0 \leqslant \psi \leqslant 2\pi$ и $0 \leqslant \omega \leqslant 1/2$ имеет ранг
+        $r_\text{SSA} = 2$, если $0 < \omega < 1/2$ и $r_\text{SSA} = 1$ при $\omega \in \{0,\, 1/2\}$ и
+        $\psi \notin \{\pi / 2,\, 3\pi / 2\}$.
+        \item[HOOI SSA] По следствию из утверждения~\ref{state:tens-ssa-rank} ранг любого сигнала в терминах
+        HOOI SSA совпадает с рангом этого сигнала в терминах SSA\@.
+        \item[MSSA] Пусть множество $G \subseteq \overline{1:P}$ таково, что $\forall p_1,\, p_2 \in G ~~~
+        p_1 \ne p_2 \Rightarrow \omega_{p_1} \ne \omega_{p_2}$ и содержит наибольшее число элементов
+        среди всех множеств, удовлетворяющих этому условию.
+        Тогда в терминах MSSA ранг многомерного сигнала
+        $\tS = (\tS^{(1)}, \ldots, \tS^{(P)})$, где элементы $\tS^{(p)}$ имеют вид~\eqref{eq:general-signal-example},
+        равен сумме SSA-рангов сигналов $\tS^{(p')}$, где $p'$ проходит множество $G$.
+        \item[HOSVD MSSA] По определению~\ref{def:hosvd-mssa-rank} $r_\text{HOSVD-MSSA} = r_\text{MSSA}$.
+        Кроме того в терминах HOSVD MSSA возникает дополнительный параметр - ранг третьего измерения, который
+        будем обозначать $r_3$.
+        Ранг третьего измерения для многомерного сигнала считается в соответствии с определением как
+        ранг третьего измерения траекторного тензора, построенного по этому сигналу.
+        \item[2D-SSA] Элементы многомерного сигнала вида~\eqref{eq:general-signal-example} можно
+        представить в виде суммы
+        \[
+            s^{(p)}_n = \sum_{m=1}^{d} A_m(p, n),
+        \]
+        \[
+            A_m(p, n) =
+            \begin{pmatrix}
+                \cos(2\pi p\omega_m') \\
+                \sin(2\pi p\omega_m')
+            \end{pmatrix}^{\rmT}
+            \begin{pmatrix}
+                a_m & b_m \\
+                c_m & d_m
+            \end{pmatrix}
+            \begin{pmatrix}
+                \cos(2\pi n\omega_m'') \\
+                \sin(2\pi n\omega_m'')
+            \end{pmatrix},
+        \]
+        где $(\omega_m', \omega_m'') \ne (\omega_j', \omega_j'')$ для $m\ne j$ и $\omega_m', \omega_m'' \in (0, 1/2)$.
+        Тогда ранг данного многомерного сигнала в терминах 2D-SSA равен сумме
+        \[
+            r_\text{2D-SSA} = \sum_{m=1}^{d} \nu_m,
+        \]
+        где
+        \[
+            \nu_m = 2\operatorname{rank}\begin{pmatrix}
+                                            a_m & b_m  & c_m  & d_m \\
+                                            d_m & -c_m & -b_m & a_m
+            \end{pmatrix}.
+        \]
+    \end{description}
+
+    \subsection{Численные сравнения}\label{subsec:numerical-comp}
+    Рассмотрим некоторые варианты сигнала вида~\eqref{eq:general-signal-example}.
+    \begin{example}
+        \label{example:two-series}
+        $P = 2$, $a_1 = 30$, $a_2 = 20$.
+
+
+        \begin{table}[!ht]
+            \centering
+            \caption{Значения рангов сигнала из примера~\ref{example:two-series}
+            для каждого метода в зависимости от параметров}
+            \begin{tabular}{c|cccc}
+                Параметры     & (HOOI) SSA & (HOSVD) MSSA & $r_3$ & 2D-SSA \\
+                \hline
+                \begin{tabular}{c}
+                    $\omega_1 = \omega_2 = \frac 1 {12}$ \\
+                    $\psi_1 = \psi_2 = 0$                \\
+                \end{tabular} & 2          & 2            & 1     & 2      \\
+                \hline
+                \begin{tabular}{c}
+                    $\omega_1 = \omega_2 = \frac 1 {12}$ \\
+                    $\psi_1 = 0,\, \psi_2 = \frac \pi  4$  \\
+                \end{tabular} & 2          & 2            & 2     & 2      \\
+                \hline
+                \begin{tabular}{c}
+                    $\omega_1 = \frac 1 {12},\, \omega_2 = \frac 1 8$ \\
+                    $\psi_1 = 0,\, \psi_2 = \frac \pi  4$               \\
+                \end{tabular} & 2          & 4            & 2     & 4      \\
+                \hline
+            \end{tabular}\label{tab:ex-two-series-ranks}
+        \end{table}
+        \begin{table}[!ht]
+            \centering
+            \caption{Минимальные RMSE восстановленного с помощью различных методов сигнала из примера~\ref{example:two-series},
+                для разных значений параметров.}
+            \begin{tabular}{c|ccccc}
+                \hline
+                Параметры     & SSA           & HOOI SSA & MSSA & HOSVD MSSA    & 2D-SSA \\
+                \hline
+                \begin{tabular}{c}
+                    $\omega_1 = \omega_2 = \frac 1 {12}$ \\
+                    $\psi_1 = \psi_2 = 0$                \\
+                \end{tabular} & 1.37          & 1.43     & 1.19 & \textbf{1.09} & 1.19   \\
+                \hline
+                \begin{tabular}{c}
+                    $\omega_1 = \omega_2 = \frac 1 {12}$ \\
+                    $\psi_1 = 0,\, \psi_2 = \frac \pi  4$  \\
+                \end{tabular} & 1.38          & 1.43     & 1.20 & \textbf{1.18} & 1.20   \\
+                \hline
+                \begin{tabular}{c}
+                    $\omega_1 = \frac 1 {12},\, \omega_2 = \frac 1 8$ \\
+                    $\psi_1 = 0,\, \psi_2 = \frac \pi  4$               \\
+                \end{tabular} & \textbf{1.39} & 1.45     & 1.69 & 1.66          & 1.69   \\
+                \hline
+            \end{tabular}\label{tab:comparison-two-series}
+        \end{table}
+        \begin{figure}
+            \centering
+            \begin{subfigure}{\linewidth}
+                \includegraphics[width=.66\linewidth]{two-series-first}\hfill
+                \includegraphics[width=.34\linewidth]{two-series-first_hooi}
+                \caption{$\omega_1=\omega_2=1/12$, $\psi_1=\psi_2=0$}
+            \end{subfigure} \par\medskip
+            \begin{subfigure}{\linewidth}
+                \includegraphics[width=.66\linewidth]{two-series-second}\hfill
+                \includegraphics[width=.34\linewidth]{two-series-second_hooi}
+                \caption{$\omega_1=\omega_2=1/12$, $\psi_1=0$, $\psi_2=\pi / 4$}
+            \end{subfigure}
+            \begin{subfigure}{\linewidth}
+                \includegraphics[width=.66\linewidth]{two-series-third}\hfill
+                \includegraphics[width=.34\linewidth]{two-series-third_hooi}
+                \caption{$\omega_1=1/12$, $\omega_2=1/8$, $\psi_1=0$, $\psi_2=\pi / 4$}
+            \end{subfigure}
+            \caption{Зависимости точности выделения сигнала от длин окна для каждого из методов
+            SSA, MSSA, HOSVD MSSA, 2D-SSA (слева), HOOI SSA (справа).}
+            \label{fig:two-series-example}
+        \end{figure}
+
+        \begin{remark}
+            В методе 2D-SSA параметр длины окна двумерный, то есть $L_{xy}=(L_x, L_y)$.
+            Здесь и далее полагается $L_y = [(P + 1) / 2]$ и $L_x=L$, где $[t]$ обозначает взятие
+            целой части числа $t$.
+        \end{remark}
+    \end{example}
+
+    \begin{example}
+        \label{example:five-series}
+        $P = 5$.
+
+%        В таблице~\ref{tab:ex-five-series-ranks} приведены значения рангов сигналов в каждом из методов
+%        в зависимости от значения параметров $a_p$, $\omega_p$, $\psi_p$.
+%        Для одномерных методов (SSA и HOOI SSA) указаны ранги каждого одномерного сигнала $\tS^{(p)}$.
+%        В таблице~\ref{tab:comparison-five-series} приведены минимальные значения среднеквадратичного отклонения
+%        восстановленного сигнала от истинного для каждого метода и при различных значениях параметров.
+%        На графиках~\ref{fig:five-series-example} приведены зависимости точности восстановления
+%        сигнала от выбора параметра $L$ для методов SSA, MSSA, HOSVD MSSA и 2D-SSA, и от
+%        выбора параметров $I, L$ для метода HOOI SSA.
+        \begin{table}[!ht]
+            \centering
+            \caption{Значения рангов сигнала из примера~\ref{example:five-series}
+            для каждого метода в зависимости от параметров}
+            \begin{tabular}{c|cccc}
+                Параметры     & (HOOI) SSA & (HOSVD) MSSA & $r_3$ & 2D-SSA \\
+                \hline
+                \begin{tabular}{c}
+                    $a_p=30$\\
+                    $\omega_p = \frac 1 {12}$,
+                    $\psi_p = 0$                \\
+                \end{tabular} & 2          & 2            & 1     & 2      \\
+                \hline
+                \begin{tabular}{c}
+                    $a_1 = a_4 = 30$\\
+                    $a_2 = a_5 =20$,
+                    $a_3=25$\\
+                    $\omega_p = \frac 1 {12}$,
+                    $\psi_p = 0$                \\
+                \end{tabular} & 2          & 2            & 1     & 6      \\
+                \hline
+                \begin{tabular}{c}
+                    $a_p=30$,
+                    $\omega_p = \frac 1 {12}$,\\
+                    $\psi_p = 2(p-1)\pi / 3$
+                \end{tabular} & 2          & 2            & 2     & 2      \\
+                \hline
+                \begin{tabular}{c}
+                    $a_p=30$,
+                    $\psi_p = 2(p-1)\pi / 3$ \\
+                    $\omega_1 = \omega_2 = \omega_3 = \frac 1 {12}$\\
+                    $\omega_4=\omega_5=\frac 1 8$
+                \end{tabular} & 2          & 4            & 4     & 10      \\
+                \hline
+            \end{tabular}\label{tab:ex-five-series-ranks}
+        \end{table}
+        \begin{table}[!ht]
+            \centering
+            \caption{Минимальные RMSE восстановленного с помощью различных методов сигнала из примера~\ref{example:five-series},
+                для разных значений параметров.}
+            \begin{tabular}{c|ccccc}
+                \hline
+                Параметры     & SSA           & HOOI SSA & MSSA & HOSVD MSSA    & 2D-SSA \\
+                \hline
+                \begin{tabular}{c}
+                    $a_p = 30$ \\
+                    $\omega_p = \frac 1 {12}$,
+                    $\psi_p = 0$                \\
+                \end{tabular} &  1.34 & 0.00 & 0.95 & 0.75 & \textbf{0.73} \\
+                \hline
+                \begin{tabular}{c}
+                    $a_1 = a_4 = 30$\\
+                    $a_2 = a_5 =20$,
+                    $a_3=25$\\
+                    $\omega_p = \frac 1 {12}$,
+                    $\psi_p = 0$                \\
+                \end{tabular} & 1.38 & 1.41 & 1.07 & \textbf{0.86} & 1.45 \\  \\
+                \hline
+                \begin{tabular}{c}
+                    $a_p=30$,
+                    $\omega_p = \frac 1 {12}$\\
+                    $\psi_p = 2(p-1)\pi / 3$
+                \end{tabular} & 1.38 & 1.41 & 1.07 & 1.05 & \textbf{0.84} \\
+                \hline
+                \begin{tabular}{c}
+                    $a_p=30$,
+                    $\psi_p = 2(p-1)\pi / 3$ \\
+                    $\omega_1 = \omega_2 = \omega_3 = \frac 1 {12}$\\
+                    $\omega_4=\omega_5=\frac 1 8$
+                \end{tabular} & \textbf{1.38} & 1.41 & 1.50 & 1.49 & 1.78 \\
+                \hline
+            \end{tabular}\label{tab:comparison-five-series}
+        \end{table}
+        \begin{figure}
+            \centering
+            \begin{subfigure}{.95\linewidth}
+                \includegraphics[width=.66\linewidth]{five-series-first}\hfill
+                \includegraphics[width=.34\linewidth]{five-series-first_hooi}
+                \caption{$a_p = 30$, $\omega_p=1/12$, $\psi_p=0$}
+            \end{subfigure} \par\medskip
+            \begin{subfigure}{.95\linewidth}
+                \includegraphics[width=.66\linewidth]{five-series-second}\hfill
+                \includegraphics[width=.34\linewidth]{five-series-second_hooi}
+                \caption{$a_1=a_4 = 30$, $a_2=a_5=20$, $a_3=25$, $\omega_p=1/12$, $\psi_p=0$}
+            \end{subfigure} \par\medskip
+            \begin{subfigure}{.95\linewidth}
+                \includegraphics[width=.66\linewidth]{five-series-third}\hfill
+                \includegraphics[width=.34\linewidth]{five-series-third_hooi}
+                \caption{$a_p = 30$, $\omega_p=1/12$, $\psi_p=2(p-1)\pi/3$}
+            \end{subfigure} \par\medskip
+            \begin{subfigure}{.95\linewidth}
+                \includegraphics[width=.66\linewidth]{five-series-fourth}\hfill
+                \includegraphics[width=.34\linewidth]{five-series-fourth_hooi}
+                \caption{$a_p = 30$, $\omega_1=\omega_2=\omega_3=1/12$, $\omega_4=\omega_5=1/8$, $\psi_p=2(p-1)\pi/3$}
+            \end{subfigure}
+            \caption{Зависимости точности выделения сигнала из примера~\ref{example:five-series}
+            от длин окна для каждого из методов
+            SSA, MSSA, HOSVD MSSA, 2D-SSA (слева), HOOI SSA (справа).}
+            \label{fig:five-series-example}
+        \end{figure}
+    \end{example}
+
+    \begin{example}
+        \label{example:nine-series}
+        $P = 9$.
+
+%        В таблице~\ref{tab:ex-nine-series-ranks} приведены значения рангов сигналов в каждом из методов
+%        в зависимости от значения параметров $a_p$, $\omega_p$, $\psi_p$.
+%        Для одномерных методов (SSA и HOOI SSA) указаны ранги каждого одномерного сигнала $\tS^{(p)}$.
+%        В таблице~\ref{tab:comparison-nine-series} приведены минимальные значения среднеквадратичного отклонения
+%        восстановленного сигнала от истинного для каждого метода и при различных значениях параметров.
+%        На графиках~\ref{fig:nine-series-example} приведены зависимости точности восстановления
+%        сигнала от выбора параметра $L$ для методов SSA, MSSA, HOSVD MSSA и 2D-SSA, и от
+%        выбора параметров $I, L$ для метода HOOI SSA.
+        \begin{table}[!ht]
+            \centering
+            \caption{Значения рангов сигнала из примера~\ref{example:nine-series}
+            для каждого метода в зависимости от параметров}
+            \begin{tabular}{c|cccc}
+                Параметры     & (HOOI) SSA & (HOSVD) MSSA & $r_3$ & 2D-SSA \\
+                \hline
+                \begin{tabular}{c}
+                    $a_p=30$\\
+                    $\omega_p = \frac 1 {12}$,
+                    $\psi_p = 0$                \\
+                \end{tabular} & 2          & 2            & 1     & 2      \\
+                \hline
+                \begin{tabular}{c}
+                    $a_{p} = a_{p+5} = 30 - 2(p-1)$, $1 \leqslant p \leqslant 4$\\
+                    $a_5=22$,
+                    $\omega_p = \frac 1 {12}$,
+                    $\psi_p = 0$                \\
+                \end{tabular} & 2          & 2            & 1     & 10      \\
+                \hline
+                \begin{tabular}{c}
+                    $a_p=30$,
+                    $\omega_p = \frac 1 {12}$,\\
+                    $\psi_p = 2(p-1)\pi / 5$
+                \end{tabular} & 2          & 2            & 2     & 2      \\
+                \hline
+                \begin{tabular}{c}
+                    $a_p=30$,
+                    $\psi_p = 2(p-1)\pi / 5$\\
+                    $\omega_p = \frac 1 {12}$, $1 \leqslant p \leqslant 7$\\
+                    $\omega_8=\omega_9=\frac 1 8$
+                \end{tabular} & 2          & 4            & 4     & 10      \\
+                \hline
+            \end{tabular}\label{tab:ex-nine-series-ranks}
+        \end{table}
+        \begin{table}[!ht]
+            \centering
+            \caption{Минимальные RMSE восстановленного с помощью различных методов сигнала из примера~\ref{example:nine-series},
+                для разных значений параметров.}
+            \begin{tabular}{c|ccccc}
+                \hline
+                Параметры     & SSA           & HOOI SSA & MSSA & HOSVD MSSA    & 2D-SSA \\
+                \hline
+                \begin{tabular}{c}
+                    $a_p = 30$ \\
+                    $\omega_p = \frac 1 {12}$,
+                    $\psi_p = 0$                \\
+                \end{tabular} & 1.38 & 1.42 & 1.01 & 0.78 & \textbf{0.65} \\
+                \hline
+                \begin{tabular}{c}
+                    $a_{p} = a_{p+5} = 30 - 2(p-1)$\\
+                    $1 \leqslant p \leqslant 4$,
+                    $a_5=22$\\
+                    $\omega_p = \frac 1 {12}$,
+                    $\psi_p = 0$
+                \end{tabular} & 1.38 & 1.42 & 1.01 & \textbf{0.78} & 1.90 \\
+                \hline
+                \begin{tabular}{c}
+                    $a_p=30$,
+                    $\omega_p = \frac 1 {12}$\\
+                    $\psi_p = 2(p-1)\pi / 5$
+                \end{tabular} & 1.38 & 1.42 & 1.01 & 1.00 & \textbf{0.65} \\
+                \hline
+                \begin{tabular}{c}
+                    $a_p=30$,
+                    $\psi_p = 2(p-1)\pi / 5$\\
+                    $\omega_p = \frac 1 {12}$, $1 \leqslant p \leqslant 7$\\
+                    $\omega_8=\omega_9=\frac 1 8$
+                \end{tabular} & \textbf{1.39} & 1.42 & 1.42 & 1.42 & 1.42 \\
+                \hline
+            \end{tabular}\label{tab:comparison-nine-series}
+        \end{table}
+        \begin{figure}
+            \centering
+            \begin{subfigure}{.95\linewidth}
+                \includegraphics[width=.66\linewidth]{nine-series-first}\hfill
+                \includegraphics[width=.34\linewidth]{nine-series-first_hooi}
+                \caption{$a_p = 30$, $\omega_p=1/12$, $\psi_p=0$}
+            \end{subfigure} \par\medskip
+            \begin{subfigure}{.95\linewidth}
+                \includegraphics[width=.66\linewidth]{nine-series-second}\hfill
+                \includegraphics[width=.34\linewidth]{nine-series-second_hooi}
+                \caption{$a_{p} = a_{p+5} = 30 - 2(p-1)$, $1 \leqslant p \leqslant 4$,
+                    $a_5=22$, $\omega_p=1/12$, $\psi_p=0$}
+            \end{subfigure} \par\medskip
+            \begin{subfigure}{.95\linewidth}
+                \includegraphics[width=.66\linewidth]{nine-series-third}\hfill
+                \includegraphics[width=.34\linewidth]{nine-series-third_hooi}
+                \caption{$a_p = 30$, $\omega_p=1/12$, $\psi_p=2(p-1)\pi/5$}
+            \end{subfigure} \par\medskip
+            \begin{subfigure}{.95\linewidth}
+                \includegraphics[width=.66\linewidth]{nine-series-fourth}\hfill
+                \includegraphics[width=.34\linewidth]{nine-series-fourth_hooi}
+                \caption{$a_p = 30$, $\omega_p=1/12$, $1 \leqslant p \leqslant 7$,
+                    $\omega_8=\omega_9=1/8$, $\psi_p=2(p-1)\pi/5$}
+            \end{subfigure}
+            \caption{Зависимости точности выделения сигнала из примера~\ref{example:nine-series}
+            от длин окна для каждого из методов
+            SSA, MSSA, HOSVD MSSA, 2D-SSA (слева), HOOI SSA (справа).}
+            \label{fig:nine-series-example}
+        \end{figure}
+    \end{example}
+
+    В таблицах~\ref{tab:ex-two-series-ranks},~\ref{tab:ex-five-series-ranks},~\ref{tab:ex-nine-series-ranks}
+    приведены значения рангов сигналов в каждом из методов в зависимости от значения параметров $\omega_p$, $\psi_p$
+    для примеров~\ref{example:two-series},~\ref{example:five-series},~\ref{example:nine-series} соответственно.
+    Для одномерных методов (SSA и HOOI SSA) указаны ранги каждого одномерного сигнала $\tS^{(p)}$.
+    В таблицах~\ref{tab:comparison-two-series},~\ref{tab:comparison-five-series},~\ref{tab:comparison-nine-series}
+    приведены минимальные значения среднеквадратичного отклонения
+    восстановленного сигнала от истинного для каждого метода и при различных значениях параметров для
+    примеров~\ref{example:two-series},~\ref{example:five-series},~\ref{example:nine-series} соответственно.
+    На графиках~\ref{fig:two-series-example},~\ref{fig:five-series-example},~\ref{fig:nine-series-example}
+    приведены зависимости точности восстановления
+    сигнала от выбора параметра $L$ для методов SSA, MSSA, HOSVD MSSA и 2D-SSA, и от
+    выбора параметров $I, L$ для метода HOOI SSA для
+    примеров~\ref{example:two-series},~\ref{example:five-series},~\ref{example:nine-series} соответственно.
+
+    Таким образом, метод HOSVD MSSA выделил сигнал точнее, чем метод MSSA во всех примерах, и
+    оказался точнее метода 2D-SSA в случае малого числа рядов и в случае различающихся
+    амплитуд у сигналов, причём последнее преимущество увеличилось с увеличением размерности ряда.
+    Однако в случаях равных сигналов и сигналов с меняющейся линейно фазой метод 2D-SSA оказался точнее,
+    чем HOSVD MSSA, причём это преимущество увеличилось при увеличении размерности ряда.
+
     \section{Альтернативные тензорные разложения}\label{sec:other-decomp}
     Помимо HOSVD, существует ещё один тип тензорных разложений: ранговое разложение тензора.
     Идея заключается в представлении тензора $\mathcal{A}$ в виде линейной комбинации $R$ тензоров ранга $1$, где $R=\operatorname{rank}(\mathcal{A})$.
     Однако нахождение этого ранга в общем случае является NP-трудной задачей~\cite{NP-hard}.
 
-    CANDECOMP-PARAFAC~\cite{parafac1, parafac2} "--- итерационный метод приближения тензора суммой заданного
+    CANDECOMP-PARAFAC~\cite{parafac1, parafac2}"--- итерационный метод приближения тензора суммой заданного
     пользователем числа тензоров ранга $1$.
     То есть по параметру $K$ этот метод считает наилучшее приближение входного тензора суммой $K$ тензоров ранга $1$.
     Заметим, что из-за отсутствия каких-либо требований к ортогональности в определении рангового разложения тензора,
     многие свойства, верные в теории SSA, могут потерять справедливость при использовании этого разложения.
 
-    Рассмотрим ряды $\tilde{f}_n=3,\, \hat{f}_n=\sin(2\pi n / 3)$, $n \in \overline{0:15}$.
+    Рассмотрим ряды $\tilde{x}_n=3,\, \hat{x}_n=\sin(2\pi n / 3)$, $n \in \overline{0:15}$.
     Построим по этим рядам траекторные тензоры с параметрами $I=L=6$.
     Тогда ранг траекторного тензора $\tilde{\mathcal{X}}$, соответствующего константному ряду, равен $1$, так как его
     можно представить в виде
@@ -857,7 +1484,7 @@
     \end{gather*}
     притом точных приближений двумя тензорами ранга $1$ нет.
 
-    Траекторный тензор ряда $x_n=\tilde{f}_n+\hat{f}_n$, построенный с параметрами $I=L=6$ представим в виде суммы
+    Траекторный тензор ряда $x_n=\tilde{x}_n+\hat{x}_n$, построенный с параметрами $I=L=6$ представим в виде суммы
     \[
         \mathcal{X}=\sum_{k=1}^{4}\lambda_i X_i \circ Y_i\circ Z_i,
     \]
@@ -898,35 +1525,40 @@
     Таким образом, несмотря на отсутствие ограничений на ортогональность в определении ранговых разложений тензора, наблюдается
     отделимость константного ряда от периодического ряда при наличии условий слабой разделимости в терминах SSA и отсутствия
     шума.
-    Однако понятия ранга в терминах SSA и в терминах CP различаются, так как в терминах SSA синус с периодом $3$ имеет ранг $2$, а в
+    Однако понятия ранга в терминах SSA и в терминах CPD различаются, так как в терминах SSA синус с периодом $3$ имеет ранг $2$, а в
     терминах рангового разложения, как показано выше, такой синус имеет ранг $3$.
 
-    Другим недостатком CP разложения является то, что это итерационный метод, причём процесс итерации начинается
+    Другим недостатком CPD является то, что это итерационный метод, причём процесс итерации начинается
     с генерации случайной матрицы, в связи с чем на одних и тех же данных он может выдавать разные результаты, в том
     числе может как сойтись, так и нет.
 
-    Возможно можно добиться лучших результатов, используя CP или его модификации, если строить тензор по ряду другим образом и подбирать
+    Возможно можно добиться лучших результатов, используя CPD или его модификации, если строить тензор по ряду другим образом и подбирать
     другие параметры разложения.
     Этот вопрос предлагается изучить в будущих работах.
     \newpage
 
 
     \section{Заключение}\label{sec:conclusion}
-    В работе было показано, что по своим свойствам Tensor SSA c использованием HOSVD имеет много общего с Basic SSA с использованием SVD.
+    В работе было показано, что по своим свойствам Tensor SSA и Tensor MSSA c использованием HOSVD
+    имеют много общего с Basic SSA и MSSA соответственно.
     Однако, есть и особенности, кардинально меняющие свойства методов, которые можно использовать для анализа временных рядов.
 
-    В результате исследования метода Tensor SSA c HOSVD были сделаны следующие выводы:
-    метод можно использовать для выделения сигнала, однако остался неизученным вопрос о том,
-    как с его помощью разделять компоненты сигнала.
+    В результате исследования методов Tensor SSA и Tensor MSSA c HOSVD были сделаны следующие выводы:
+    методы можно использовать для выделения сигнала, однако остался неизученным вопрос о том,
+    как с их помощью разделять компоненты сигнала.
     Также, в большинстве случаев, как Tensor SSA c HOSVD, так и Tensor SSA с мультилинейной аппроксимацией, оказались хуже,
     чем Basic SSA в точности выделения сигнала.
     Удалось построить только один пример, где Basic SSA менее точно выделяет сигнал.
     Это противоречит результатам работы~\cite{hosvd-hooi-separation}, где показано преимущество TSSA с мультилинейной аппроксимацией.
     Однако, в этой статье сравнение идет для сигнала в виде суммы двух комплексных экспонент по точности оценке частоты сигналов.
 
+    С другой стороны, метод HOSVD MSSA выделил сигнал точнее метода MSSA во всех рассмотренных случаях, но в
+    некоторых из них данный метод оказался менее точным, чем метод 2D-SSA.
+
     Таким образом, остались открытыми вопросы: подтвердить преимущество Tensor SSA c HOSVD для выделения сигнала,
-    о котором утверждается в статье~\cite{hosvd-hooi-separation} а также найти методы, которые разделяют компоненты сигнала,
-    например в работе~\cite{cpd-separation} предлагается метод CPD для разделения комплексных экспонент.
+    о котором утверждается в статье~\cite{hosvd-hooi-separation}, найти методы, которые разделяют компоненты сигнала,
+    например в работе~\cite{cpd-separation} предлагается метод CPD для разделения комплексных экспонент, а также
+    расширить теорию HOSVD MSSA.
 
     \bibliography{main}
     \bibliographystyle{ugost2008}
