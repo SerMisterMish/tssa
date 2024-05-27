@@ -1,6 +1,6 @@
 ### HO-SSA implementation
 
-## Main function, implements the stages of injection and decomposition
+## Main function, implements the stages of embedding and decomposition
 tssa3 <- function(s, I = (length(s) + 2) %/% 3, L = I, approx.method = c("HOSVD", "HOOI")) {
   require("rTensor")
   require("tensr")
@@ -18,7 +18,7 @@ tssa3 <- function(s, I = (length(s) + 2) %/% 3, L = I, approx.method = c("HOSVD"
   result
 }
 
-## Injection operator
+## Embedding operator
 tens3 <- function(s, I, L) {
   require("rTensor")
   v <- as.vector(s)

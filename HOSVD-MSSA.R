@@ -4,7 +4,7 @@ library(rTensor)
 library(Rssa)
 library(purrr)
 
-## Main function, implements the stages of injection and decomposition.
+## Main function, implements the stages of embedding and decomposition.
 ## s must be a matrix with one-dimensional time series as its columns.
 ## progress = TRUE provides a progress bar for HOSVD step.
 ## n-ranks of the desired tensor estimate can be provided with ranks.
@@ -29,7 +29,7 @@ tmssa3 <- function(s, L = (N + 1) %% 2, progress = FALSE, ranks = hankel.list$ha
   result
 }
 
-## Injection operator. Returns a list with the trajectory tensor and the
+## Embedding operator. Returns a list with the trajectory tensor and the
 ## trajectory matrix in terms of the MSSA method.
 t.hankel <- function(s, L) {
   hankel.matrix <- purrr::reduce(apply(s, 2, Rssa::hankel, L = L, simplify = "list"), cbind)
