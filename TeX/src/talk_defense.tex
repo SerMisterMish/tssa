@@ -388,37 +388,57 @@
         $\tX = \widehat{\tS} + \widetilde{\tS} + \tE$,
         где $\hat{s}_n^{(1)} = 3$, $\hat{s}_n^{(2)} = -1.5$,
         $\tilde{s}_n^{(1)} = \cos(2\pi n / 20)$ и $\tilde{s}_n^{(2)} = 2\cos(2\pi n / 20)$, 
-        а $\varepsilon_n^{(p)}\sim \rmN(0, \sigma^2)$ и независимы. 
-        \begin{figure}
-            \centering
-            \includegraphics[width=\linewidth]{./img/approx_sep_no_noise}
-            \caption{Зависимость RMSE оценки сигнала от длины окна: $\sigma = 0$}
-        \end{figure}
-    \end{frame}
-    \begin{frame}{Численные результаты: смещение и дисперсия}
+        а $\varepsilon_n^{(p)}\sim \rmN(0, 1)$ и независимы. 
         \begin{figure}
             \begin{minipage}[c]{0.8\textwidth}
-                \includegraphics[height=4cm]{./img/approx_sep_small_noise}
+                \hspace{-0.4cm}
+                \includegraphics[width=\linewidth]{./img/approx_sep_no_noise_slides}
             \end{minipage}\hfill
-            \begin{minipage}[c]{0.18\textwidth}
-                \caption{Зависимость RMSE оценки сигнала от длины окна: $\sigma = 0.5$}
+            \begin{minipage}[c]{0.2\textwidth}
+                \caption{Смещение оценок каждым методом (RMSE без шума)}
             \end{minipage}
             \begin{minipage}[c]{0.8\textwidth}
-                \includegraphics[height=4cm]{./img/approx_sep_large_noise}
+                \vspace{-0.1cm}
+                \hspace{-0.4cm}
+                \includegraphics[width=\linewidth]{./img/approx_sep_large_noise_var}
             \end{minipage}\hfill
-            \begin{minipage}[c]{0.18\textwidth}
-                \caption{Зависимость RMSE оценки сигнала от длины окна: $\sigma = 1$}
+            \begin{minipage}[c]{0.2\textwidth}
+                \caption{Дисперсии оценок каждым методом}
             \end{minipage}
         \end{figure}
     \end{frame}
-    \begin{frame}{Численные результаты: смещение и дисперсия}
+    \begin{frame}{Численные результаты: сумма смещения и дисперсии}
         \begin{figure}
             \centering
-            \includegraphics[width=\linewidth]{./img/approx_sep_errors}
-            \caption{Сравнение значений RMSE при $\sigma=1$ и аппроксимации 
-                $\sqrt{\mathrm{bias}^2 + \widehat{\mathrm{Var}}_2}$ в зависимости от длины окна}
+            \includegraphics[width=\textwidth]{./img/approx_sep_large_noise_mse}
         \end{figure}
+        Оценки методом HOSVD-MSSA имеют меньшую дисперсию, чем методом MSSA, однако могут проигрывать в точности за счёт
+        большого смещения при некоторых $L$.
     \end{frame}
+%    \begin{frame}{Численные результаты: смещение и дисперсия}
+%        \begin{figure}
+%            \begin{minipage}[c]{0.8\textwidth}
+%                \includegraphics[height=4cm]{./img/approx_sep_small_noise}
+%            \end{minipage}\hfill
+%            \begin{minipage}[c]{0.18\textwidth}
+%                \caption{Зависимость RMSE оценки сигнала от длины окна: $\sigma = 0.5$}
+%            \end{minipage}
+%            \begin{minipage}[c]{0.8\textwidth}
+%                \includegraphics[height=4cm]{./img/approx_sep_large_noise}
+%            \end{minipage}\hfill
+%            \begin{minipage}[c]{0.18\textwidth}
+%                \caption{Зависимость RMSE оценки сигнала от длины окна: $\sigma = 1$}
+%            \end{minipage}
+%        \end{figure}
+%    \end{frame}
+%    \begin{frame}{Численные результаты: смещение и дисперсия}
+%        \begin{figure}
+%            \centering
+%            \includegraphics[width=\linewidth]{./img/approx_sep_errors}
+%            \caption{Сравнение значений RMSE при $\sigma=1$ и аппроксимации 
+%                $\sqrt{\mathrm{bias}^2 + \widehat{\mathrm{Var}}_2}$ в зависимости от длины окна}
+%        \end{figure}
+%    \end{frame}
     
     
     \section{Результаты}\label{sec:results}
