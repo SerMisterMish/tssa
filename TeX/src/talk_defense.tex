@@ -413,7 +413,7 @@
             \includegraphics[width=\textwidth]{./img/approx_sep_large_noise_mse}
         \end{figure}
         Оценки методом HOSVD-MSSA имеют меньшую дисперсию, чем методом MSSA, однако могут проигрывать в точности за счёт
-        большого смещения при некоторых $L$.
+        б\'{о}льшего смещения при некоторых $L$.
     \end{frame}
 %    \begin{frame}{Численные результаты: смещение и дисперсия}
 %        \begin{figure}
@@ -459,11 +459,93 @@
             \item Численные выводы
             \begin{itemize}
                 \item Отсутствие преимущества HO-SSA над SSA
-                \item Преимущество HOSVD-MSSA над MSSA в условиях разделимости, и над 2D-SSA для гармонических сигналов с равными амплитудами
-                \item Возможное преимущество HOSVD-MSSA над MSSA в условиях приблизительной разделимости для HOSVD-MSSA и точной для MSSA за счёт меньшей дисперсии оценки тензорным методом
+                \item Преимущество HOSVD-MSSA над MSSA в условиях разделимости
+                \item Возможное преимущество HOSVD-MSSA над MSSA в условиях приближённой разделимости для HOSVD-MSSA 
+                в зависимости от соотношения смещения и дисперсии
             \end{itemize}
             \item Реализация методов HO-SSA и HOSVD-MSSA на языке R в стиле пакета Rssa (исходный код опубликован в 
             репозитории Zenodo)
+        \end{enumerate}
+    \end{frame}
+    
+    \begin{frame}[noframenumbering]{Список источников}
+        \begin{thebibliography}{4}
+            \bibitem{ssa1986}
+            Broomhead~D.\;S., King~G.\;P.
+            Extracting qualitative dynamics from experimental data //
+            Physica D: Nonlinear Phenomena.~--- 1986.~--- Vol.~20, no.~2--3.~--- P.~217--236.
+            
+            
+            \bibitem{ssa2001}
+            Golyandina~N., Nekrutkin~V., Zhigljavsky~A.
+            Analysis of time series structure: SSA and related techiques.
+            --- Chapman \& Hall/CRC, 2001.
+            
+            \bibitem{mssa1986} 
+            Broomhead~D.\;S., King~G.\;P.
+            On the Qualitative Analysis of Experimental Dynamical Systems // 
+            Nonlinear Phenomena and Chaos.~--- 1986.~--- P.~113--144.           
+        \end{thebibliography}
+    \end{frame}
+    \begin{frame}[noframenumbering]{Трудоёмкости алгоритмов}
+        \begin{itemize}
+            \item \bluetext{HOSVD-SSA:} вычисление HOSVD тензора размерности $I\times L \times J$ имеет трудоёмкость порядка
+            \[
+                O(ILJ(\min(I, LJ) + \min(L, IJ) + \min(J, IL))).
+            \]
+            Если требуется вычислить только усечение HOSVD с $n$-рангами $(r_1, r_2, r_3)$, то трудоёмкость можно
+            уменьшить до порядка
+            \[
+            O(ILJ(r_1 + r_2 + r_3)).
+            \]
+            \item \bluetext{HOOI-SSA:} HOOI --- итеративный алгоритм. Начальное приближение: усечение HOSVD. Трудоёмкость каждой итерации имеет порядок
+            \[
+                O(r_1 r_2 r_3 (I + L + J)),
+            \]
+            а скорость сходимости алгоритма линейная. Итого:
+            \[
+                O\left(ILJ(r_1 + r_2 + r_3) + \frac{1}{\varepsilon}r_1 r_2 r_3 (I + L + J)\right)
+            \]
+        \end{itemize} 
+    \end{frame}
+    \begin{frame}[noframenumbering]{Варианты сигналов в сравнении HOSVD-MSSA с MSSA и 2D-SSA}
+        \begin{enumerate}
+            \item \textbf{Равные сигналы:} $N = 44$, $P = 12$,
+            \[
+                \hat{s}_n^{(p)} = 2 \cos(2 \pi n / 5), \quad \tilde{s}_n^{(p)} = \cos(2\pi n /3).
+            \]
+            \item \textbf{Различие амплитуд:} $N = 44$, $P = 12$,
+            \[
+                \hat{s}_n^{(p)} = 2 c_1^{(p)} \cos(2 \pi n / 5), \quad \tilde{s}_n^{(p)} = c_2^{(p)}\cos(2\pi n /3).
+            \]
+            \item \textbf{Линейные фазы:} $N = 44$, $P = 12$,
+            \[
+                \hat{s}_n^{(p)} = 2 c_1^{(p)} \cos(2 \pi n / 5 + p \pi / 6),
+                \quad \tilde{s}_n^{(p)} = c_2^{(p)}\cos(2\pi n /3 + p \pi / 9).
+            \]
+            \item \textbf{Произвольные фазы:} $N = 44$, $P = 12$,
+            \[
+                \hat{s}_n^{(p)} = 2 c_1^{(p)} \cos(2 \pi n / 5 + \varphi_1^{(p)}),
+                \quad \tilde{s}_n^{(p)} = c_2^{(p)}\cos(2\pi n /3 + \varphi_2^{(p)}).
+            \]
+            \item \textbf{Разделимость с константой:} $N = 44$, $P = 12$,
+            \[
+                \hat{s}_n^{(p)} = 3 c_1^{(p)},
+                \quad \tilde{s}_n^{(p)} = c_2^{(p)}\cos(2\pi n /3).
+            \]
+            \item \textbf{Различие частот:} $N = 59$, $P = 12$,
+            \[
+                \hat{s}_n^{(p)} = 2 \cos(2 \pi n / 5), \quad
+                \tilde{s}_n^{(p)} = \begin{cases}
+                    \cos(2\pi n /3), & 1 \leqslant p \leqslant 10,\\
+                    0.4 \cos(2 \pi n / 6), & 11 \leqslant p \leqslant 12.
+                \end{cases}
+            \]
+            \item \textbf{Ортогональность по каналам:} $N = 29$, $P = 12$,
+            \[
+                \hat{s}_n^{(p)} = 2 \cos(2 \pi n / 5) \cos(2 \pi p / 3), \quad
+                \tilde{s}_n^{(p)} = 0.5 \cos(2\pi n /3) \cos(2 \pi p / 6).
+            \]
         \end{enumerate}
     \end{frame}
 %    \section{Известные результаты}\label{sec:known-results}
