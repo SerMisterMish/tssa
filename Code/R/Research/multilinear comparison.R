@@ -26,15 +26,13 @@ tens3 <- function(s, I, L) {
   v <- as.vector(s)
   N <- length(v)
   J <- N - I - L + 2
-  X <- array(NA, c(I, L, J))
-  for (i in 1:J) {
-    X[, , i] <- outer(1:I, 1:L, function(x, y) s[i + x + y - 2])
-  }
+  X <- outer(1:L, 1:J, function(l, j) l + j) |> outer(1:I, function(lj, i) s[lj + i - 2])
   return(as.tensor(X))
 }
 
 # diagonal averaging i + j + k = const, const = 3:(I+L+J)
 reconstruct.group3 <- function(X.tens) {
+  stopifnot(is(X.tens, "Tensor"))
   X <- X.tens@data
   I <- length(X[, 1, 1])
   L <- length(X[1, , 1])

@@ -1,0 +1,195 @@
+---
+title: "Parameters estimation via HOSVD"
+output: html_document
+---
+```{r setup, include=FALSE}
+library(Rssa)
+library(rTensor)
+```
+
+```{r tensorization}
+tens3 <- function(s, I, L) {
+  require("rTensor")
+  v <- as.vector(s)
+  N <- length(v)
+  J <- N - I - L + 2
+  X <- outer(1:L, 1:J, function(l, j) l + j) |> outer(1:I, function(lj, i) s[lj + i - 2])
+  return(as.tensor(X))
+}
+
+# diagonal averaging i + j + k = const, const = 3:(I+L+J)
+reconstruct.group3 <- function(X.tens) {
+  stopifnot(is(X.tens, "Tensor"))
+  X <- X.tens@data
+  I <- length(X[, 1, 1])
+  L <- length(X[1, , 1])
+  J <- length(X[1, 1,])
+  s <- vector(mode = "numeric", length = I + L + J - 2)
+  for (C in 3:(I + L + J)) {
+    sum <- 0
+    count <- 0
+    for (i in 1:(C - 2)) {
+      for (l in 1:(C - 1 - i)) {
+        if (i <= I && l <= L && C - i - l <= J) {
+          sum <- sum + X[i, l, C - i - l]
+          count <- count + 1
+        }
+      }
+    }
+    s[C - 2] <- sum / count
+  }
+  return(s)
+}
+```
+
+```{r hosvd-mod}
+fnorm_complex <- function(tnsr) {
+  sqrt(sum(abs(tnsr@data) ^ 2))
+}
+
+hosvd_mod <- function(tnsr, ranks = NULL, status = TRUE) 
+{
+    stopifnot(is(tnsr, "Tensor"))
+    if (sum(ranks <= 0) != 0) 
+        stop("ranks must be positive")
+    if (all(tnsr@data == 0)) 
+        stop("Zero tensor detected")
+    num_modes <- tnsr@num_modes
+    if (is.null(ranks)) {
+        ranks <- tnsr@modes
+    }
+    else {
+        if (sum(ranks > tnsr@modes) != 0) 
+            stop("ranks must be smaller than the corresponding mode")
+    }
+    if (status) {
+      pb <- txtProgressBar(min = 0, max = num_modes, style = 3)
+      U_list <- vector("list", num_modes)
+      for (m in 1:num_modes) {
+        temp_mat <- rs_unfold(tnsr, m = m)@data
+        U_list[[m]] <- svd(temp_mat, nu = ranks[m])$u
+        setTxtProgressBar(pb, m)
+      }
+      close(pb)
+    }
+    else {
+      U_list <- vector("list", num_modes)
+      for (m in 1:num_modes) {
+        temp_mat <- rs_unfold(tnsr, m = m)@data
+        U_list[[m]] <- svd(temp_mat, nu = ranks[m])$u
+      }
+    }
+    Z <- ttl(tnsr, lapply(U_list, (\(.) Conj(t(.)))), ms = 1:num_modes)
+    est <- ttl(Z, U_list, ms = 1:num_modes)
+    resid <- fnorm_complex(est - tnsr)
+    list(Z = Z, U = U_list, est = est, fnorm_resid = resid)
+}
+
+tucker_mod <- function (tnsr, ranks = NULL, max_iter = 25, tol = 1e-05, status = TRUE) 
+{
+    stopifnot(is(tnsr, "Tensor"))
+    if (is.null(ranks)) 
+        stop("ranks must be specified")
+    if (sum(ranks > tnsr@modes) != 0) 
+        stop("ranks must be smaller than the corresponding mode")
+    if (sum(ranks <= 0) != 0) 
+        stop("ranks must be positive")
+    if (all(tnsr@data == 0)) 
+        stop("Zero tensor detected")
+    num_modes <- tnsr@num_modes
+    U_list <- vector("list", num_modes)
+    for (m in 1:num_modes) {
+        temp_mat <- rs_unfold(tnsr, m = m)@data
+        U_list[[m]] <- svd(temp_mat, nu = ranks[m])$u
+    }
+    tnsr_norm <- fnorm_complex(tnsr)
+    curr_iter <- 1
+    converged <- FALSE
+    fnorm_resid <- rep(0, max_iter)
+    CHECK_CONV <- function(Z, U_list) {
+        est <- ttl(Z, U_list, ms = 1:num_modes)
+        curr_resid <- fnorm_complex(tnsr - est)
+        fnorm_resid[curr_iter] <<- curr_resid
+        if (curr_iter == 1) 
+            return(FALSE)
+        if (abs(curr_resid - fnorm_resid[curr_iter - 1])/tnsr_norm < 
+            tol) 
+            return(TRUE)
+        else {
+            return(FALSE)
+        }
+    }
+    if (status) {
+      pb <- txtProgressBar(min = 0, max = max_iter, style = 3)
+      while ((curr_iter < max_iter) && (!converged)) {
+        setTxtProgressBar(pb, curr_iter)
+        modes <- tnsr@modes
+        modes_seq <- 1:num_modes
+        for (m in modes_seq) {
+          X <- ttl(tnsr, lapply(U_list[-m], (\(.) Conj(t(.)))), ms = modes_seq[-m])
+          U_list[[m]] <- svd(rs_unfold(X, m = m)@data, nu = ranks[m])$u
+        }
+        Z <- ttm(X, mat = Conj(t(U_list[[num_modes]])), m = num_modes)
+        if (CHECK_CONV(Z, U_list)) {
+          converged <- TRUE
+          setTxtProgressBar(pb, max_iter)
+        }
+        else {
+          curr_iter <- curr_iter + 1
+        }
+      }
+      close(pb)
+    }
+    else {
+      while ((curr_iter < max_iter) && (!converged)) {
+        modes <- tnsr@modes
+        modes_seq <- 1:num_modes
+        for (m in modes_seq) {
+          X <- ttl(tnsr, lapply(U_list[-m], (\(.) Conj(t(.)))), ms = modes_seq[-m])
+          U_list[[m]] <- svd(rs_unfold(X, m = m)@data, nu = ranks[m])$u
+        }
+        Z <- ttm(X, mat = Conj(t(U_list[[num_modes]])), m = num_modes)
+        if (CHECK_CONV(Z, U_list)) {
+          converged <- TRUE
+        }
+        else {
+          curr_iter <- curr_iter + 1
+        }
+      }
+    }
+    
+    fnorm_resid <- fnorm_resid[fnorm_resid != 0]
+    norm_percent <- (1 - (tail(fnorm_resid, 1)/tnsr_norm)) * 
+        100
+    est <- ttl(Z, U_list, ms = 1:num_modes)
+    invisible(list(Z = Z, U = U_list, conv = converged, est = est, 
+        norm_percent = norm_percent, fnorm_resid = tail(fnorm_resid, 
+            1), all_resids = fnorm_resid))
+}
+```
+
+```{r test-hosvd-mod}
+library(waldo)
+X.test <- rTensor::rand_tensor()
+cat("Real example:\n")
+waldo::compare(hosvd(X.test), hosvd_mod(X.test))
+
+cat("\nComplex example:\n")
+X.test.complex <- tens3(exp(1:10 * 1i), 3, 4)
+waldo::compare(hosvd(X.test.complex), hosvd_mod(X.test.complex))
+```
+
+```{r test-hooi-mod}
+library(waldo)
+X.test <- rTensor::rand_tensor()
+cat("Real example:\n")
+waldo::compare(tucker(X.test, c(3, 3, 3)), tucker_mod(X.test, c(3, 3, 3)))
+
+cat("\nComplex example:\n1. Package function\n")
+X.test.complex <- tens3(exp(1:10 * 1i), 3, 4)
+try(tucker(X.test.complex, c(3, 3, 3)))
+cat("2. Modified function\n")
+try(tucker_mod(X.test.complex, c(3, 3, 3)))
+cat("\nFnorm of the residual for modified function:\n")
+tucker_mod(X.test.complex, c(1, 1, 1), status = FALSE)$fnorm_resid
+```

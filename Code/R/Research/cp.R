@@ -10,21 +10,18 @@ tssa <- function(s, rank, l = floor(sqrt(length(s))), l1 = (l + 1) %/% 2, o = 1,
   return(result)
 }
 
-tens <- function(s, l, l1, o) {
+tens3 <- function(s, I, L) {
+  require("rTensor")
   v <- as.vector(s)
   N <- length(v)
-  I <- N %/% l
-  X.cap <- matrix(v, ncol = l, nrow = I, byrow = TRUE)
-  J <- ((l - l1) %/% o + 1)
-  X <- array(NA, c(J, l1, I))
-  for (i in 1:I) {
-    X[, , i] <- outer(0:(J - 1), 1:l1, function(x, y) X.cap[i, x * o + y])
-  }
+  J <- N - I - L + 2
+  X <- outer(1:L, 1:J, function(l, j) l + j) |> outer(1:I, function(lj, i) s[lj + i - 2])
   return(as.tensor(X))
 }
 
 reconstruct.group <- function(X.tens, l, o) {
-  X <- X.tens
+  stopifnot(is(X.tens, "Tensor"))
+  X <- X.tens@data
   I <- length(X[1, 1,])
   L <- nrow(as.matrix(X[, , 1]))
   K <- ncol(as.matrix(X[, , 1]))
