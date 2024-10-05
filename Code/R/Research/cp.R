@@ -10,6 +10,7 @@ tssa <- function(s, rank, l = floor(sqrt(length(s))), l1 = (l + 1) %/% 2, o = 1,
   return(result)
 }
 
+###TODO
 tens3 <- function(s, I, L) {
   require("rTensor")
   v <- as.vector(s)
@@ -19,6 +20,7 @@ tens3 <- function(s, I, L) {
   return(as.tensor(X))
 }
 
+###TODO
 reconstruct.group <- function(X.tens, l, o) {
   stopifnot(is(X.tens, "Tensor"))
   X <- X.tens@data
