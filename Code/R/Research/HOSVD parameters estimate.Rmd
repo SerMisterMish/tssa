@@ -8,16 +8,28 @@ library(rTensor)
 ```
 
 ```{r tensorization}
-tens3 <- function(s, I, L) {
+tens3 <- function(s, I, L, kind = c("HO-SSA", "HO-MSSA")) {
   require("rTensor")
-  v <- as.vector(s)
-  N <- length(v)
-  J <- N - I - L + 2
-  X <- outer(1:L, 1:J, function(l, j) l + j) |> outer(1:I, function(lj, i) s[lj + i - 2])
+  if (identical(kind[1], "HO-SSA")) {
+    N <- length(s)
+    J <- N - I - L + 2
+    X <- outer(1:I, 1:L, `+`) |>
+      outer(1:J, function(il, j)
+        s[il + j - 2])
+  }
+  else if (identical(kind[1], "HO-MSSA")) {
+    if (missing(L))
+      L <- I
+    N <- nrow(s)
+    K <- N - L + 1
+    Q <- ncol(s)
+    X <- apply(s, 2, Rssa::hankel, L = L, simplify = FALSE) |>
+      Reduce(cbind, x = _) |>
+      rTensor::fold(1, 2:3, modes = c(L, K, Q))
+  }
   return(as.tensor(X))
 }
 
-# diagonal averaging i + j + k = const, const = 3:(I+L+J)
 reconstruct.group3 <- function(X.tens) {
   stopifnot(is(X.tens, "Tensor"))
   X <- X.tens@data
@@ -193,3 +205,75 @@ try(tucker_mod(X.test.complex, c(3, 3, 3)))
 cat("\nFnorm of the residual for modified function:\n")
 tucker_mod(X.test.complex, c(1, 1, 1), status = FALSE)$fnorm_resid
 ```
+
+```{r tensor-based-esprit}
+tens_esprit <- function(s, I, L, groups, kind = c("HO-SSA", "HO-MSSA"), est_dim = 3, status = TRUE) {
+  if (identical(kind[1], "HO-SSA"))
+    H <- tens3(s, I, L)
+  else if (identical(kind[1], "HO-MSSA"))
+  {
+    if (missing(L))
+      L <- I
+    H <- tens3(s, L, kind = "HO-MSSA")
+  }
+  max_rank <- max(sapply(groups, max))
+  H.hooi <- tucker_mod(H, rep(max_rank, 3), status = status)
+  estimates <- list()
+  for (i in seq(groups)) {
+    U <- H$U[[est_dim]][, groups[[i]], drop = FALSE]
+    Z <- solve(U[-nrow(U), ], U[-1, ])
+    poles <- eigen(Z, only.values = TRUE)$values
+    estimates[[i]] <- list(
+      poles = poles,
+      damping = -Re(log(poles)),
+      freq = Im(log(poles)) / 2 / pi
+    )
+  }
+  estimates
+}
+```
+
+```{r test-1d-esprit-no-noise}
+
+```
+
+
+```{r complex-noise-generator}
+CCSWGN <- function(n, mean = 0, sd = 1) {
+  rnorm(n, mean = Re(mean), sd = sd / sqrt(2)) + 1i * rnorm(n, mean = Im(mean), sd = sd / sqrt(2))
+}
+```
+
+```{r test-1d-esprit-with-noise}
+set.seed(5)
+n <- 25
+SNR <- 30
+signal <- exp((-0.01 + 2i * pi * 0.2) * 0:(n - 1)) + exp((-0.02 + 2i * pi * 0.22) * 0:(n - 1))
+sd <- sqrt(mean(abs(signal)^2) / SNR)
+noise <- CCSWGN(n, mean = 0, sd = sd)
+x <- signal + noise
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
