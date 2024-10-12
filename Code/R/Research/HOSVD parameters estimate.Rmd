@@ -220,21 +220,33 @@ tens_esprit <- function(s, I, L, groups, kind = c("HO-SSA", "HO-MSSA"), est_dim 
   H.hooi <- tucker_mod(H, rep(max_rank, 3), status = status)
   estimates <- list()
   for (i in seq(groups)) {
-    U <- H$U[[est_dim]][, groups[[i]], drop = FALSE]
-    Z <- solve(U[-nrow(U), ], U[-1, ])
+    U <- H.hooi$U[[est_dim]][, groups[[i]], drop = FALSE]
+    Z <- qr.solve(U[-nrow(U), ], U[-1, ])
     poles <- eigen(Z, only.values = TRUE)$values
     estimates[[i]] <- list(
       poles = poles,
-      damping = -Re(log(poles)),
-      freq = Im(log(poles)) / 2 / pi
+      rates = Re(log(poles)),
+      frequencies = Im(log(poles)) / 2 / pi
     )
   }
   estimates
 }
 ```
 
-```{r test-1d-esprit-no-noise}
-
+```{r test-1d-ssa-esprit-no-noise}
+n <- 25
+x <- exp((-0.01 + 2i * pi * 0.2) * 0:(n - 1)) + exp((-0.02 + 2i * pi * 0.22) * 0:(n - 1))
+L <- 15
+x.ssa <- ssa(x, L = L) 
+pars <- parestimate(x.ssa, groups = list(1:2))
+cat("Rates:\n", pars$rates, "\nFrequencies:\n", pars$frequencies)
+```
+```{r test-1d-tens-esprit-no-noise}
+n <- 25
+x <- exp((-0.01 + 2i * pi * 0.2) * 0:(n - 1)) + exp((-0.02 + 2i * pi * 0.22) * 0:(n - 1))
+I <- 14; L <- 8
+pars <- tens_esprit(x, I, L, groups = list(1:2), status = FALSE)
+cat("Rates:\n", pars[[1]]$rates, "\nFrequencies:\n", pars[[1]]$frequencies)
 ```
 
 
@@ -244,36 +256,62 @@ CCSWGN <- function(n, mean = 0, sd = 1) {
 }
 ```
 
-```{r test-1d-esprit-with-noise}
-set.seed(5)
-n <- 25
-SNR <- 30
-signal <- exp((-0.01 + 2i * pi * 0.2) * 0:(n - 1)) + exp((-0.02 + 2i * pi * 0.22) * 0:(n - 1))
-sd <- sqrt(mean(abs(signal)^2) / SNR)
-noise <- CCSWGN(n, mean = 0, sd = sd)
-x <- signal + noise
+```{r rrmse}
+rrmse <- function(true, estimate) {
+  100 * sqrt(mean(abs(true - estimate)^2)) / true
+}
 ```
 
 
+```{r test-1d-esprit-noise}
+set.seed(10)
+n <- 25
+L <- 15
+I <- 14; L.tens <- 8
+rates.true <- c(-0.01, -0.02)
+freqs.true <- c(0.2, 0.22)
+signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
+  exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1))
+sd <- 0.025
+R <- 1000
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+pars.ssa <- list(
+  rate1 = numeric(R),
+  rate2 = numeric(R),
+  freq1 = numeric(R),
+  freq2 = numeric(R)
+)
+pars.tssa <- list(
+  rate1 = numeric(R),
+  rate2 = numeric(R),
+  freq1 = numeric(R),
+  freq2 = numeric(R)
+)
+pb <- txtProgressBar(max = R, style = 3)
+for (i in seq(R)) {
+  noise <- CCSWGN(n, mean = 0, sd = sd)
+  x <- signal + noise
+  x.ssa <- ssa(x, L = L)
+  par.ssa <- parestimate(x.ssa, groups = list(1:2))
+  pars.ssa$rate1[i] <- max(par.ssa$rates[1], par.ssa$rates[2])
+  pars.ssa$rate2[i] <- min(par.ssa$rates[1], par.ssa$rates[2])
+  pars.ssa$freq1[i] <- min(par.ssa$frequencies[1], par.ssa$frequencies[2])
+  pars.ssa$freq2[i] <- max(par.ssa$frequencies[1], par.ssa$frequencies[2])
+  par.tssa <- tens_esprit(x, I, L.tens, groups = list(1:2), status = FALSE)
+  pars.tssa$rate1[i] <- max(par.tssa[[1]]$rates[1], par.tssa[[1]]$rates[2])
+  pars.tssa$rate2[i] <- min(par.tssa[[1]]$rates[1], par.tssa[[1]]$rates[2])
+  pars.tssa$freq1[i] <- min(par.tssa[[1]]$frequencies[1], par.tssa[[1]]$frequencies[2])
+  pars.tssa$freq2[i] <- max(par.tssa[[1]]$frequencies[1], par.tssa[[1]]$frequencies[2])
+  setTxtProgressBar(pb, i)
+}
+close(pb)
+cat("Rate 1, SSA: ", rrmse(rates.true[1], pars.ssa$rate1), '\n')
+cat("Rate 1, HO-SSA: ", rrmse(rates.true[1], pars.tssa$rate1), '\n')
+cat("Rate 2, SSA: ", rrmse(rates.true[2], pars.ssa$rate2), '\n')
+cat("Rate 2, HO-SSA: ", rrmse(rates.true[2], pars.tssa$rate2), '\n')
+cat("Freq 1, SSA: ", rrmse(freqs.true[1], pars.ssa$freq1), '\n')
+cat("Freq 1, HO-SSA: ", rrmse(freqs.true[1], pars.tssa$freq1), '\n')
+cat("Freq 2, SSA: ", rrmse(freqs.true[2], pars.ssa$freq2), '\n')
+cat("Freq 2, HO-SSA: ", rrmse(freqs.true[2], pars.tssa$freq2), '\n')
+```
 
