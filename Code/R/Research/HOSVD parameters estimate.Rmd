@@ -263,7 +263,7 @@ rrmse <- function(true, estimate) {
 ```
 
 
-```{r test-1d-esprit-noise}
+```{r test-1d-esprit-noise, results='hide'}
 set.seed(10)
 n <- 25
 L <- 15
@@ -272,7 +272,7 @@ rates.true <- c(-0.01, -0.02)
 freqs.true <- c(0.2, 0.22)
 signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
   exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1))
-sd <- 0.025
+sd <- 0.04
 R <- 1000
 
 pars.ssa <- list(
@@ -305,6 +305,8 @@ for (i in seq(R)) {
   setTxtProgressBar(pb, i)
 }
 close(pb)
+```
+```{r, results='hold'}
 cat("Rate 1, SSA: ", rrmse(rates.true[1], pars.ssa$rate1), '\n')
 cat("Rate 1, HO-SSA: ", rrmse(rates.true[1], pars.tssa$rate1), '\n')
 cat("Rate 2, SSA: ", rrmse(rates.true[2], pars.ssa$rate2), '\n')
