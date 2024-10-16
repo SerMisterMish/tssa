@@ -8,3 +8,4 @@
 *.zip*
 *.Rproj
 .Rproj.user
+*/R/img/*
