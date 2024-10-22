@@ -5,7 +5,9 @@ output: html_document
 ```{r setup, include=FALSE}
 library(Rssa)
 library(rTensor)
-library(ggplot2) 
+library(ggplot2)
+library(gridExtra)
+library(factoextra)
 library(dplyr)
 library(tidyr)
 library(waldo)
@@ -59,9 +61,13 @@ reconstruct.group3 <- function(X.tens) {
 ```
 
 ```{r hosvd-mod}
-fnorm_complex <- function(tnsr) {
-  sqrt(sum(abs(tnsr@data) ^ 2))
+fnorm_complex <- function(x) {
+  sqrt(sum(abs(x) ^ 2))
 }
+
+setMethod("fnorm_complex", "Tensor", function(tnsr) {
+  sqrt(sum(abs(tnsr@data) ^ 2))
+})
 
 hosvd_mod <- function(tnsr, ranks = NULL, status = TRUE) 
 {
@@ -236,6 +242,31 @@ tens_esprit <- function(s, I, L, groups, kind = c("HO-SSA", "HO-MSSA"), est_dim 
 }
 ```
 
+```{r complex-noise-generator}
+CCSWGN <- function(n, mean = 0, sd = 1) {
+  rnorm(n, mean = Re(mean), sd = sd / sqrt(2)) + 1i * rnorm(n, mean = Im(mean), sd = sd / sqrt(2))
+}
+```
+
+```{r rrmse}
+rrmse <- function(true, estimate) {
+  100 * sqrt(mean(abs(true - estimate)^2)) / abs(true)
+}
+```
+
+
+```{r plot-and-save}
+plot.save <- function(plt, name, format, ..., save = TRUE) {
+  print(plt)
+  if (save){
+    format(name, ...)
+    print(plt)
+    dev.off()
+  }
+}
+save = FALSE
+```
+
 ```{r test-1d-ssa-esprit-no-noise}
 n <- 25
 x <- exp((-0.01 + 2i * pi * 0.2) * 0:(n - 1)) + exp((-0.02 + 2i * pi * 0.22) * 0:(n - 1))
@@ -251,20 +282,6 @@ I <- 14; L <- 8
 pars <- tens_esprit(x, I, L, groups = list(1:2), status = FALSE)
 cat("Rates:\n", pars[[1]]$rates, "\nFrequencies:\n", pars[[1]]$frequencies)
 ```
-
-
-```{r complex-noise-generator}
-CCSWGN <- function(n, mean = 0, sd = 1) {
-  rnorm(n, mean = Re(mean), sd = sd / sqrt(2)) + 1i * rnorm(n, mean = Im(mean), sd = sd / sqrt(2))
-}
-```
-
-```{r rrmse}
-rrmse <- function(true, estimate) {
-  100 * sqrt(mean(abs(true - estimate)^2)) / abs(true)
-}
-```
-
 
 ```{r test-1d-esprit-noise, results='hide'}
 set.seed(10)
@@ -320,19 +337,124 @@ cat("Freq 2, SSA: ", rrmse(freqs.true[2], pars.ssa$freq2), '\n')
 cat("Freq 2, HO-SSA: ", rrmse(freqs.true[2], pars.tssa$freq2), '\n')
 ```
 
-```{r 1d-comparison-for-sds, results='hide'}
+
+```{r}
 len.out <- 16
-sds <- seq(from = 0.01, to = 0.06, length.out = len.out)
+sds <- seq(from = 0, to = 0.2, length.out = len.out)
+
 set.seed(10)
 
 n <- 25
 L <- 15
 I <- 14; L.tens <- 8
-rates.true <- c(-0.01, -0.02)
+
+# no rates
+rates.true <- c(0, 0)
+# both rates -0.01
+# rates.true <- c(-0.01, -0.01)
+# both rates -0.02
+# rates.true <- c(-0.02, -0.02)
+# rates from paper
+# rates.true <- c(-0.01, -0.02)
+
 freqs.true <- c(0.2, 0.22)
 signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
   exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1))
-R <- 1000
+
+R <- 100
+l.range <- 2:4
+
+lambda.mean <- list(ssa = matrix(numeric(length(l.range) * len.out), nrow = length(l.range)), 
+                    tssa = matrix(numeric(length(l.range) * len.out), nrow = length(l.range)))
+colnames(lambda.mean$ssa) <- round(sds, 2)
+colnames(lambda.mean$tssa) <- round(sds, 2)
+rownames(lambda.mean$ssa) <- l.range
+rownames(lambda.mean$tssa) <- l.range
+
+pb <- txtProgressBar(max = R * len.out, style = 3)
+
+for (j in seq_along(sds)) {
+  sd <- sds[j]
+  
+  lambda.ssa <- matrix(numeric(length(l.range) * R), nrow = length(l.range))
+  lambda.tssa <- matrix(numeric(length(l.range) * R), nrow = length(l.range))
+  
+  for (i in seq(R)) {
+    noise <- CCSWGN(n, mean = 0, sd = sd)
+    x <- signal + noise
+    
+    lambda.ssa[,i] <- svd(Rssa::hankel(x, L))$d[l.range]
+    
+    Z <- hosvd_mod(tens3(x, I, L.tens), status = FALSE)$Z[,, l.range, drop = FALSE]@data
+    lambda.tssa[,i] <- apply(Z, 3, fnorm_complex)
+    
+    setTxtProgressBar(pb, (j - 1) * R + i)
+  }
+  
+  lambda.mean$ssa[,j] <- rowMeans(lambda.ssa)
+  lambda.mean$tssa[,j] <- rowMeans(lambda.tssa)
+}
+close(pb)
+```
+
+
+```{r}
+scree.plots.ssa <- list()
+scree.plots.tssa <- list()
+
+for (j in 1:len.out) {
+  df <- data.frame(l_ssa = lambda.mean$ssa[, j], l_tssa = lambda.mean$tssa[, j])
+  
+  scree.plots.ssa[[j]] <- df |> ggplot(aes(x = l.range, y = l_ssa)) +
+    geom_point(size = 4) + geom_line() +
+    labs(title = paste0("SSA, sd = ", round(sds[j], 2)),
+         x = "Index", y = "Lambda") +
+    ylim(c(min(lambda.mean$ssa), max(lambda.mean$ssa)))
+  
+  scree.plots.tssa[[j]] <- df |> ggplot(aes(x = l.range, y = l_tssa)) +
+    geom_point(size = 4) + geom_line() +
+    labs(title = paste0("HO-SSA, sd = ", round(sds[j], 2)),
+         x = "Index", y = "Lambda") +
+    ylim(c(min(lambda.mean$tssa), max(lambda.mean$tssa)))
+}
+
+ggsave("./img/Scree_plots_ssa.pdf",
+       marrangeGrob(grobs = scree.plots.ssa, ncol = 2, nrow = 3,
+                    layout_matrix = matrix(seq_len(2 * 3), nrow = 3, byrow = TRUE)),
+       width = 7, height = 7)
+
+ggsave("./img/Scree_plots_tssa.pdf",
+       marrangeGrob(grobs = scree.plots.tssa, ncol = 2, nrow = 3,
+                    layout_matrix = matrix(seq_len(2 * 3), nrow = 3, byrow = TRUE)),
+       width = 7, height = 7)
+```
+
+
+```{r 1d-comparison-for-sds, results='hide'}
+len.out <- 16
+sds <- seq(from = 0.01, to = 0.2, length.out = len.out)
+# sds <- seq(from = 0.01, to = 0.06, length.out = len.out)
+set.seed(10)
+
+n <- 25
+L <- 15
+I <- 14; L.tens <- 8
+# no rates
+# rates.true <- c(0, 0)
+# both rates -0.01
+# rates.true <- c(-0.01, -0.01)
+# both rates -0.02
+# rates.true <- c(-0.02, -0.02)
+# rates from paper
+rates.true <- c(-0.01, -0.02)
+
+freqs.true <- c(0.2, 0.22)
+signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
+  exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1))
+
+groups <- list(1:2)
+
+R <- 500
 
 rate1.rrmse <- list(ssa = numeric(len.out), tssa = numeric(len.out))
 rate2.rrmse <- list(ssa = numeric(len.out), tssa = numeric(len.out))
@@ -363,13 +485,13 @@ for (j in seq_along(sds)) {
     x <- signal + noise
     x.ssa <- ssa(x, L = L)
     
-    par.ssa <- parestimate(x.ssa, groups = list(1:2))
+    par.ssa <- parestimate(x.ssa, groups = groups)
     pars.ssa$rate1[i] <- max(par.ssa$rates[1], par.ssa$rates[2])
     pars.ssa$rate2[i] <- min(par.ssa$rates[1], par.ssa$rates[2])
     pars.ssa$freq1[i] <- min(par.ssa$frequencies[1], par.ssa$frequencies[2])
     pars.ssa$freq2[i] <- max(par.ssa$frequencies[1], par.ssa$frequencies[2])
     
-    par.tssa <- tens_esprit(x, I, L.tens, groups = list(1:2), status = FALSE)
+    par.tssa <- tens_esprit(x, I, L.tens, groups = groups, status = FALSE)
     pars.tssa$rate1[i] <- max(par.tssa[[1]]$rates[1], par.tssa[[1]]$rates[2])
     pars.tssa$rate2[i] <- min(par.tssa[[1]]$rates[1], par.tssa[[1]]$rates[2])
     pars.tssa$freq1[i] <- min(par.tssa[[1]]$frequencies[1], par.tssa[[1]]$frequencies[2])
@@ -390,13 +512,22 @@ for (j in seq_along(sds)) {
 close(pb)
 ```
 
-```{r plot-and-save}
-plot.save <- function(plt, name, format, ...) {
-  print(plt)
-  format(name, ...)
-  print(plt)
-  dev.off()
-}
+```{r}
+signal.plot.df <- data.frame(
+  re_1 = Re(exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1))), 
+  im_1 = Im(exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1))),
+  re_2 = Re(exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1))),
+  im_2 = Im(exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1))),
+  index = 1:n) |> mutate(re_sum = re_1 + re_2, im_sum = im_1 + im_2)
+
+
+signal.plot.df |> pivot_longer(c(re_1, re_2, re_sum), names_to = "Re_num", 
+                               names_prefix = "re_", values_to = "Re") |>
+  ggplot(aes(x = index)) + geom_line(aes(y = Re, col = Re_num, linetype = Re_num), lwd = 1.2)
+
+signal.plot.df |> pivot_longer(c(im_1, im_2, im_sum), names_to = "Im_num", 
+                               names_prefix = "im_", values_to = "Im") |>
+  ggplot(aes(x = index)) + geom_line(aes(y = Im, col = Im_num, linetype = Im_num), lwd = 1.2)
 ```
 
 
@@ -412,10 +543,10 @@ rate1.plot <- rate1.df |> ggplot() +
   ), lwd = 1.2)
 
 plot.save(rate1.plot,
-          "./img/rate1_mini.pdf",
+          "./img/rate1.pdf",
           pdf,
           width = 9,
-          height = 6)
+          height = 6, save = save)
 ```
 
 ```{r}
@@ -429,10 +560,10 @@ rate2.plot <- rate2.df |> ggplot() + geom_line(aes(
 ), lwd = 1.2)
 
 plot.save(rate2.plot,
-          "./img/rate2_mini.pdf",
+          "./img/rate2.pdf",
           pdf,
           width = 9,
-          height = 6)
+          height = 6, save = save)
 ```
 
 ```{r}
@@ -446,10 +577,10 @@ freq1.plot <- freq1.df |> ggplot() + geom_line(aes(
 ), lwd = 1.2)
 
 plot.save(freq1.plot,
-          "./img/freq1_mini.pdf",
+          "./img/freq1.pdf",
           pdf,
           width = 9,
-          height = 6)
+          height = 6, save = save)
 ```
 ```{r}
 freq2.df <- freq2.rrmse |> as.data.frame() |> mutate(sd = sds) |>
@@ -462,10 +593,10 @@ freq2.plot <- freq2.df |> ggplot() + geom_line(aes(
 ), lwd = 1.2)
 
 plot.save(freq2.plot,
-          "./img/freq2_mini.pdf",
+          "./img/freq2.pdf",
           pdf,
           width = 9,
-          height = 6)
+          height = 6, save = save)
 ```
 
 ```{r complex-nd-esprit}
@@ -530,30 +661,40 @@ Q <- 12
 L <- 13
 L.tens <- 13
 
-rates.true <- c(-0.01, -0.02)
+# no rates
+rates.true <- c(0, 0)
+# both rates -0.01
+# rates.true <- c(-0.01, -0.01)
+# both rates -0.02
+# rates.true <- c(-0.02, -0.02)
+# rates from paper
+# rates.true <- c(-0.01, -0.02)
+
 freqs.true <- c(0.2, 0.22)
+
 coef <- matrix(CCSWGN(2 * Q), ncol = 2)
 
-signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) %o% coef[, 1] + 
+signal.mult <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) %o% coef[, 1] + 
   exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1)) %o% coef[, 2]
+
 R <- 1000
 
-rate1.rrmse <- list(ssa = numeric(len.out), tssa = numeric(len.out))
-rate2.rrmse <- list(ssa = numeric(len.out), tssa = numeric(len.out))
-freq1.rrmse <- list(ssa = numeric(len.out), tssa = numeric(len.out))
-freq2.rrmse <- list(ssa = numeric(len.out), tssa = numeric(len.out))
+rate1.mult.rrmse <- list(mssa = numeric(len.out), tmssa = numeric(len.out))
+rate2.mult.rrmse <- list(mssa = numeric(len.out), tmssa = numeric(len.out))
+freq1.mult.rrmse <- list(mssa = numeric(len.out), tmssa = numeric(len.out))
+freq2.mult.rrmse <- list(mssa = numeric(len.out), tmssa = numeric(len.out))
 
 pb <- txtProgressBar(max = R * len.out, style = 3)
 
 for (j in seq_along(sds)) {
-  pars.ssa <- list(
+  pars.mssa <- list(
     rate1 = numeric(R),
     rate2 = numeric(R),
     freq1 = numeric(R),
     freq2 = numeric(R)
   )
   
-  pars.tssa <- list(
+  pars.tmssa <- list(
     rate1 = numeric(R),
     rate2 = numeric(R),
     freq1 = numeric(R),
@@ -564,36 +705,38 @@ for (j in seq_along(sds)) {
   
   for (i in seq(R)) {
     noise <- CCSWGN(n, mean = 0, sd = sd)
-    x <- signal + noise
+    x <- signal.mult + noise
     
-    par.ssa <- cmesprit(x, L = L, groups = list(1:2))
-    pars.ssa$rate1[i] <- max(par.ssa[[1]]$rates[1], par.ssa[[1]]$rates[2])
-    pars.ssa$rate2[i] <- min(par.ssa[[1]]$rates[1], par.ssa[[1]]$rates[2])
-    pars.ssa$freq1[i] <- min(par.ssa[[1]]$frequencies[1], par.ssa[[1]]$frequencies[2])
-    pars.ssa$freq2[i] <- max(par.ssa[[1]]$frequencies[1], par.ssa[[1]]$frequencies[2])
+    par.mssa <- cmesprit(x, L = L, groups = list(1:2))
+    pars.mssa$rate1[i] <- max(par.mssa[[1]]$rates[1], par.mssa[[1]]$rates[2])
+    pars.mssa$rate2[i] <- min(par.mssa[[1]]$rates[1], par.mssa[[1]]$rates[2])
+    pars.mssa$freq1[i] <- min(par.mssa[[1]]$frequencies[1], par.mssa[[1]]$frequencies[2])
+    pars.mssa$freq2[i] <- max(par.mssa[[1]]$frequencies[1], par.mssa[[1]]$frequencies[2])
     
-    par.tssa <- tens_esprit(x, L.tens, kind = "HO-MSSA", est_dim = 1, groups = list(1:2), status = FALSE)
-    pars.tssa$rate1[i] <- max(par.tssa[[1]]$rates[1], par.tssa[[1]]$rates[2])
-    pars.tssa$rate2[i] <- min(par.tssa[[1]]$rates[1], par.tssa[[1]]$rates[2])
-    pars.tssa$freq1[i] <- min(par.tssa[[1]]$frequencies[1], par.tssa[[1]]$frequencies[2])
-    pars.tssa$freq2[i] <- max(par.tssa[[1]]$frequencies[1], par.tssa[[1]]$frequencies[2])
+    par.tmssa <- tens_esprit(x, L.tens, kind = "HO-MSSA", est_dim = 1, groups = list(1:2), status = FALSE)
+    pars.tmssa$rate1[i] <- max(par.tmssa[[1]]$rates[1], par.tmssa[[1]]$rates[2])
+    pars.tmssa$rate2[i] <- min(par.tmssa[[1]]$rates[1], par.tmssa[[1]]$rates[2])
+    pars.tmssa$freq1[i] <- min(par.tmssa[[1]]$frequencies[1], par.tmssa[[1]]$frequencies[2])
+    pars.tmssa$freq2[i] <- max(par.tmssa[[1]]$frequencies[1], par.tmssa[[1]]$frequencies[2])
     
     setTxtProgressBar(pb, (j - 1) * R + i)
   }
   
-  rate1.rrmse$ssa[j] <- rrmse(rates.true[1], pars.ssa$rate1)
-  rate1.rrmse$tssa[j] <- rrmse(rates.true[1], pars.tssa$rate1)
-  rate2.rrmse$ssa[j] <- rrmse(rates.true[2], pars.ssa$rate2)
-  rate2.rrmse$tssa[j] <- rrmse(rates.true[2], pars.tssa$rate2)
-  freq1.rrmse$ssa[j] <- rrmse(freqs.true[1], pars.ssa$freq1)
-  freq1.rrmse$tssa[j] <- rrmse(freqs.true[1], pars.tssa$freq1)
-  freq2.rrmse$ssa[j] <- rrmse(freqs.true[2], pars.ssa$freq2)
-  freq2.rrmse$tssa[j] <- rrmse(freqs.true[2], pars.tssa$freq2)
+  rate1.mult.rrmse$mssa[j] <- rrmse(rates.true[1], pars.mssa$rate1)
+  rate1.mult.rrmse$tmssa[j] <- rrmse(rates.true[1], pars.tmssa$rate1)
+  rate2.mult.rrmse$mssa[j] <- rrmse(rates.true[2], pars.mssa$rate2)
+  rate2.mult.rrmse$tmssa[j] <- rrmse(rates.true[2], pars.tmssa$rate2)
+  freq1.mult.rrmse$mssa[j] <- rrmse(freqs.true[1], pars.mssa$freq1)
+  freq1.mult.rrmse$tmssa[j] <- rrmse(freqs.true[1], pars.tmssa$freq1)
+  freq2.mult.rrmse$mssa[j] <- rrmse(freqs.true[2], pars.mssa$freq2)
+  freq2.mult.rrmse$tmssa[j] <- rrmse(freqs.true[2], pars.tmssa$freq2)
 }
 close(pb)
 ```
 
 ```{r}
+save = TRUE
+
 rate1.df <- rate1.rrmse |> as.data.frame() |> mutate(sd = sds) |>
   pivot_longer(!sd, names_to = "type", values_to = "RRMSE")
 rate1.plot <- rate1.df |> ggplot() +
@@ -608,7 +751,7 @@ plot.save(rate1.plot,
           "./img/rate1_nd.pdf",
           pdf,
           width = 9,
-          height = 6)
+          height = 6, save = save)
 ```
 
 ```{r}
@@ -625,7 +768,7 @@ plot.save(rate2.plot,
           "./img/rate2_nd.pdf",
           pdf,
           width = 9,
-          height = 6)
+          height = 6, save = save)
 ```
 
 ```{r}
@@ -642,8 +785,9 @@ plot.save(freq1.plot,
           "./img/freq1_nd.pdf",
           pdf,
           width = 9,
-          height = 6)
+          height = 6, save = save)
 ```
+
 ```{r}
 freq2.df <- freq2.rrmse |> as.data.frame() |> mutate(sd = sds) |>
   pivot_longer(!sd, names_to = "type", values_to = "RRMSE")
@@ -658,5 +802,5 @@ plot.save(freq2.plot,
           "./img/freq2_nd.pdf",
           pdf,
           width = 9,
-          height = 6)
+          height = 6, save = save)
 ```
