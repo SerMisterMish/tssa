@@ -345,37 +345,55 @@ cat("Freq 2, HO-SSA: ", rrmse(freqs.true[2], pars.tssa$freq2), '\n')
 # Проверка смешения сигнала с шумом
 ```{r 1d-lambdas}
 len.out <- 12
-sds <- seq(from = 0, to = 0.2, length.out = len.out)
+sds <- seq(from = 0,
+           to = 0.2,
+           length.out = len.out)
 
 set.seed(10)
 
 n <- 25
 L <- 15
-I <- 14; L.tens <- 8
+I <- 14
+L.tens <- 8
 
 # no rates
-# rates.true <- c(0, 0)
+rates.true <- c(0, 0)
 # both rates -0.01
 # rates.true <- c(-0.01, -0.01)
 # both rates -0.02
 # rates.true <- c(-0.02, -0.02)
 # rates from paper
-rates.true <- c(-0.01, -0.02)
+# rates.true <- c(-0.01, -0.02)
 
 freqs.true <- c(0.2, 0.22)
 signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
   exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1))
 
-R <- 100
+R <- 500
 l.range <- 2:4
 
-lambda.mean <- list(ssa = matrix(numeric(length(l.range) * len.out), nrow = length(l.range)), 
-                    tssa = list(
-                      dim1 = matrix(numeric(length(l.range) * len.out), nrow = length(l.range)),
-                      dim2 = matrix(numeric(length(l.range) * len.out), nrow = length(l.range)),
-                      dim3 = matrix(numeric(length(l.range) * len.out), nrow = length(l.range))))
+lambda.mean <- list(
+  ssa = matrix(numeric(length(l.range) * len.out), nrow = length(l.range)),
+  tssa = list(
+    dim1 = matrix(numeric(length(l.range) * len.out), nrow = length(l.range)),
+    dim2 = matrix(numeric(length(l.range) * len.out), nrow = length(l.range)),
+    dim3 = matrix(numeric(length(l.range) * len.out), nrow = length(l.range))
+  )
+)
+
+noise.lambda.mean <- list(
+  ssa = matrix(numeric(length(l.range) * len.out), nrow = length(l.range)),
+  tssa = list(
+    dim1 = matrix(numeric(length(l.range) * len.out), nrow = length(l.range)),
+    dim2 = matrix(numeric(length(l.range) * len.out), nrow = length(l.range)),
+    dim3 = matrix(numeric(length(l.range) * len.out), nrow = length(l.range))
+  )
+)
+
 colnames(lambda.mean$ssa) <- round(sds, 2)
+colnames(noise.lambda.mean$ssa) <- round(sds, 2)
 lambda.mean$tssa <- lapply(lambda.mean$tssa, `colnames<-`, value = round(sds, 2))
+noise.lambda.mean$tssa <- lapply(noise.lambda.mean$tssa, `colnames<-`, value = round(sds, 2))
 
 pb <- txtProgressBar(max = R * len.out, style = 3)
 
@@ -387,24 +405,43 @@ for (j in seq_along(sds)) {
   lambda.tssa.dim2 <- matrix(numeric(length(l.range) * R), nrow = length(l.range))
   lambda.tssa.dim3 <- matrix(numeric(length(l.range) * R), nrow = length(l.range))
   
+  noise.lambda.ssa <- matrix(numeric(length(l.range) * R), nrow = length(l.range))
+  noise.lambda.tssa.dim1 <- matrix(numeric(length(l.range) * R), nrow = length(l.range))
+  noise.lambda.tssa.dim2 <- matrix(numeric(length(l.range) * R), nrow = length(l.range))
+  noise.lambda.tssa.dim3 <- matrix(numeric(length(l.range) * R), nrow = length(l.range))
+  
   for (i in seq(R)) {
     noise <- CCSWGN(n, mean = 0, sd = sd)
     x <- signal + noise
     
-    lambda.ssa[,i] <- svd(Rssa::hankel(x, L))$d[l.range]
+    lambda.ssa[, i] <- svd(Rssa::hankel(x, L))$d[l.range]
     
     Z <- hosvd_mod(tens3(x, I, L.tens), status = FALSE)$Z@data
-    lambda.tssa.dim1[,i] <- apply(Z, 1, fnorm_complex)[l.range]
-    lambda.tssa.dim2[,i] <- apply(Z, 2, fnorm_complex)[l.range]
-    lambda.tssa.dim3[,i] <- apply(Z, 3, fnorm_complex)[l.range]
+    lambda.tssa.dim1[, i] <- apply(Z, 1, fnorm_complex)[l.range]
+    lambda.tssa.dim2[, i] <- apply(Z, 2, fnorm_complex)[l.range]
+    lambda.tssa.dim3[, i] <- apply(Z, 3, fnorm_complex)[l.range]
+    
+    if(sd > 0) {
+      noise.lambda.ssa[, i] <- svd(Rssa::hankel(noise, L))$d[seq_along(l.range)]
+    
+      Z.noise <- hosvd_mod(tens3(noise, I, L.tens), status = FALSE)$Z@data
+      noise.lambda.tssa.dim1[, i] <- apply(Z.noise, 1, fnorm_complex)[seq_along(l.range)]
+      noise.lambda.tssa.dim2[, i] <- apply(Z.noise, 2, fnorm_complex)[seq_along(l.range)]
+      noise.lambda.tssa.dim3[, i] <- apply(Z.noise, 3, fnorm_complex)[seq_along(l.range)]
+    }
     
     setTxtProgressBar(pb, (j - 1) * R + i)
   }
   
-  lambda.mean$ssa[,j] <- rowMeans(lambda.ssa)
-  lambda.mean$tssa$dim1[,j] <- rowMeans(lambda.tssa.dim1)
-  lambda.mean$tssa$dim2[,j] <- rowMeans(lambda.tssa.dim2)
-  lambda.mean$tssa$dim3[,j] <- rowMeans(lambda.tssa.dim3)
+  lambda.mean$ssa[, j] <- rowMeans(lambda.ssa)
+  lambda.mean$tssa$dim1[, j] <- rowMeans(lambda.tssa.dim1)
+  lambda.mean$tssa$dim2[, j] <- rowMeans(lambda.tssa.dim2)
+  lambda.mean$tssa$dim3[, j] <- rowMeans(lambda.tssa.dim3)
+  
+  noise.lambda.mean$ssa[, j] <- rowMeans(noise.lambda.ssa)
+  noise.lambda.mean$tssa$dim1[, j] <- rowMeans(noise.lambda.tssa.dim1)
+  noise.lambda.mean$tssa$dim2[, j] <- rowMeans(noise.lambda.tssa.dim2)
+  noise.lambda.mean$tssa$dim3[, j] <- rowMeans(noise.lambda.tssa.dim3)
 }
 close(pb)
 ```
@@ -443,7 +480,7 @@ for (j in 1:len.out) {
 
 layout_matrix <- matrix(seq_len(2 * 3), nrow = 3, byrow = TRUE)
 
-ggsave("./img/Scree_plots_diffrates.pdf",
+ggsave("./img/Scree_plots_norates.pdf",
        marrangeGrob(grobs = scree.plots, ncol = 2, nrow = 3,
                     layout_matrix = layout_matrix,
                     top = quote(
@@ -451,6 +488,20 @@ ggsave("./img/Scree_plots_diffrates.pdf",
                                       "), page ", g, " of ", npages))),
        width = 9, height = 9)
 ```
+
+## Отношения разниц сингулярных значений
+```{r, results='hold'}
+cat("SSA\n|--Noise ratios:\n")
+apply(noise.lambda.mean$ssa[, -1], 2, function(x) Reduce(`/`, -diff(x)))
+cat("\n|--Signal+Noise ratios:\n")
+apply(lambda.mean$ssa[, -1], 2, function(x) Reduce(`/`, -diff(x)))
+
+cat("\n\nHO-SSA\n|--Noise ratios:\n")
+apply(noise.lambda.mean$tssa$dim1[, -1], 2, function(x) Reduce(`/`, -diff(x)))
+cat("\n|--Signal+Noise ratios:\n")
+apply(lambda.mean$tssa$dim1[, -1], 2, function(x) Reduce(`/`, -diff(x)))
+```
+
 
 # Сравнение одномерных методов для разных дисперсий
 ```{r 1d-comparison-for-sds, results='hide'}
