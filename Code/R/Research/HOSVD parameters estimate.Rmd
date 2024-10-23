@@ -2,7 +2,7 @@
 title: "Parameters estimation via HOSVD"
 output: html_document
 ---
-```{r setup, include=FALSE}
+```{r, setup, include=FALSE}
 library(Rssa)
 library(rTensor)
 library(ggplot2)
@@ -13,6 +13,7 @@ library(tidyr)
 library(waldo)
 ```
 
+# Функции для тензоризации SSA
 ```{r tensorization}
 tens3 <- function(s, I, L, kind = c("HO-SSA", "HO-MSSA")) {
   require("rTensor")
@@ -60,15 +61,18 @@ reconstruct.group3 <- function(X.tens) {
 }
 ```
 
-```{r hosvd-mod}
+# Комплексные модификации тензорных разложений
+```{r fnorm_complex}
 fnorm_complex <- function(x) {
   sqrt(sum(abs(x) ^ 2))
 }
 
-setMethod("fnorm_complex", "Tensor", function(tnsr) {
-  sqrt(sum(abs(tnsr@data) ^ 2))
+setMethod("fnorm_complex", "Tensor", function(x) {
+  sqrt(sum(abs(x@data) ^ 2))
 })
+```
 
+```{r hosvd-mod}
 hosvd_mod <- function(tnsr, ranks = NULL, status = TRUE) 
 {
     stopifnot(is(tnsr, "Tensor"))
@@ -190,6 +194,7 @@ tucker_mod <- function(tnsr, ranks = NULL, max_iter = 25, tol = 1e-05, status = 
 }
 ```
 
+# Проверка корректности модификаций
 ```{r test-hosvd-mod}
 X.test <- rTensor::rand_tensor()
 cat("Real example:\n")
@@ -213,7 +218,7 @@ try(tucker_mod(X.test.complex, c(3, 3, 3)))
 cat("\nFnorm of the residual for modified function:\n")
 tucker_mod(X.test.complex, c(1, 1, 1), status = FALSE)$fnorm_resid
 ```
-
+# Тензорная модификация ESPRIT и вспомогательные функции
 ```{r tensor-based-esprit}
 tens_esprit <- function(s, I, L, groups, kind = c("HO-SSA", "HO-MSSA"), est_dim = 3, 
                         status = TRUE, qrtol = 1e-07) {
@@ -254,7 +259,6 @@ rrmse <- function(true, estimate) {
 }
 ```
 
-
 ```{r plot-and-save}
 plot.save <- function(plt, name, format, ..., save = TRUE) {
   print(plt)
@@ -267,7 +271,8 @@ plot.save <- function(plt, name, format, ..., save = TRUE) {
 save = FALSE
 ```
 
-```{r test-1d-ssa-esprit-no-noise}
+# Сравнения одномерных методов
+```{r test-1d-no-noise}
 n <- 25
 x <- exp((-0.01 + 2i * pi * 0.2) * 0:(n - 1)) + exp((-0.02 + 2i * pi * 0.22) * 0:(n - 1))
 L <- 15
@@ -283,7 +288,7 @@ pars <- tens_esprit(x, I, L, groups = list(1:2), status = FALSE)
 cat("Rates:\n", pars[[1]]$rates, "\nFrequencies:\n", pars[[1]]$frequencies)
 ```
 
-```{r test-1d-esprit-noise, results='hide'}
+```{r test-1d-noise, results='hide'}
 set.seed(10)
 n <- 25
 L <- 15
@@ -337,9 +342,9 @@ cat("Freq 2, SSA: ", rrmse(freqs.true[2], pars.ssa$freq2), '\n')
 cat("Freq 2, HO-SSA: ", rrmse(freqs.true[2], pars.tssa$freq2), '\n')
 ```
 
-
-```{r}
-len.out <- 16
+# Проверка смешения сигнала с шумом
+```{r 1d-lambdas}
+len.out <- 12
 sds <- seq(from = 0, to = 0.2, length.out = len.out)
 
 set.seed(10)
@@ -349,13 +354,13 @@ L <- 15
 I <- 14; L.tens <- 8
 
 # no rates
-rates.true <- c(0, 0)
+# rates.true <- c(0, 0)
 # both rates -0.01
 # rates.true <- c(-0.01, -0.01)
 # both rates -0.02
 # rates.true <- c(-0.02, -0.02)
 # rates from paper
-# rates.true <- c(-0.01, -0.02)
+rates.true <- c(-0.01, -0.02)
 
 freqs.true <- c(0.2, 0.22)
 signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
@@ -365,11 +370,12 @@ R <- 100
 l.range <- 2:4
 
 lambda.mean <- list(ssa = matrix(numeric(length(l.range) * len.out), nrow = length(l.range)), 
-                    tssa = matrix(numeric(length(l.range) * len.out), nrow = length(l.range)))
+                    tssa = list(
+                      dim1 = matrix(numeric(length(l.range) * len.out), nrow = length(l.range)),
+                      dim2 = matrix(numeric(length(l.range) * len.out), nrow = length(l.range)),
+                      dim3 = matrix(numeric(length(l.range) * len.out), nrow = length(l.range))))
 colnames(lambda.mean$ssa) <- round(sds, 2)
-colnames(lambda.mean$tssa) <- round(sds, 2)
-rownames(lambda.mean$ssa) <- l.range
-rownames(lambda.mean$tssa) <- l.range
+lambda.mean$tssa <- lapply(lambda.mean$tssa, `colnames<-`, value = round(sds, 2))
 
 pb <- txtProgressBar(max = R * len.out, style = 3)
 
@@ -377,7 +383,9 @@ for (j in seq_along(sds)) {
   sd <- sds[j]
   
   lambda.ssa <- matrix(numeric(length(l.range) * R), nrow = length(l.range))
-  lambda.tssa <- matrix(numeric(length(l.range) * R), nrow = length(l.range))
+  lambda.tssa.dim1 <- matrix(numeric(length(l.range) * R), nrow = length(l.range))
+  lambda.tssa.dim2 <- matrix(numeric(length(l.range) * R), nrow = length(l.range))
+  lambda.tssa.dim3 <- matrix(numeric(length(l.range) * R), nrow = length(l.range))
   
   for (i in seq(R)) {
     noise <- CCSWGN(n, mean = 0, sd = sd)
@@ -385,51 +393,66 @@ for (j in seq_along(sds)) {
     
     lambda.ssa[,i] <- svd(Rssa::hankel(x, L))$d[l.range]
     
-    Z <- hosvd_mod(tens3(x, I, L.tens), status = FALSE)$Z[,, l.range, drop = FALSE]@data
-    lambda.tssa[,i] <- apply(Z, 3, fnorm_complex)
+    Z <- hosvd_mod(tens3(x, I, L.tens), status = FALSE)$Z@data
+    lambda.tssa.dim1[,i] <- apply(Z, 1, fnorm_complex)[l.range]
+    lambda.tssa.dim2[,i] <- apply(Z, 2, fnorm_complex)[l.range]
+    lambda.tssa.dim3[,i] <- apply(Z, 3, fnorm_complex)[l.range]
     
     setTxtProgressBar(pb, (j - 1) * R + i)
   }
   
   lambda.mean$ssa[,j] <- rowMeans(lambda.ssa)
-  lambda.mean$tssa[,j] <- rowMeans(lambda.tssa)
+  lambda.mean$tssa$dim1[,j] <- rowMeans(lambda.tssa.dim1)
+  lambda.mean$tssa$dim2[,j] <- rowMeans(lambda.tssa.dim2)
+  lambda.mean$tssa$dim3[,j] <- rowMeans(lambda.tssa.dim3)
 }
 close(pb)
 ```
 
 
-```{r}
-scree.plots.ssa <- list()
-scree.plots.tssa <- list()
+```{r scree-plots}
+scree.plots <- list()
+tens.dims <- c(I, L.tens, n - I - L.tens + 2)
 
 for (j in 1:len.out) {
-  df <- data.frame(l_ssa = lambda.mean$ssa[, j], l_tssa = lambda.mean$tssa[, j])
+  df.ssa <- data.frame(l_ssa = lambda.mean$ssa[, j])
+  df.tssa <- data.frame(
+    dim1 = lambda.mean$tssa$dim1[, j],
+    dim2 = lambda.mean$tssa$dim2[, j],
+    dim3 = lambda.mean$tssa$dim3[, j],
+    index = l.range)
   
-  scree.plots.ssa[[j]] <- df |> ggplot(aes(x = l.range, y = l_ssa)) +
+  scree.plots[[2 * j - 1]] <- df.ssa |> ggplot(aes(x = l.range, y = l_ssa)) +
     geom_point(size = 4) + geom_line() +
     labs(title = paste0("SSA, sd = ", round(sds[j], 2)),
          x = "Index", y = "Lambda") +
     ylim(c(min(lambda.mean$ssa), max(lambda.mean$ssa)))
   
-  scree.plots.tssa[[j]] <- df |> ggplot(aes(x = l.range, y = l_tssa)) +
-    geom_point(size = 4) + geom_line() +
+  scree.plots[[2 * j]] <- df.tssa |> 
+    pivot_longer(cols = dim1:dim3, names_to = "Dim", names_prefix = "dim",
+                 values_to = "l_tssa") |>
+    mutate(Dim_size = as.factor(tens.dims[as.integer(Dim)])) |>
+    ggplot(aes(x = index, y = l_tssa, col = Dim_size)) +
+    geom_point(aes(shape = Dim_size), size = 3) + geom_line(aes(linetype = Dim_size)) +
     labs(title = paste0("HO-SSA, sd = ", round(sds[j], 2)),
          x = "Index", y = "Lambda") +
-    ylim(c(min(lambda.mean$tssa), max(lambda.mean$tssa)))
+    theme(legend.position = "inside", legend.position.inside = c(0.72, 0.88),
+          legend.direction = "horizontal") +
+    ylim(c(min(sapply(lambda.mean$tssa, min)), max(sapply(lambda.mean$tssa, max))))
 }
 
-ggsave("./img/Scree_plots_ssa.pdf",
-       marrangeGrob(grobs = scree.plots.ssa, ncol = 2, nrow = 3,
-                    layout_matrix = matrix(seq_len(2 * 3), nrow = 3, byrow = TRUE)),
-       width = 7, height = 7)
+layout_matrix <- matrix(seq_len(2 * 3), nrow = 3, byrow = TRUE)
 
-ggsave("./img/Scree_plots_tssa.pdf",
-       marrangeGrob(grobs = scree.plots.tssa, ncol = 2, nrow = 3,
-                    layout_matrix = matrix(seq_len(2 * 3), nrow = 3, byrow = TRUE)),
-       width = 7, height = 7)
+ggsave("./img/Scree_plots_diffrates.pdf",
+       marrangeGrob(grobs = scree.plots, ncol = 2, nrow = 3,
+                    layout_matrix = layout_matrix,
+                    top = quote(
+                      paste0("Rates = (", rates.true[1], ", ", rates.true[2],
+                                      "), page ", g, " of ", npages))),
+       width = 9, height = 9)
 ```
 
-
+# Сравнение одномерных методов для разных дисперсий
 ```{r 1d-comparison-for-sds, results='hide'}
 len.out <- 16
 sds <- seq(from = 0.01, to = 0.2, length.out = len.out)
@@ -512,6 +535,7 @@ for (j in seq_along(sds)) {
 close(pb)
 ```
 
+## Графики мнимой и вещественной частей сигнала
 ```{r}
 signal.plot.df <- data.frame(
   re_1 = Re(exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1))), 
@@ -530,7 +554,7 @@ signal.plot.df |> pivot_longer(c(im_1, im_2, im_sum), names_to = "Im_num",
   ggplot(aes(x = index)) + geom_line(aes(y = Im, col = Im_num, linetype = Im_num), lwd = 1.2)
 ```
 
-
+## Графики RRMSE оценок параметров каждым из методов
 ```{r}
 rate1.df <- rate1.rrmse |> as.data.frame() |> mutate(sd = sds) |>
   pivot_longer(!sd, names_to = "type", values_to = "RRMSE")
@@ -599,6 +623,7 @@ plot.save(freq2.plot,
           height = 6, save = save)
 ```
 
+# Комплексный многоканальный ESPRIT 
 ```{r complex-nd-esprit}
 cmesprit <- function(s, L, groups, qrtol = 1e-07) {
   H <- apply(s, 2, Rssa::hankel, L = L, simplify = FALSE) |>
@@ -621,7 +646,7 @@ cmesprit <- function(s, L, groups, qrtol = 1e-07) {
 }
 ```
 
-
+# Сравнение многомерных методов
 ```{r test-nd-ssa-esprit-no-noise}
 set.seed(10)
 
@@ -734,8 +759,9 @@ for (j in seq_along(sds)) {
 close(pb)
 ```
 
+## Графики RRMSE оценок параметров каждым из методов
 ```{r}
-save = TRUE
+save <- TRUE
 
 rate1.df <- rate1.rrmse |> as.data.frame() |> mutate(sd = sds) |>
   pivot_longer(!sd, names_to = "type", values_to = "RRMSE")
