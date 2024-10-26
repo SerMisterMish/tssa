@@ -1,10 +1,11 @@
 *.Rproj.user
 *.Rhistory
-*.RData
 *.Ruserdata
 *.aux
 *.log
 *.tar*
 *.zip*
 *.Rproj
+
 .Rproj.user
+.RData
