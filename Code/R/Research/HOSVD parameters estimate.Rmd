@@ -11,6 +11,8 @@ library(factoextra)
 library(dplyr)
 library(tidyr)
 library(waldo)
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
 
 # Функции для тензоризации SSA
@@ -528,7 +530,7 @@ for (j in 1:len.out) {
 
 layout_matrix <- matrix(seq_len(2 * 3), nrow = 3, byrow = TRUE)
 
-ggsave(paste0("../img/Scree_plots", scree.plot.name, ".pdf"),
+ggsave(paste0("./img/Scree_plots", scree.plot.name, ".pdf"),
        marrangeGrob(grobs = scree.plots, ncol = 2, nrow = 3,
                     layout_matrix = layout_matrix,
                     top = quote(
@@ -850,7 +852,7 @@ rate1.plot.mini <- filter(rate1.df, sd <= 0.1) |> ggplot() + geom_line(aes(
 
 plot.save(
   rate1.plot,
-  paste0("../img/rate1", plot.name, ".pdf"),
+  paste0("./img/rate1", plot.name, ".pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -859,7 +861,7 @@ plot.save(
 
 plot.save(
   rate1.plot.mini,
-  paste0("../img/rate1", plot.name, "_mini.pdf"),
+  paste0("./img/rate1", plot.name, "_mini.pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -888,7 +890,7 @@ rate2.plot.mini <- filter(rate2.df, sd <= 0.1) |> ggplot() + geom_line(aes(
 
 plot.save(
   rate2.plot,
-  paste0("../img/rate2", plot.name, ".pdf"),
+  paste0("./img/rate2", plot.name, ".pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -897,7 +899,7 @@ plot.save(
 
 plot.save(
   rate2.plot.mini,
-  paste0("../img/rate2", plot.name, "_mini.pdf"),
+  paste0("./img/rate2", plot.name, "_mini.pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -926,7 +928,7 @@ freq1.plot.mini <- filter(freq1.df, sd <= 0.1) |> ggplot() + geom_line(aes(
 
 plot.save(
   freq1.plot,
-  paste0("../img/freq1", plot.name, ".pdf"),
+  paste0("./img/freq1", plot.name, ".pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -935,7 +937,7 @@ plot.save(
 
 plot.save(
   freq1.plot.mini,
-  paste0("../img/freq1", plot.name, "_mini.pdf"),
+  paste0("./img/freq1", plot.name, "_mini.pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -963,7 +965,7 @@ freq2.plot.mini <- filter(freq2.df, sd <= 0.1) |> ggplot() + geom_line(aes(
 
 plot.save(
   freq2.plot,
-  paste0("../img/freq2", plot.name, ".pdf"),
+  paste0("./img/freq2", plot.name, ".pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -972,7 +974,7 @@ plot.save(
 
 plot.save(
   freq2.plot.mini,
-  paste0("../img/freq2", plot.name, "_mini.pdf"),
+  paste0("./img/freq2", plot.name, "_mini.pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -1084,7 +1086,7 @@ reconstr.plot <- reconstr.df |> ggplot() +
 
 plot.save(
   reconstr.plot,
-  paste0("../img/rec_rmse", plot.name, ".pdf"),
+  paste0("./img/rec_rmse", plot.name, ".pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -1093,7 +1095,7 @@ plot.save(
 
 # plot.save(
 #   reconstr.plot.mini,
-#   paste0("../img/rec_rmse", plot.name, "_mini.pdf"),
+#   paste0("./img/rec_rmse", plot.name, "_mini.pdf"),
 #   pdf,
 #   width = 9,
 #   height = 6,
@@ -1155,8 +1157,8 @@ max.r <- max(sapply(groups, max))
 trunc_dims <- list(1, 1:2, 1:3)
 
 # I >= L >= J
-Is <- seq(from = max.r + 1, to = n - max.r - 1, by = 3)
-Ls <- seq(from = max.r + 1, to = n - max.r - 1, by = 3)
+Is <- seq(from = max.r + 1, to = n - max.r - 1, by = 1)
+Ls <- seq(from = max.r + 1, to = n - max.r - 1, by = 1)
 
 correct.dims <- which(outer(Is, Ls, (
   \(i, l) ifelse((i >= l) &
@@ -1207,6 +1209,66 @@ for (j in seq(len.out)) {
 close(pb)
 ```
 
+## Нахождение минимума RMSE для SSA по возможным длинам окна
+```{r}
+sd <- 0.04
+set.seed(10)
+
+n <- 25
+
+# no rates
+rates.true <- c(0, 0)
+# both rates -0.01
+# rates.true <- c(-0.01, -0.01)
+# both rates -0.02
+# rates.true <- c(-0.02, -0.02)
+# rates from paper
+# rates.true <- c(-0.01, -0.02)
+
+freqs.true <- c(0.2, 0.22)
+signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
+  exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1))
+
+groups <- list(1:2)
+max.r <- max(sapply(groups, max))
+
+# L <= K
+Ls <- seq(from = max.r + 1, to = (n + 1) %/% 2, by = 1)
+
+len.out <- length(Ls)
+
+R <- 500
+
+rec.ssa.rmse <- numeric(len.out)
+
+pb <- txtProgressBar(max = R * len.out, style = 3)
+
+for (j in seq(len.out)) {
+  mse.ssa <- numeric(R)
+  
+  L <- Ls[j]
+  
+  for (i in seq(R)) {
+    noise <- CCSWGN(n, mean = 0, sd = sd)
+    x <- signal + noise
+    
+    x.ssa <- ssa(x, L = L)
+    
+    rec.ssa <- reconstruct(x.ssa, groups = groups)
+    mse.ssa[i] <- mean(abs(Reduce(`+`, rec.ssa) - signal)^2)
+   
+    setTxtProgressBar(pb, (j - 1) * R + i)
+  }
+  
+    rec.ssa.rmse[j] <- mse.ssa |> mean() |> sqrt()
+}
+
+
+min.ssa.rmse <- c(min(rec.ssa.rmse), Ls[which.min(rec.ssa.rmse)])
+
+close(pb)
+```
+
 ## Графики RMSE
 ```{r}
 rec1.df <- rec.rmse |> as.data.frame() |>
@@ -1222,17 +1284,20 @@ rec1.plot <- rec1.df |> ggplot() +
     group = `trunc dims`,
     colour = `trunc dims`,
     linetype = `trunc dims`
-  ), lwd = 1.2)
+  ), lwd = 1.2) + 
+  geom_abline(slope = 0, intercept = min.ssa.rmse[1], col = "gray10", lty = 3) +
+  annotate(geom = "text", x = 5, y = min.ssa.rmse[1] * 1.02, label = "SSA min RMSE") +
+  ylim(min.ssa.rmse[1], 0.0245) + 
+  theme(axis.text.x = element_text(angle = 90))
 
 plot.save(
   rec1.plot,
-  paste0("../img/rec_dim_rmse", plot.name, ".pdf"),
+  paste0("./img/rec_dim_rmse", plot.name, ".pdf"),
   pdf,
   width = 9,
   height = 6,
   save = save
 )
-
 ```
 
 # Сравнение точности оценки параметров для различных длин окна.
@@ -1263,8 +1328,8 @@ groups <- list(1:2)
 max.r <- max(sapply(groups, max))
 
 # I >= L >= J
-Is <- seq(from = max.r + 1, to = n - max.r - 1, by = 3)
-Ls <- seq(from = max.r + 1, to = n - max.r - 1, by = 3)
+Is <- seq(from = max.r + 1, to = n - max.r - 1, by = 1)
+Ls <- seq(from = max.r + 1, to = n - max.r - 1, by = 1)
 
 correct.dims <- which(outer(Is, Ls, (
   \(i, l) ifelse((i >= l) &
@@ -1330,8 +1395,93 @@ for (j in seq(len.out)) {
   }
 }
 
+
 close(pb)
 ```
+
+## Нахождение минимума RRMSE для SSA по возможным длинам окна
+```{r}
+sd <- 0.04
+set.seed(10)
+
+n <- 25
+
+# no rates
+rates.true <- c(0, 0)
+# both rates -0.01
+# rates.true <- c(-0.01, -0.01)
+# both rates -0.02
+# rates.true <- c(-0.02, -0.02)
+# rates from paper
+# rates.true <- c(-0.01, -0.02)
+
+freqs.true <- c(0.2, 0.22)
+signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
+  exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1))
+
+groups <- list(1:2)
+max.r <- max(sapply(groups, max))
+
+# L <= K
+Ls <- seq(from = max.r + 1, to = (n + 1) %/% 2, by = 1)
+
+len.out <- length(Ls)
+
+R <- 500
+
+rate1.ssa.rrmse <- numeric(len.out)
+rate2.ssa.rrmse <- numeric(len.out)
+freq1.ssa.rrmse <- numeric(len.out)
+freq2.ssa.rrmse <- numeric(len.out)
+
+pb <- txtProgressBar(max = R * len.out, style = 3)
+
+for (j in seq(len.out)) {
+  pars.ssa <- list(
+    rate1 = numeric(R),
+    rate2 = numeric(R),
+    freq1 = numeric(R),
+    freq2 = numeric(R)
+  )
+  
+  L <- Ls[j]
+  
+  for (i in seq(R)) {
+    noise <- CCSWGN(n, mean = 0, sd = sd)
+    x <- signal + noise
+    
+    x.ssa <- ssa(x, L = L)
+    
+    par.ssa <- parestimate(x.ssa, groups = groups)
+    pars.ssa$rate1[i] <- max(par.ssa$rates[1], par.ssa$rates[2])
+    pars.ssa$rate2[i] <- min(par.ssa$rates[1], par.ssa$rates[2])
+    pars.ssa$freq1[i] <- min(par.ssa$frequencies[1], par.ssa$frequencies[2])
+    pars.ssa$freq2[i] <- max(par.ssa$frequencies[1], par.ssa$frequencies[2])
+   
+    setTxtProgressBar(pb, (j - 1) * R + i)
+  }
+  
+    rate1.ssa.rrmse[j] <- rrmse(rates.true[1], pars.ssa$rate1)
+    rate2.ssa.rrmse[j] <- rrmse(rates.true[2], pars.ssa$rate2)
+    freq1.ssa.rrmse[j] <- rrmse(freqs.true[1], pars.ssa$freq1)
+    freq2.ssa.rrmse[j] <- rrmse(freqs.true[2], pars.ssa$freq2)
+}
+
+
+min.ssa.rrmse <- lapply(
+  list(
+    rate1 = rate1.ssa.rrmse,
+    rate2 = rate2.ssa.rrmse,
+    freq1 = freq1.ssa.rrmse,
+    freq2 = freq2.ssa.rrmse
+  ),
+  (\(v) c(min(v), which.min(Ls[v])))
+)
+
+close(pb)
+```
+
+
 
 ## Графики RRMSE
 ```{r}
@@ -1347,11 +1497,14 @@ rate1.plot <- rate1.df |> ggplot() +
     group = `estim dim`,
     colour = `estim dim`,
     linetype = `estim dim`
-  ), lwd = 1.2)
+  ), lwd = 1.2) + 
+  geom_abline(slope = 0, intercept = min.ssa.rrmse$rate1[1], col = "gray10", lty = 3) + 
+  annotate(geom = "text", x = 5, y = min.ssa.rrmse$rate1[1] * 1.05, label = "SSA min RRMSE") +
+  theme(axis.text.x = element_text(angle = 90))
 
 plot.save(
   rate1.plot,
-  paste0("../img/rate1_dims", plot.name, ".pdf"),
+  paste0("./img/rate1_dims", plot.name, ".pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -1372,11 +1525,14 @@ rate2.plot <- rate2.df |> ggplot() +
     group = `estim dim`,
     colour = `estim dim`,
     linetype = `estim dim`
-  ), lwd = 1.2)
+  ), lwd = 1.2) + 
+  geom_abline(slope = 0, intercept = min.ssa.rrmse$rate2[1], col = "gray10", lty = 3) + 
+  annotate(geom = "text", x = 5, y = min.ssa.rrmse$rate2[1] * 1.05, label = "SSA min RRMSE") +
+  theme(axis.text.x = element_text(angle = 90))
 
 plot.save(
   rate2.plot,
-  paste0("../img/rate2_dims", plot.name, ".pdf"),
+  paste0("./img/rate2_dims", plot.name, ".pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -1397,11 +1553,14 @@ freq1.plot <- freq1.df |> ggplot() +
     group = `estim dim`,
     colour = `estim dim`,
     linetype = `estim dim`
-  ), lwd = 1.2)
+  ), lwd = 1.2) + 
+  geom_abline(slope = 0, intercept = min.ssa.rrmse$freq1[1], col = "gray10", lty = 3) + 
+  annotate(geom = "text", x = 5, y = min.ssa.rrmse$freq1[1] * 1.05, label = "SSA min RRMSE") +
+  theme(axis.text.x = element_text(angle = 90))
 
 plot.save(
   freq1.plot,
-  paste0("../img/freq1_dims", plot.name, ".pdf"),
+  paste0("./img/freq1_dims", plot.name, ".pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -1422,11 +1581,14 @@ freq2.plot <- freq2.df |> ggplot() +
     group = `estim dim`,
     colour = `estim dim`,
     linetype = `estim dim`
-  ), lwd = 1.2)
+  ), lwd = 1.2) + 
+  geom_abline(slope = 0, intercept = min.ssa.rrmse$freq2[1], col = "gray10", lty = 3) + 
+  annotate(geom = "text", x = 5, y = min.ssa.rrmse$freq2[1] * 1.05, label = "SSA min RRMSE") +
+  theme(axis.text.x = element_text(angle = 90))
 
 plot.save(
   freq2.plot,
-  paste0("../img/freq2_dims", plot.name, ".pdf"),
+  paste0("./img/freq2_dims", plot.name, ".pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -1560,7 +1722,7 @@ rate1.plot <- rate1.df |> ggplot() +
   ), lwd = 1.2)
 
 plot.save(rate1.plot,
-          "../img/rate1_nd.pdf",
+          "./img/rate1_nd.pdf",
           pdf,
           width = 9,
           height = 6, save = save)
@@ -1577,7 +1739,7 @@ rate2.plot <- rate2.df |> ggplot() + geom_line(aes(
 ), lwd = 1.2)
 
 plot.save(rate2.plot,
-          "../img/rate2_nd.pdf",
+          "./img/rate2_nd.pdf",
           pdf,
           width = 9,
           height = 6, save = save)
@@ -1594,7 +1756,7 @@ freq1.plot <- freq1.df |> ggplot() + geom_line(aes(
 ), lwd = 1.2)
 
 plot.save(freq1.plot,
-          "../img/freq1_nd.pdf",
+          "./img/freq1_nd.pdf",
           pdf,
           width = 9,
           height = 6, save = save)
@@ -1611,7 +1773,7 @@ freq2.plot <- freq2.df |> ggplot() + geom_line(aes(
 ), lwd = 1.2)
 
 plot.save(freq2.plot,
-          "../img/freq2_nd.pdf",
+          "./img/freq2_nd.pdf",
           pdf,
           width = 9,
           height = 6, save = save)
