@@ -1,0 +1,370 @@
+% Preamble
+\documentclass{article}
+
+% Packages
+\usepackage[a4paper, includefoot,
+  left=3cm, right=1.5cm,
+  top=2cm, bottom=2cm,
+headsep=1cm, footskip=1cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english, russian]{babel}
+\usepackage{pdfpages}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{amsthm}
+\usepackage{framed}
+\usepackage{xcolor}
+\usepackage{color}
+\usepackage{fancyvrb}
+\usepackage{slashbox}
+\usepackage{multirow}
+\usepackage{mdwtab}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{refcount}
+\usepackage{placeins}
+\usepackage{mathdots}
+
+\include{letters_series_mathbb}
+
+\setcounter{tocdepth}{2}
+\graphicspath{{./img}}
+
+\theoremstyle{plain}
+\newtheorem{statement}{Утверждение}[section]
+\newtheorem{theorem}{Теорема}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Определение}[section]
+\newtheorem{property}{Свойство}[section]
+\newtheorem{example}{Пример}[section]
+\newtheorem*{corollary}{Следствие}
+
+\theoremstyle{remark}
+\newtheorem*{remark}{Замечание}
+
+\newcommand{\Input}{\textbf{Входные данные: }}
+\newcommand{\Output}{\textbf{Результат: }}
+\newcommand{\iu}{\mathrm{i}}
+
+\floatname{algorithm}{Алгоритм}
+\renewcommand{\listalgorithmname}{Список алгоритмов}
+
+% Document
+\begin{document}\section{Известные сведения об алгоритмах SSA и MSSA}\label{sec:known-results-ssa}
+В этом разделе приведены описания алгоритмов SSA и MSSA, а также некоторые их свойства и важные определения.
+
+\subsection{SSA}\label{subsec:ssa}
+Все определения и утверждения из этого раздела можно найти в книге~\cite{ssa}.
+
+Пусть дан временной ряд $\tX$ длины $N$
+\[
+  \tX=(x_1,x_2,\ldots,x_N).
+\]
+
+\begin{definition}[Оператор вложения]
+  \label{def:injection-op}
+  Оператором вложения $\calH_L$ с длиной окна $L$ будем называть отображение, переводящее временной ряд
+  $\tX=(x_1, x_2,\ldots, x_N)$, $N \geqslant L$, в ганкелеву матрицу $\bfX\in \bbR^{L \times K}$, $K = N-L+1$,
+  такую, что $\bfX_{lk}=x_{l+k-1}$.
+  Результирующая матрица имеет вид
+  \[
+    \calH_L(\tX) = \bfX =
+    \begin{pmatrix}
+      x_1    & x_2     & \ldots & x_K     \\
+      x_2    & x_3     & \ldots & x_{K+1} \\
+      \vdots & \vdots  & \ddots & \vdots  \\
+      x_L    & x_{L+1} & \ldots & x_N
+    \end{pmatrix}.
+  \]
+\end{definition}
+
+\begin{definition}[Траекторная матрица]
+  Траекторной матрицей ряда $\tX$ с длиной окна $L<N$ называют матрицу $\bfX$, полученную применением оператора
+  вложения $\calH_L$, к ряду $\tX$.
+\end{definition}
+
+Пусть временной ряд $\tX$ представим в виде суммы временных рядов $\tX_k$ и шума $\tE$:
+\[
+  \tX = \sum_{k=1}^{m} \tX_k + \tE.
+\]
+В алгоритме~\ref{alg:ssa-components} описан метод SSA для разделения компонент сигнила, то есть
+нахождения рядов $\tX_k$.
+В алгоритме~\ref{alg:ssa-signal} описан метод SSA для выделения сигнала, то есть нахождения $\sum_{k=1}^{m} \tX_k$.
+Первые два шага в алгоритме~\ref{alg:ssa-signal} совпадают с соответствующими шагами
+алгоритма~\ref{alg:ssa-components}, поэтому описание алгоритма начинается с шага 3.
+
+\begin{algorithm}[!h]
+  \caption{SSA для разделения компонент сигнала.}
+  \label{alg:ssa-components}
+  \Input $\tX$, $L: 1 < L < N$, где $N$ "--- длина $\tX$, $m$, $R: m \leqslant R\leqslant \min(L, N-L+1)$,
+  $\mathfrak{S}_1, \ldots, \mathfrak{S}_m$:
+  \[
+    \{1,\, 2\,\ldots,\, R\}=\bigcup_{k=1}^{m}\mathfrak{S}_k, \qquad \mathfrak{S}_k\cap \mathfrak{S}_l =\varnothing,\,
+    k\ne l.
+  \]
+  \Output $\widetilde{\tX}_1$, $\widetilde{\tX}_2$, $\ldots$, $\widetilde{\tX}_m$ "--- оценки рядов
+  $\tX_1$, $\tX_2$, $\ldots$, $\tX_m$.
+  \begin{algorithmic}[1]
+    \State Вложение: построение траекторной матрицы $\bfX$ по длине окна $L$.
+    \State Разложение: проведение SVD траекторной матрицы $\bfX$, получение её представления в виде
+    \begin{equation*}
+      \bfX=\sum_{i=1}^{d} \sqrt{\lambda_i} U_i V_i^{\rmT}, \quad R \leqslant d \leqslant \min(L, N-L+1).
+    \end{equation*}
+    \State Группировка: построение матриц
+    \begin{equation*}
+      \bfX_k=\sum_{i \in \mathfrak{S}_k} \sqrt{\lambda_i} U_i V_i^{\rmT}.
+      %            \label{eq:tens-group}
+    \end{equation*}
+    \State Восстановление: вычисление рядов $\widetilde{\tX}_k$ по матрицам $\bfX_k$ посредством их усреднения
+    вдоль побочных диагоналей $i + j =\operatorname{const}$:
+    \begin{gather*}
+      \tilde{x}^{(k)}_n=\frac{1}{\#\mathfrak{M}_n}\sum_{(i,j)\in \mathfrak{M}_n}
+      \left(\bfX_k\right)_{ij},\qquad n\in \overline{1:N},\\
+      \mathfrak{M}_n=\left\{(i,\, j)~\Big|~1\leqslant i \leqslant L,\, 1\leqslant j \leqslant N-L+1,\,
+      i+j-1=n\right\}.
+    \end{gather*}
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[!h]
+  \caption{SSA для выделения сигнала.}
+  \label{alg:ssa-signal}
+  \Input $\tX$, $L: 1 < L < N$, где $N$ "--- длина $\tX$, $R: 1 \leqslant R\leqslant \min(L, N-L+1)$.\\
+  \Output $\widetilde{\tX}$ "--- оценка сигнала $\sum_{k=1}^{m} \tX_k$.
+  \begin{algorithmic}[1]
+    \setcounter{ALG@line}{2}
+    %            \State Построение траекторной матрицы $\bfX$ по длине окна $L$.
+    %            \State Проведение SVD траекторной матрицы $\bfX$, получение её представления в виде
+    %            \begin{equation*}
+    %                \bfX=\sum_{i=1}^{d} \sqrt{\lambda_i} U_i V_i^{\rmT}, \quad R \leqslant d \leqslant \min(L, N-L+1).
+    %            \end{equation*}
+    \State Группировка: построение матрицы
+    \begin{equation*}
+      \widetilde{\bfX} = \sum_{i = 1}^{R} \sqrt{\lambda_i} U_i V_i^{\rmT}.
+      %            \label{eq:tens-group}
+    \end{equation*}
+    \State Восстановление ряда $\widetilde{\tX}$ по матрице $\widetilde{\bfX}$ посредством её усреднения
+    вдоль побочных диагоналей $i + j =\operatorname{const}$.
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{definition}[SSA-ранг временного ряда]
+  \label{def:ssa-rank}
+  Число $d$ называется SSA-рангом временного ряда $\tX$ длины $N$, если $d \leqslant (N+1) / 2$ и для любой допустимой
+  длины окна $L$,
+  то есть такой, что $d \leqslant \min(L, N- L + 1)$, ранг траекторной матрицы $\bfX$ этого ряда, построенной по
+  длине окна $L$, равен $d$.
+\end{definition}
+\begin{remark}
+  В качестве параметра $R$ в алгоритмах~\ref{alg:ssa-components} и~\ref{alg:ssa-signal} рекомендуется выбирать
+  SSA-ранг сигнала.
+\end{remark}
+
+\begin{example}
+  \label{ex:ssa-ranks}
+  Ниже приведены примеры некоторых рядов, имеющих конечные SSA-ранги.
+  \begin{itemize}
+    \item Ранг полиномиального ряда $x_n = Q_d(n)$, где $Q_d$ "--- многочлен степени $d$, равен $d + 1$.
+    \item Ранг экспоненциального ряда $x_n = C e^{\alpha n}$, где $\alpha \in \bbC$ и $C \ne 0$, равен 1.
+    \item Ранг суммы экспоненциальных рядов
+      \[
+        x_n = \sum_{j=1}^{M} C_j e^{\alpha_j n},
+      \]
+      где $\alpha_j \in \bbC$ и $C_j \ne 0$ при всех $j$, равен количеству уникальных
+      значений $\alpha_j$.
+    \item Ранг экспоненциально-модулированного гармонического ряда
+      \[
+        x_n = C e^{\alpha n}\cos(2 \pi n \omega + \psi),
+      \]
+      где $C \ne 0$, $\alpha \in \bbR$ и $\omega \in [0,1/2]$,
+      равен $r(\omega)$, где
+      \begin{equation}
+        \label{eq:cos-rank}
+        r(\omega) =
+        \begin{cases}
+          1, & \omega \in \{0,\, 1/2\},\\
+          2, & \omega \in (0, 1/2).
+        \end{cases}
+      \end{equation}
+    \item Ранг суммы экспоненциально-модулированных гармоник
+      \[
+        x_n = \sum_{j=1}^{M} C e^{\alpha_j n}\cos(2 \pi n \omega_j + \psi_j)
+      \]
+      равен
+      \begin{equation*}
+        \label{eq:cos-sum-rank}
+        \sum_{(\omega, \alpha)\in \Omega} r(\omega),
+      \end{equation*}
+      где $\Omega$ "--- множество уникальных пар $(\omega_i,\, \alpha_i)$, представленных в данном временном ряде.
+  \end{itemize}
+\end{example}
+
+\begin{definition}[Слабая SSA-разделимость]
+  \label{def:ssa-separability}
+  Временные ряды $\widehat{\tX} = (\hat{x}_1, \hat{x}_2, \ldots, \hat{x}_N)$ и
+  $\widetilde{\tX} = (\tilde{x}_1, \tilde{x}_2, \ldots, \tilde{x}_N)$ называют слабо $L$-разделимыми в терминах
+  SSA, если выполнены следующие условия:
+  \begin{enumerate}
+    \item $\displaystyle \sum_{k=0}^{L - 1} \hat{x}_{i + k}\tilde{x}_{j + k} = 0,
+      \quad \forall i, j \in \overline{1:(N - L + 1)}$,
+    \item $\displaystyle \sum_{k=0}^{N - L} \hat{x}_{i + k}\tilde{x}_{j + k} = 0,
+      \quad \forall i, j \in \overline{1:L}$.
+  \end{enumerate}
+\end{definition}
+
+\begin{statement}
+  \label{state:ssa-separability}
+  Пусть $\tX = \widehat{\tX} + \widetilde{\tX}$, а $\bfX$, $\widehat{\bfX}$ и $\widetilde{\bfX}$ "--- траекторные
+  матрицы с длиной окна $L$ рядов $\tX$, $\widehat{\tX}$ и $\widetilde{\tX}$ соответственно.
+  Тогда сумма \emph{SVD} матриц $\widehat{\bfX}$ и $\widetilde{\bfX}$ является \emph{SVD} матрицы $\bfX$ тогда и только тогда, когда
+  ряды $\widehat{\tX}$ и $\widetilde{\tX}$ слабо $L$-разделимы в терминах \emph{SSA}.
+\end{statement}
+
+Утверждение~\ref{state:ssa-separability} позволяет выделить множество временных рядов, которые возможно
+разделить алгоритмом~\ref{alg:ssa-components}, а именно: слабо разделимые с некоторой длиной окна.
+
+\subsection{MSSA}\label{subsec:mssa}
+Все определения и утверждения из этого раздела можно найти в работах~\cite{mssa, mssa2, ssa-2020}.
+
+Пусть дан $P$-мерный временной ряд $\tX$ длины $N$
+\begin{gather*}
+  \tX = (\tX_1: \tX_2: \ldots: \tX_P), \\
+  \tX_p = \left(x_1^{(p)}, x_2^{(p)}, \ldots, x_N^{(p)}\right)^{\rmT}.
+\end{gather*}
+
+\begin{definition}[Траекторная матрица многомерного временного ряда]
+  Пусть \linebreak $\bfX_1$, $\bfX_2$, $\ldots$, $\bfX_P$ "--- траекторные матрицы рядов
+  $\tX_1$, $\tX_2$, $\ldots$, $\tX_P$ соответственно, построенные по длине окна $L$.
+  Траекторной матрицей многомерного временного ряда $\tX$ называется
+  матрица $\bfX\in \bbR^{L \times KP}$, $K = N - L + 1$, построенная соединением матриц $\bfX_p$ по столбцам, то есть
+  \[
+    \bfX = [\bfX_1 : \bfX_2 : \ldots : \bfX_P].
+  \]
+\end{definition}
+
+Методы MSSA для разделения компонент и выделения сигнала совпадают с алгоритмами~\ref{alg:ssa-components}
+и~\ref{alg:ssa-signal} соответственно, с точностью до изменения шагов вложения и восстановления в соответствии
+с определением траекторной матрицы многомерного ряда (процедура восстановления временного ряда по
+матрице должна быть обратной к шагу вложения).
+
+\begin{definition}[MSSA-ранг временного ряда]
+  \label{def:mssa-rank}
+  Число $d$ называется MSSA-рангом $P$-мерного временного ряда $\tX$ длины $N$, если $d \leqslant P(N+1) / (P+1)$,
+  и для любой допустимой
+  длины окна $L$,
+  то есть такой, что $d \leqslant \min(L, P(N- L + 1))$, ранг траекторной матрицы $\bfX$ этого ряда,
+  построенной по длине окна $L$, равен $d$.
+\end{definition}
+\begin{remark}
+  Как и в SSA, в алгоритме MSSA рекомендуется в качестве параметра количества компонент, относимых к сигналу,
+  выбирать ранг сигнала.
+\end{remark}
+\begin{example}
+  \label{ex:mssa-ranks}
+  Рассмотрим $P$-мерный временной ряд $\tX$ длины $N$ с элементами вида
+  \begin{equation}
+    \label{eq:nd-cos-sum-model}
+    x_n^{(p)} = \sum_{i=1}^{R(p)} a_i^{(p)} e^{-\alpha_i^{(p)} n}
+    \cos\left(2 \pi \omega_i^{(p)} n + \varphi_i^{(p)}\right).
+  \end{equation}
+  MSSA-ранг такого ряда равен
+  \begin{equation}
+    \sum_{(\omega, \alpha)\in \Omega} r(\omega),
+  \end{equation}
+  где функция $r(\omega)$ определена в уравнении~\eqref{eq:cos-rank}, а $\Omega$ "--- множество уникальных пар
+  \linebreak $\left(\omega_i^{(p)}, \alpha_i^{(p)}\right)$, представленных в данном временном ряде.
+\end{example}
+
+\begin{remark}
+  В дальнейшем в работе будут проведены сравнения методов SSA и MSSA с их тензорными модификациями
+  HO-SSA и HOSVD-MSSA на многомерных сигналах вида~\eqref{eq:nd-cos-sum-model}.
+  Это обосновано тем, что такая модель, а точнее её частный случай, в котором параметры $R(p)$, $\omega_i^{(p)}$
+  и $\alpha_i^{(p)}$ не зависят от номера ряда $p$, применяется в спектроскопии ядерного магнитного
+  резонанса~\cite{NMR}.
+  Кроме того, в работе~\cite{hosvd-hooi-separation} также рассматривается этот частный случай модели.
+\end{remark}
+
+\begin{definition}[Слабая MSSA-разделимость]
+  \label{def:mssa-separability}
+  $P$-мерные временные ряды $\widehat{\tX}$ и $\widetilde{\tX}$ длины $N$ называются слабо $L$-разделимыми, если
+  выполнены следующие условия:
+  \begin{enumerate}
+    \item $\displaystyle \sum_{k=0}^{L-1} \hat{x}_{i+k}^{(p)}\tilde{x}_{j+k}^{(p')} = 0,
+      \qquad \forall i, j \in \overline{1:(N-L+1)},\, p, p' \in \overline{1:P}$,
+    \item $\displaystyle \sum_{p=1}^{P} \sum_{i=0}^{K-1} \hat{x}_{k+i}^{(p)} \tilde{x}_{m+i}^{(p)} = 0, \quad
+      \forall k, m \in \overline{1:L}$.
+  \end{enumerate}
+\end{definition}
+
+\begin{statement}
+  \label{state:mssa-separability}
+  Пусть $\tX = \widehat{\tX} + \widetilde{\tX}$, а $\bfX$, $\widehat{\bfX}$ и $\widetilde{\bfX}$ "--- траекторные
+  матрицы с длиной окна $L$ рядов $\tX$, $\widehat{\tX}$ и $\widetilde{\tX}$ соответственно.
+  Тогда сумма \emph{SVD} матриц $\widehat{\bfX}$ и $\widetilde{\bfX}$ является \emph{SVD} матрицы $\bfX$ тогда и только тогда, когда
+  ряды $\widehat{\tX}$ и $\widetilde{\tX}$ слабо $L$-разделимы в терминах MSSA.
+\end{statement}
+Как и в одномерном случае, это утверждение позволяет определять множество рядов, которые возможно разделить с
+помощью метода MSSA.
+
+\subsection{ESPRIT}\label{subsec:esprit}
+Все определения и утверждения из этого раздела
+можно найти в статьях~\cite{esprit,hosvd-hooi-separation}.
+
+Пусть элементы многомерного временного ряда $\tX$ имеют вид
+\begin{equation}
+  \label{eq:complex-mv-model}
+  x_n^{(p)} = \sum_{j=1}^{R} a_j^{(p)} e^{ \alpha_j n }
+  e^{\iu \left( 2 \pi \omega_j n + \varphi_j^{(p)}\right)},
+\end{equation}
+где $\iu$ обозначает мнимую единицу, а параметрами модели являются амплитуды
+$a_j^{(p)} \in \mathbb{R}\setminus\{0\}$, фазы ${\varphi_j^{(p)} \in [0, 2\pi)}$,
+частоты $\omega_j\in [0, 1/2]$ и степени затухания $\alpha_j \in \mathbb{R}$.
+
+Алгоритм ESPRIT~(Estimation of signal parameters via rotational invariance technique), как
+и SSA, относится к классу методов, основанных на подпространстве сигнала.
+В отличие от SSA, ESPRIT применяется для решения задачи оценки параметров
+степеней затухания $\alpha_j$ и частот $\omega_j$ многомерного комплекснозначного сигнала в модели~\eqref{eq:complex-mv-model}.
+
+В алгоритме~\ref{alg:esprit} описан метод ESPRIT для оценки параметров
+сигнала~\eqref{eq:complex-mv-model}.
+Первые два шага в алгоритме~\ref{alg:esprit} совпадают с соответствующими шагами
+алгоритма~\ref{alg:ssa-components}, поэтому описание алгоритма начинается с шага 3.
+
+\begin{algorithm}[!h]
+  \caption{ESPRIT для оценки параметров многомерного комплекснозначного сигнала.}
+  \label{alg:esprit}
+  \Input $\tX$, $L: 1 < L < N$, где $N$ "--- длина $\tX$, $R: 1 \leqslant R\leqslant \min(L, N-L+1)$.
+
+  \Output $\left(\widehat{\alpha}_1, \widehat{\omega}_1\right),
+  \left(\widehat{\alpha}_2, \widehat{\omega}_2\right), \ldots,
+  \left(\widehat{\alpha}_R, \widehat{\omega}_R\right)$ "--- оценки параметров
+  сигнала~\eqref{eq:complex-mv-model}.
+  \begin{algorithmic}[1]
+    \setcounter{ALG@line}{2}
+
+    \State Решение уравнения
+    \[
+      \bfU^{\uparrow}=\bfU_{\downarrow}\bfZ
+    \]
+    относительно матрицы $\bfZ$, где $\bfU = [U_1:U_2:\ldots: U_d]$,
+    запись $\bfU^{\uparrow}$ обозначает матрицу $\bfU$ без первой строки, а
+    запись $\bfU_{\downarrow}$ "--- без последней.
+    \State Нахождение первых $R$ собственных чисел $\lambda_j$ матрицы $\bfZ$.
+    Полученные собственные числа $\lambda_j$ считаются оценками
+    экспонент $e^{\alpha_j + 2\pi\iu \omega_j}$, через которые можно выразить
+    оценки искомых параметров:
+    \[
+      \widehat{\alpha}_j = \left|\lambda_j\right|, \qquad
+      \widehat{\omega}_j = \frac{\operatorname{Arg}\left(\lambda_j\right)}{2 \pi}.
+    \]
+  \end{algorithmic}
+\end{algorithm}
+
+\bibliography{main}
+\bibliographystyle{ugost2008}
+\end{document}
