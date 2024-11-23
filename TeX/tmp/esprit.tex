@@ -312,7 +312,7 @@ headsep=1cm, footskip=1cm]{geometry}
 помощью метода MSSA.
 
 \subsection{ESPRIT}\label{subsec:esprit}
-Все определения и утверждения из этого раздела
+Оригинальное описание алгоритма и его обоснование
 можно найти в статьях~\cite{esprit,hosvd-hooi-separation}.
 
 Пусть элементы многомерного временного ряда $\tX$ имеют вид
@@ -325,6 +325,25 @@ headsep=1cm, footskip=1cm]{geometry}
 $a_j^{(p)} \in \mathbb{R}\setminus\{0\}$, фазы ${\varphi_j^{(p)} \in [0, 2\pi)}$,
 частоты $\omega_j\in [0, 1/2]$ и степени затухания $\alpha_j \in \mathbb{R}$.
 
+\begin{remark}
+  В статье~\cite{esprit} приводится алгоритм ESPRIT для модели временного ряда вида
+  \[
+    x_n^{(p)} = \sum_{j=1}^{R} s_j(n)e^{\iu \omega_0 \Delta \sin\theta_j / c} a^{(p)}(\theta_j),
+  \]
+  но в работе будет рассматриваться модель вида~\eqref{eq:complex-mv-model} по причине,
+  указанной в замечании к примеру~\ref{ex:mssa-ranks}.
+\end{remark}
+\begin{remark}
+  В силу того, что
+  \[
+    \cos(2 \pi \omega n + \varphi_n) =
+    \frac{e^{2\pi \iu \omega n + \varphi_n} + e^{-2\pi \iu \omega n - \varphi_n}}{2},
+  \]
+  вещественнозначный временной ряд из примера~\ref{ex:mssa-ranks} при
+  $R(p)=R$, $\omega_j^{(p)}=\omega_j$ и $\alpha_j^{(p)}=\alpha_j$ является частным случаем
+  ряда~\eqref{eq:complex-mv-model}.
+\end{remark}
+
 Алгоритм ESPRIT~(Estimation of signal parameters via rotational invariance technique), как
 и SSA, относится к классу методов, основанных на подпространстве сигнала.
 В отличие от SSA, ESPRIT применяется для решения задачи оценки параметров
@@ -336,7 +355,7 @@ $a_j^{(p)} \in \mathbb{R}\setminus\{0\}$, фазы ${\varphi_j^{(p)} \in [0, 2\p
 алгоритма~\ref{alg:ssa-components}, поэтому описание алгоритма начинается с шага 3.
 
 \begin{algorithm}[!h]
-  \caption{ESPRIT для оценки параметров многомерного комплекснозначного сигнала.}
+  \caption{ESPRIT для оценки параметров комплекснозначного сигнала.}
   \label{alg:esprit}
   \Input $\tX$, $L: 1 < L < N$, где $N$ "--- длина $\tX$, $R: 1 \leqslant R\leqslant \min(L, N-L+1)$.
 
@@ -354,12 +373,82 @@ $a_j^{(p)} \in \mathbb{R}\setminus\{0\}$, фазы ${\varphi_j^{(p)} \in [0, 2\p
     относительно матрицы $\bfZ$, где $\bfU = [U_1:U_2:\ldots: U_d]$,
     запись $\bfU^{\uparrow}$ обозначает матрицу $\bfU$ без первой строки, а
     запись $\bfU_{\downarrow}$ "--- без последней.
-    \State Нахождение первых $R$ собственных чисел $\lambda_j$ матрицы $\bfZ$.
+    \State Нахождение первых $R$ в порядке неубывания собственных чисел $\lambda_j$ матрицы $\bfZ$.
     Полученные собственные числа $\lambda_j$ считаются оценками
     экспонент $e^{\alpha_j + 2\pi\iu \omega_j}$, через которые можно выразить
     оценки искомых параметров:
     \[
-      \widehat{\alpha}_j = \left|\lambda_j\right|, \qquad
+      \widehat{\alpha}_j = \log\left(\left|\lambda_j\right|\right), \qquad
+      \widehat{\omega}_j = \frac{\operatorname{Arg}\left(\lambda_j\right)}{2 \pi}.
+    \]
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{remark}
+  Как и в методах SSA и MSSA, в качестве параметра алгоритма $R$ рекомендуется выбирать ранг
+  ряда~\eqref{eq:complex-mv-model}.
+\end{remark}
+\begin{remark}
+  Алгоритм~\ref{alg:esprit} применим как для одномерных, так и для многомерных рядов, и отличается
+  для них только способом построения траекторной матрицы ряда.
+\end{remark}
+
+\section{Описание метода HO-ESPRIT}
+Пусть $\tX$ "--- одномерный ($P=1$) или многомерный ($P>1$) комплекснозначный временной ряд
+вида~\eqref{eq:complex-mv-model}.
+Обозначим
+\[
+  \overline{L} =
+  \begin{cases}
+    (I, L), & P=1,\\
+    L, & P>1,
+  \end{cases}
+\]
+а $\calX$ "--- траекторный тензор ряда $\tX$, построенный с параметрами из $\overline{L}$.
+Также определим область допустимых параметров $\overline{L}$:
+\[
+  \calD =
+  \begin{cases}
+    \left\{ (I, L):\: 1< I,L <N,\, I + L < N + 1 \right\}, & P = 1,\\
+    \left\{ L:\: 1< L <N \right\}, & P > 1.
+  \end{cases}
+\]
+
+\begin{algorithm}[!h]
+  \caption{HO-ESPRIT для оценки параметров комплекснозначного сигнала.}
+  \label{alg:ho-esprit}
+  \Input $\tX$, $\overline{L} \in \calD$, $R: 1 \leqslant R\leqslant \min(L, N-L+1)$,
+  $D\in \{1, 2, 3\}$ "--- номер направления сингулярных векторов,
+  используемых для оценки параметров.
+
+  \Output $\left(\widehat{\alpha}_1, \widehat{\omega}_1\right),
+  \left(\widehat{\alpha}_2, \widehat{\omega}_2\right), \ldots,
+  \left(\widehat{\alpha}_R, \widehat{\omega}_R\right)$ "--- оценки параметров
+  сигнала~\eqref{eq:complex-mv-model}.
+  \begin{algorithmic}[1]
+    \State Построение траекторного тензора $\calX\in \bbC^{I_1\times I_2 \times I_3}$
+    по ряду $\tX$ с параметрами из $\overline{L}$.
+    Если $P=1$, то $I_1=I$, $I_2=L$, $I_3=N-I-L+2$, а если
+    $P>1$, то $I_1=L$, $I_2=N-L+1$, $I_3=P$.
+    \State Вычисление HOSVD $\calX$, получение его представления в виде
+    \[
+      \calX = \sum_{i_1=1}^{I_1} \sum_{i_2=1}^{I_2} \sum_{i_3=1}^{I_3}
+      \calZ_{i_1 i_2 i_3} U_{i_1}^{(1)}\circ U_{i_2}^{(2)} \circ U_{i_3}^{(3)},
+    \]
+    построение матрицы $\bfU = \left[U_1^{(D)}:U_2^{(D)}:\ldots: U_{I_D}^{(D)}\right]$.
+    \State Решение уравнения
+    \[
+      \bfU^{\uparrow}=\bfU_{\downarrow}\bfZ
+    \]
+    относительно матрицы $\bfZ$, где $\bfU = [U_1:U_2:\ldots: U_d]$,
+    запись $\bfU^{\uparrow}$ обозначает матрицу $\bfU$ без первой строки, а
+    запись $\bfU_{\downarrow}$ "--- без последней.
+    \State Нахождение первых $R$ в порядке неубывания собственных чисел $\lambda_j$ матрицы $\bfZ$.
+    Полученные собственные числа $\lambda_j$ считаются оценками
+    экспонент $e^{\alpha_j + 2\pi\iu \omega_j}$, через которые можно выразить
+    оценки искомых параметров:
+    \[
+      \widehat{\alpha}_j = \log\left(\left|\lambda_j\right|\right), \qquad
       \widehat{\omega}_j = \frac{\operatorname{Arg}\left(\lambda_j\right)}{2 \pi}.
     \]
   \end{algorithmic}
