@@ -317,7 +317,7 @@ headsep=1cm, footskip=1cm]{geometry}
 
 Пусть элементы многомерного временного ряда $\tX$ имеют вид
 \begin{equation}
-  \label{eq:complex-mv-model}
+  \label{eq:esprit-model}
   x_n^{(p)} = \sum_{j=1}^{R} a_j^{(p)} e^{ \alpha_j n }
   e^{\iu \left( 2 \pi \omega_j n + \varphi_j^{(p)}\right)},
 \end{equation}
@@ -330,7 +330,8 @@ $a_j^{(p)} \in \mathbb{R}\setminus\{0\}$, фазы ${\varphi_j^{(p)} \in [0, 2\p
   \[
     x_n^{(p)} = \sum_{j=1}^{R} s_j(n)e^{\iu \omega_0 \Delta \sin\theta_j / c} a^{(p)}(\theta_j),
   \]
-  но в работе будет рассматриваться модель вида~\eqref{eq:complex-mv-model} по причине,
+  где оцениваемые параметры обозначены $\theta_j$,
+  но в работе будет рассматриваться модель вида~\eqref{eq:esprit-model} по причине,
   указанной в замечании к примеру~\ref{ex:mssa-ranks}.
 \end{remark}
 \begin{remark}
@@ -341,16 +342,16 @@ $a_j^{(p)} \in \mathbb{R}\setminus\{0\}$, фазы ${\varphi_j^{(p)} \in [0, 2\p
   \]
   вещественнозначный временной ряд из примера~\ref{ex:mssa-ranks} при
   $R(p)=R$, $\omega_j^{(p)}=\omega_j$ и $\alpha_j^{(p)}=\alpha_j$ является частным случаем
-  ряда~\eqref{eq:complex-mv-model}.
+  ряда~\eqref{eq:esprit-model}.
 \end{remark}
 
 Алгоритм ESPRIT~(Estimation of signal parameters via rotational invariance technique), как
 и SSA, относится к классу методов, основанных на подпространстве сигнала.
 В отличие от SSA, ESPRIT применяется для решения задачи оценки параметров
-степеней затухания $\alpha_j$ и частот $\omega_j$ многомерного комплекснозначного сигнала в модели~\eqref{eq:complex-mv-model}.
+степеней затухания $\alpha_j$ и частот $\omega_j$ многомерного комплекснозначного сигнала в модели~\eqref{eq:esprit-model}.
 
 В алгоритме~\ref{alg:esprit} описан метод ESPRIT для оценки параметров
-сигнала~\eqref{eq:complex-mv-model}.
+сигнала~\eqref{eq:esprit-model}.
 Первые два шага в алгоритме~\ref{alg:esprit} совпадают с соответствующими шагами
 алгоритма~\ref{alg:ssa-components}, поэтому описание алгоритма начинается с шага 3.
 
@@ -362,7 +363,7 @@ $a_j^{(p)} \in \mathbb{R}\setminus\{0\}$, фазы ${\varphi_j^{(p)} \in [0, 2\p
   \Output $\left(\widehat{\alpha}_1, \widehat{\omega}_1\right),
   \left(\widehat{\alpha}_2, \widehat{\omega}_2\right), \ldots,
   \left(\widehat{\alpha}_R, \widehat{\omega}_R\right)$ "--- оценки параметров
-  сигнала~\eqref{eq:complex-mv-model}.
+  сигнала~\eqref{eq:esprit-model}.
   \begin{algorithmic}[1]
     \setcounter{ALG@line}{2}
 
@@ -386,16 +387,250 @@ $a_j^{(p)} \in \mathbb{R}\setminus\{0\}$, фазы ${\varphi_j^{(p)} \in [0, 2\p
 
 \begin{remark}
   Как и в методах SSA и MSSA, в качестве параметра алгоритма $R$ рекомендуется выбирать ранг
-  ряда~\eqref{eq:complex-mv-model}.
+  ряда~\eqref{eq:esprit-model}.
 \end{remark}
 \begin{remark}
-  Алгоритм~\ref{alg:esprit} применим как для одномерных, так и для многомерных рядов, и отличается
-  для них только способом построения траекторной матрицы ряда.
+  Алгоритм~\ref{alg:esprit} применим и для одномерных временных рядов ($P=1$).
 \end{remark}
 
-\section{Описание метода HO-ESPRIT}
+\section{Описание метода HO-SSA}\label{sec:HO-SSA-method-description}
+Пусть дан временной ряд $\tX$ длины $N$
+\[
+  \tX=(x_1,x_2,\ldots,x_N).
+\]
+\begin{definition}[Траекторный тензор ряда]
+  Траекторным тензором ряда $\tX$ с параметрами $I,L: 1 < I,L < N,\, I + L < N + 1$
+  будем называть тензор $\mathcal{X}$ размера $I\times L \times J,\, J=N-I-L+2$, элементы которого удовлетворяют равенству
+  \[
+    \mathcal{X}_{ilj}=x_{i+l+j-2}\qquad i\in \overline{1:I},\, l \in\overline{1:L},\, j \in\overline{1:J}.
+  \]
+\end{definition}
+
+\begin{remark}
+  Траекторный тензор $\calX$ является ганкелевым~\cite{hankel-tensor}.
+\end{remark}
+
+Введём обозначения для сечений произвольного трёхмерного тензора $\calA$:
+\[
+  \calA_{k \cdot \cdot} = \calA_{i_1=k}, \quad
+  \calA_{\cdot k \cdot} = \calA_{i_2=k}, \quad
+  \calA_{\cdot \cdot k} = \calA_{i_3=k}.
+\]
+Тогда в терминах оператора вложения~\ref{def:injection-op} сечения траекторного тензора ряда $\tX$
+с параметрами $I, L$ имеют следующий вид
+\begin{gather*}
+  \mathcal{X}_{\cdot \cdot j}= \calH_I \Big((x_j, x_{j+1}, \ldots, x_{j+I+L-2})\Big),\\
+  \mathcal{X}_{\cdot l \cdot}= \calH_I \Big((x_l, x_{l+1}, \ldots, x_{l+L+J-2})\Big),\\
+  \mathcal{X}_{i\cdot \cdot}=\calH_L \Big((x_i, x_{i+1}, \ldots, x_{i+L+J-2})\Big).
+\end{gather*}
+
+На вход алгоритму подаётся временной ряд $\tX$ и параметры $I,L: 1< I,L < N,\, I + L < N + 1$.
+Так как при замене одного из этих параметров на $J=N-I-L+2$ или при замене их между собой получаются
+те же самые траекторные тензоры с точностью до перестановки их направлений, то имеет смысл при
+рассмотрении нескольких наборов параметров рассматривать только те, которые дают уникальные тройки $(I, L, J)$
+без учёта порядка.
+В зависимости от целей определяются разные формулировки алгоритма.
+
+\subsection{HO-SSA для разделения компонент сигнала}\label{ho-ssa-sep}
+Пусть временной ряд $\tX$ представим в виде суммы временных рядов $\tX_k$ и шума $\tE$:
+\[
+  \tX = \sum_{k=1}^{m} \tX_k + \tE.
+\]
+Алгоритм HO-SSA для разделения компонент сигнала сводится к представлению \linebreak HOSVD траекторного тензора ряда
+$\tX$ в виде суммы HOSVD траекторных тензоров рядов $\tX_k$.
+Метод HOSVD-SSA для разделения компонент сигнала представлен в алгоритме~\ref{alg:hosvd-ssa-components}.
+
+\begin{algorithm}[!h]
+  \caption{HOSVD-SSA для разделения компонент сигнала.}
+  \label{alg:hosvd-ssa-components}
+  \Input $\tX$, $I,L: 1< I,L < N,\, I + L < N + 1$, где $N$ "--- длина $\tX$,
+  $m$,\linebreak $R: m \leqslant R\leqslant \min(I, L, N-I-L+2)$,
+  $\mathfrak{S}_1^{(p)}, \ldots, \mathfrak{S}_m^{(p)}$:
+  \[
+    \{1,\, 2\,\ldots,\, R\}=\bigcup_{k=1}^{m}\mathfrak{S}_k^{(p)} \qquad
+    \mathfrak{S}_k^{(p)}\cap \mathfrak{S}_l^{(p)} =\varnothing,\, k\ne l,\, p \in \{1, 2, 3\}.
+  \]
+  \Output $\widetilde{\tX}_1$, $\widetilde{\tX}_2$, $\ldots$, $\widetilde{\tX}_m$ "--- оценки рядов
+  $\tX_1$, $\tX_2$, $\ldots$, $\tX_m$.
+  \begin{algorithmic}[1]
+    \State \label{alg:first-step}
+    Вложение: построение траекторного тензора $\mathcal{X}$ по параметрам $I, L$.
+    \State \label{alg:second-step}
+    Разложение: проведение HOSVD траекторного тензора $\mathcal{X}$, получение его представления в виде
+    \begin{equation}
+      \mathcal{X}=\sum_{i=1}^{I} \sum_{l=1}^{L} \sum_{j=1}^{J} \mathcal{Z}_{ilj} U^{(1)}_{i}
+      \circ U^{(2)}_{l} \circ U^{(3)}_{j}.
+      \label{eq:trajectory-hosvd}
+    \end{equation}
+    \State Группировка: построение тензоров
+    \begin{equation*}
+      \mathcal{X}^{(k)}=\sum_{i \in \mathfrak{S}_k^{(1)}} \sum_{l\in \mathfrak{S}_k^{(2)}}
+      \sum_{j\in \mathfrak{S}_k^{(3)}}
+      \mathcal{Z}_{ilj} U^{(1)}_{i}\circ U^{(2)}_{l} \circ U^{(3)}_{j}.
+      %            \label{eq:tens-group}
+    \end{equation*}
+    \State Восстановление: получение рядов $\widetilde{\tX}_k$ по тензорам
+    $\mathcal{X}^{(k)}$ посредством их усреднения вдоль
+    плоскостей $i+l+j=\operatorname{const}$:
+    \begin{gather*}
+      \tilde{x}^{(k)}_n=\frac{1}{\#\mathfrak{M}_n}\sum_{(i,l,j)\in \mathfrak{M}_n} \mathcal{X}^{(k)}_{ilj},\qquad n\in \overline{1:N},         \\
+      \mathfrak{M}_n=\left\{(i,\, l,\, j)~\Big|~1\leqslant i \leqslant I,\, 1\leqslant l \leqslant L,\, 1\leqslant j \leqslant J,\, i+l+j-2=n\right\}.
+    \end{gather*}
+  \end{algorithmic}
+\end{algorithm}
+
+\subsection{HO-SSA для выделения сигнала из ряда}\label{subsec:ho-ssa-signal}
+Алгоритм HO-SSA для выделения в ряде сигнала из шума сводится к получению
+как можно более точного приближения траекторного тензора тензором меньших $n$-рангов, заданных пользователем, и
+может быть проведён двумя различными способами.
+
+Первый способ заключается в приближении траекторного тензора путём усечения его HOSVD (HOSVD-SSA).
+Благодаря свойству~\ref{property:approx} такое приближение можно считать достаточно точным,
+хоть оно и не оптимально.
+Первые два шага этого алгоритма совпадают с алгоритмом~\ref{alg:hosvd-ssa-components}, поэтому опишем его, начиная с третьего шага.
+Описание приведено в алгоритме~\ref{alg:hosvd-ssa-signal}.
+
+Второй способ использует алгоритм HOOI для приближения траекторного тензора ряда некоторым тензором
+меньших $n$-рангов, причём результатом выполнения HOOI будет HOSVD этого приближения (HOOI-SSA).
+Первый шаг этого алгоритма совпадает с первым шагом алгоритма~\ref{alg:hosvd-ssa-components},
+поэтому опишем его начиная со второго шага.
+Описание приведено в алгоритме~\ref{alg:hooi-ssa}.
+
+\begin{algorithm}[!ht]
+  \caption{HOSVD-SSA для выделения сигнала.}
+  \label{alg:hosvd-ssa-signal}
+  \Input $\tX$, $I,L: 1< I,L < N,\, I + L < N + 1$, где $N$ "--- длина $\tX$, $R_1 \in \overline{1:I}$,
+  $R_2 \in \overline{1:L}$, $R_3 \in \overline{1:J}$.\\
+  \Output $\widehat{\tX}$.
+
+  \begin{algorithmic}[1]
+    \setcounterref{ALG@line}{alg:second-step}
+    \State По параметрам $R_1, R_2, R_3$ и разложению траекторного тензора $\mathcal{X}$
+    в виде~\eqref{eq:trajectory-hosvd},
+    в тензоре $\mathcal{Z}$ проводится замена сечений $\calZ_{i_m = k}$ при $k>R_m$ на нулевые,
+    и по полученному тензору $\widehat{\mathcal{Z}}$
+    строится приближение траекторного тензора $\widehat{\mathcal{X}}$.
+    \State \label{alg:hosvd-ssa-reconstruct-step}
+    Усреднение тензора $\widehat{\mathcal{X}}$ вдоль плоскостей $i+l+j=\operatorname{const}$,
+    в результате чего получается оценка сигнала $\widehat{\tX}$.
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[!ht]
+  \caption{HOOI-SSA}
+  \label{alg:hooi-ssa}
+  \Input $\tX$, $I,L: 1< I,L <N,\, I + L < N + 1$, где $N$ "--- длина $\tX$, $R_1 \in \overline{1:I}$,
+  $R_2 \in \overline{1:L}$, $R_3 \in \overline{1:J}$.\\
+  \Output $\widehat{\tX}$.
+
+  \begin{algorithmic}[1]
+    \setcounterref{ALG@line}{alg:first-step}
+    \State Применение к построенному на первом шаге траекторному тензору $\mathcal{X}$ метода
+    HOOI с набором $n$-рангов $(R_1,\, R_2,\, R_3)$. Результат применения HOOI: тензор $\widehat{\calX}$,
+    имеющий заданные $n$-ранги.
+    \State Восстановление сигнала, совпадает с шагом~\ref{alg:hosvd-ssa-reconstruct-step}
+    алгоритма~\ref{alg:hosvd-ssa-signal}.
+  \end{algorithmic}
+\end{algorithm}
+
+%% TODO: Отобразоить в свойствах возможность выбора различных R_i для усечения
+
+\section{Описание метода HOSVD-MSSA}\label{sec:Tensor-MSSA-method-description}
+В данном разделе приведены описания алгоритмов HOSVD-MSSA для выделения сигнала из ряда и для разделения компонент сигнала.
+\subsection{HOSVD-MSSA для выделения сигнала}\label{subsec:Tensor-MSSA-method-signal-description}
+Пусть дан $P$-мерный временной ряд $\tX$ длины $N$
+\begin{gather*}
+  \tX = (\tX_1: \tX_2: \ldots: \tX_P), \\
+  \tX_p = \left(x_1^{(p)}, x_2^{(p)}, \ldots, x_N^{(p)}\right)^{\rmT}.
+\end{gather*}
+
+\begin{definition}[Траекторный тензор многомерного ряда]
+  \label{def:trajectory-tensor-mssa}
+  Траекторным тензором ряда $\tX$ с длиной окна $L:\: 1< L < N$ будем называть тензор $\calX$
+  размерности ${L \times K \times P}$, ${K = N - L + 1}$, элементы которого удовлетворяют равенству
+  \[
+    \calX_{lkp}=x_{l+k-1}^{(p)} \qquad l \in \overline{1:L},\, k \in \overline{1:K},\, p \in \overline{1:P}.
+  \]
+\end{definition}
+
+Из определения следует, что сечение $\calX_{\cdot \cdot p}$ траекторного тензора с длиной окна $L$
+является траекторной матрицей ряда $\tX^{(p)}$, построенной по длине окна $L$.
+Пользуясь определением~\ref{def:injection-op} оператора вложения, можно записать следующее представление
+\[
+  \calX_{\cdot \cdot p} = \calH_L \left(\tX^{(p)}\right).
+\]
+
+Метод HOSVD-MSSA для выделения в ряде сигнала из шума, по аналогии с алгоритмом HOSVD-SSA,
+сводится к получению как можно более точного приближения траекторного тензора тензором меньших,
+заданных пользователем, $n$-рангов.
+Для получения такого приближения используется усечение HOSVD траекторного тензора.
+Описание метода приведено в алгоритме~\ref{alg:hosvd-mssa}.
+
+\begin{algorithm}[!ht]
+  \caption{HOSVD-MSSA для выделения сигнала}
+  \label{alg:hosvd-mssa}
+  \Input $\tX = \left(\tX^{(1)}, \ldots, \tX^{(P)}\right)^{\rmT}$,
+  $L: 1< L < N$, где $N$ "--- длина $\tX$, $R_1 \in \overline{1:L}$,
+  $R_2 \in \overline{1:K}$, $R_3 \in \overline{1:P}$, где $K = N-L+1$.\\
+  \Output $\tilde{\tX}$.
+  \begin{algorithmic}[1]
+    \State Построение по ряду $\tX$ траекторного тензора $\calX$ с длиной окна $L$.
+    \State Вычисление HOSVD $\calX$, получение его представления в виде
+    \begin{equation}
+      \calX = \sum_{l=1}^{L} \sum_{k=1}^{K} \sum_{p=1}^{P} \calZ_{lkp} U_l^{(1)}\circ U_k^{(2)} \circ U_p^{(3)}.
+      \label{eq:hosvd-mssa}
+    \end{equation}
+    \State Построение по параметрам $R_1, R_2, R_3$ усечения HOSVD
+    \[
+      \widetilde{\calX}=\sum_{l=1}^{R_1} \sum_{k=1}^{R_2} \sum_{p=1}^{R_3} \calZ_{lkp} U_l^{(1)}\circ U_k^{(2)} \circ U_p^{(3)}.
+    \]
+    \State \label{step:hosvd-mssa-sep-restoration} Восстановление многомерного ряда $\widetilde{\tX}=\left(\widetilde{\tX}^{(1)}, \ldots, \widetilde{\tX}^{(P)}\right)$ по тензору
+    $\widetilde{\calX}$, которое происходит следующим образом:
+    ряды $\widetilde{\tX}^{(p)}$ получаются усреднением сечений $\widetilde{\calX}_{\cdot \cdot p}$ вдоль
+    побочных диагоналей $l+k=\operatorname{const}$.
+  \end{algorithmic}
+\end{algorithm}
+
+\subsection{HOSVD-MSSA для разделения компонент сигнала}\label{subsec:Tensor-MSSA-sep-method-description}
+Пусть есть два $P$-мерных временных ряда $\widehat{\tX}$ и $\widetilde{\tX}$ длины $N$ и
+$\tX = \widehat{\tX} + \widetilde{\tX}$. Их траекторные тензоры с длиной окна $L$ обозначим
+$\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
+
+Метод HOSVD-MSSA для разделения компонент сигнала сводится к получению представления HOSVD траекторного тензора
+наблюдаемого сигнала $\tX$ в виде суммы HOSVD траекторных тензоров компонент $\widehat{\tX}$ и $\widetilde{\tX}$.
+Первые два шага этого алгоритма совпадают с первыми двумя шагами алгоритма~\ref{alg:hosvd-mssa}, поэтому
+описание алгоритма приводится, начиная с 3 шага.
+Описание метода приведено в алгоритме~\ref{alg:hosvd-mssa-sep}.
+
+\begin{algorithm}[!ht]
+  \caption{HOSVD-MSSA для разделения компонент сигнала.}
+  \label{alg:hosvd-mssa-sep}
+  \Input $\tX$,
+  $L: 1< L < N$, $K = N - L + 1$,
+  $\widehat{\mathfrak{S}},\, \widetilde{\mathfrak{S}} \subseteq \overline{1:\min(L, K)}:
+  \widehat{\mathfrak{S}} \cap \widetilde{\mathfrak{S}} = \varnothing$,
+  $\widehat{\mathfrak{P}},\, \widetilde{\mathfrak{P}}  \subseteq \overline{1:P}$\\
+  \Output $\mathring{\widehat{\tX}}$, $\mathring{\widetilde{\tX}}$ "--- оценки $\widehat{\tX}$ и $\widetilde{\tX}$
+  соответственно.
+  \begin{algorithmic}[1]
+    \setcounter{ALG@line}{2}
+    \State Группировка: построение тензоров
+    \begin{gather*}
+      \widehat{\mathcal{X}}=\sum_{l \in \widehat{\mathfrak{S}}} \sum_{k\in \widehat{\mathfrak{S}}}
+      \sum_{p\in \widehat{\mathfrak{P}}}
+      \mathcal{Z}_{lkp} U^{(1)}_{l}\circ U^{(2)}_{k} \circ U^{(3)}_{p},\\
+      \widetilde{\mathcal{X}}=\sum_{l \in \widetilde{\mathfrak{S}}} \sum_{k\in \widetilde{\mathfrak{S}}}
+      \sum_{p\in \widetilde{\mathfrak{P}}}
+      \mathcal{Z}_{lkp} U^{(1)}_{l}\circ U^{(2)}_{k} \circ U^{(3)}_{p}.
+    \end{gather*}
+    \State Восстановление рядов $\mathring{\widehat{\tX}}$ и $\mathring{\widetilde{\tX}}$ по тензорам $\widehat{\mathcal{X}}$ и $\widetilde{\mathcal{X}}$ соответственно путём применения к
+    каждому из этих тензоров шага~\ref{step:hosvd-mssa-sep-restoration} алгоритма~\ref{alg:hosvd-mssa}.
+  \end{algorithmic}
+\end{algorithm}
+
+\section{Описание метода HO-ESPRIT}\label{seq:Tensor-esprit-description}
 Пусть $\tX$ "--- одномерный ($P=1$) или многомерный ($P>1$) комплекснозначный временной ряд
-вида~\eqref{eq:complex-mv-model}.
+вида~\eqref{eq:esprit-model}.
 Обозначим
 \[
   \overline{L} =
@@ -414,6 +649,7 @@ $a_j^{(p)} \in \mathbb{R}\setminus\{0\}$, фазы ${\varphi_j^{(p)} \in [0, 2\p
   \end{cases}
 \]
 
+Описание метода HO-ESPRIT приведено в алгоритме~\ref{alg:ho-esprit}.
 \begin{algorithm}[!h]
   \caption{HO-ESPRIT для оценки параметров комплекснозначного сигнала.}
   \label{alg:ho-esprit}
@@ -424,7 +660,7 @@ $a_j^{(p)} \in \mathbb{R}\setminus\{0\}$, фазы ${\varphi_j^{(p)} \in [0, 2\p
   \Output $\left(\widehat{\alpha}_1, \widehat{\omega}_1\right),
   \left(\widehat{\alpha}_2, \widehat{\omega}_2\right), \ldots,
   \left(\widehat{\alpha}_R, \widehat{\omega}_R\right)$ "--- оценки параметров
-  сигнала~\eqref{eq:complex-mv-model}.
+  сигнала~\eqref{eq:esprit-model}.
   \begin{algorithmic}[1]
     \State Построение траекторного тензора $\calX\in \bbC^{I_1\times I_2 \times I_3}$
     по ряду $\tX$ с параметрами из $\overline{L}$.
