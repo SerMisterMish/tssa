@@ -1,5 +1,7 @@
 % Preamble
-\documentclass{article}
+\documentclass[specialist,
+  substylefile=spbu.rtx,
+subf,href,colorlinks=true, 12pt]{disser}
 
 % Packages
 \usepackage[a4paper, includefoot,
@@ -32,7 +34,7 @@ headsep=1cm, footskip=1cm]{geometry}
 \include{letters_series_mathbb}
 
 \setcounter{tocdepth}{2}
-\graphicspath{{./img}}
+\graphicspath{{../img}}
 
 \theoremstyle{plain}
 \newtheorem{statement}{Утверждение}[section]
@@ -375,12 +377,13 @@ $a_j^{(p)} \in \mathbb{R}\setminus\{0\}$, фазы ${\varphi_j^{(p)} \in [0, 2\p
     запись $\bfU^{\uparrow}$ обозначает матрицу $\bfU$ без первой строки, а
     запись $\bfU_{\downarrow}$ "--- без последней.
     \State Нахождение первых $R$ в порядке неубывания собственных чисел $\lambda_j$ матрицы $\bfZ$.
-    Полученные собственные числа $\lambda_j$ считаются оценками
-    экспонент $e^{\alpha_j + 2\pi\iu \omega_j}$, через которые можно выразить
+    Полученные собственные числа $\lambda_{j'}$ считаются оценками
+    экспонент $e^{\alpha_j + 2\pi\iu \omega_j}$, возможно с точностью до некоторой перестановки
+    $j = S (j')$, через которые можно выразить
     оценки искомых параметров:
     \[
-      \widehat{\alpha}_j = \log\left(\left|\lambda_j\right|\right), \qquad
-      \widehat{\omega}_j = \frac{\operatorname{Arg}\left(\lambda_j\right)}{2 \pi}.
+      \widehat{\alpha}_j = \log\left(\left|\lambda_{j'}\right|\right), \qquad
+      \widehat{\omega}_j = \frac{\operatorname{Arg}\left(\lambda_{j'}\right)}{2 \pi}.
     \]
   \end{algorithmic}
 \end{algorithm}
@@ -601,7 +604,6 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
 Первые два шага этого алгоритма совпадают с первыми двумя шагами алгоритма~\ref{alg:hosvd-mssa}, поэтому
 описание алгоритма приводится, начиная с 3 шага.
 Описание метода приведено в алгоритме~\ref{alg:hosvd-mssa-sep}.
-
 \begin{algorithm}[!ht]
   \caption{HOSVD-MSSA для разделения компонент сигнала.}
   \label{alg:hosvd-mssa-sep}
@@ -639,7 +641,7 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
     L, & P>1,
   \end{cases}
 \]
-а $\calX$ "--- траекторный тензор ряда $\tX$, построенный с параметрами из $\overline{L}$.
+а $\calX$ "--- траекторный тензор ряда $\tX$, построенный с длиной (длинами) окна из $\overline{L}$.
 Также определим область допустимых параметров $\overline{L}$:
 \[
   \calD =
@@ -650,11 +652,11 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
 \]
 
 Описание метода HO-ESPRIT приведено в алгоритме~\ref{alg:ho-esprit}.
-\begin{algorithm}[!h]
+\begin{algorithm}[!ht]
   \caption{HO-ESPRIT для оценки параметров комплекснозначного сигнала.}
   \label{alg:ho-esprit}
   \Input $\tX$, $\overline{L} \in \calD$, $R: 1 \leqslant R\leqslant \min(L, N-L+1)$,
-  $D\in \{1, 2, 3\}$ "--- номер направления сингулярных векторов,
+  $d\in \{1, 2, 3\}$ "--- номер направления сингулярных векторов,
   используемых для оценки параметров.
 
   \Output $\left(\widehat{\alpha}_1, \widehat{\omega}_1\right),
@@ -671,24 +673,82 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
       \calX = \sum_{i_1=1}^{I_1} \sum_{i_2=1}^{I_2} \sum_{i_3=1}^{I_3}
       \calZ_{i_1 i_2 i_3} U_{i_1}^{(1)}\circ U_{i_2}^{(2)} \circ U_{i_3}^{(3)},
     \]
-    построение матрицы $\bfU = \left[U_1^{(D)}:U_2^{(D)}:\ldots: U_{I_D}^{(D)}\right]$.
+    построение матрицы $\bfU = \left[U_1^{(d)}:U_2^{(d)}:\ldots: U_{I_D}^{(d)}\right]$.
     \State Решение уравнения
     \[
       \bfU^{\uparrow}=\bfU_{\downarrow}\bfZ
     \]
-    относительно матрицы $\bfZ$, где $\bfU = [U_1:U_2:\ldots: U_d]$,
-    запись $\bfU^{\uparrow}$ обозначает матрицу $\bfU$ без первой строки, а
-    запись $\bfU_{\downarrow}$ "--- без последней.
+    относительно матрицы $\bfZ$, где запись $\bfU^{\uparrow}$ обозначает матрицу $\bfU$ без первой строки,
+    а запись $\bfU_{\downarrow}$ "--- без последней.
     \State Нахождение первых $R$ в порядке неубывания собственных чисел $\lambda_j$ матрицы $\bfZ$.
-    Полученные собственные числа $\lambda_j$ считаются оценками
-    экспонент $e^{\alpha_j + 2\pi\iu \omega_j}$, через которые можно выразить
+    Полученные собственные числа $\lambda_{j'}$ считаются оценками
+    экспонент $e^{\alpha_j + 2\pi\iu \omega_j}$, возможно с точностью до некоторой перестановки
+    $j = S (j')$,, через которые можно выразить
     оценки искомых параметров:
     \[
-      \widehat{\alpha}_j = \log\left(\left|\lambda_j\right|\right), \qquad
-      \widehat{\omega}_j = \frac{\operatorname{Arg}\left(\lambda_j\right)}{2 \pi}.
+      \widehat{\alpha}_j = \log\left(\left|\lambda_{j'}\right|\right), \qquad
+      \widehat{\omega}_j = \frac{\operatorname{Arg}\left(\lambda_{j'}\right)}{2 \pi}.
     \]
   \end{algorithmic}
 \end{algorithm}
+
+\section{Численные сравнения в задаче оценки параметров}
+В этом разделе приведены сравнения методов ESPRIT и HO-ESPRIT по точности оценки параметров сигнала
+вида~\eqref{eq:esprit-model} в случае одномерных и многомерных рядов.
+В качестве показателя точности оценки была выбрана метрика относительного среднеквадратичного
+отклонения (RRMSE)
+\begin{equation}
+  \label{eq:rrmse}
+  \operatorname{RRMSE} = \frac{100}{|\gamma|}\sqrt{\frac{1}{m} \sum_{j=1}^{m} \left|\gamma-\widehat{\gamma}_j\right|^2} (\%),
+\end{equation}
+где $m$ "--- количество реализаций шума, $\gamma$ "--- оцениваемый параметр, $\widehat{\gamma}_j$ "---
+оценка параметра $\gamma$ по ряду с $j$-й реализацией шума.
+Такой выбор был сделан для того, чтобы в дальнейшем сравнить результаты с результатами
+работы~\cite{hosvd-hooi-separation}, в которой использовалась именно такая метрика для определения
+точности оценивания параметров.
+
+\subsection{Одномерный случай}
+Пусть $P=1$ и $R=2$, то есть одномерный временной ряд $\tX = \left(x_0, x_1, \ldots, x_{24}\right)$
+состоит из элементов вида
+\[
+  x_n = a_1 e^{ \alpha_1 n }
+  e^{\iu \left( 2 \pi \omega_1 n + \varphi_1\right)} +
+  a_2 e^{ \alpha_2 n }
+  e^{\iu \left( 2 \pi \omega_2 n + \varphi_2\right)} + \varepsilon_n,
+\]
+где $n \in \overline{0:24}$, а $\varepsilon_n$ "--- последовательность независимых случайных величин из
+распределения $\mathrm{N}(0,\, \sigma^2)$, $\sigma=0.04$.
+Также пусть $\omega_1 = 0.2$, $\omega_2 = 0.22$.
+Ниже приведены рассматриваемые варианты степеней затухания.
+\begin{enumerate}
+  \item\label{enum:esprit-no-rates} $\alpha_1=\alpha_2=0$.
+  \item\label{enum:esprit-smalleq-rates} $\alpha_1=\alpha_2=-0.01$.
+  \item\label{enum:esprit-bigeq-rates} $\alpha_1=\alpha_2=-0.02$.
+  \item\label{enum:esprit-diff-rates} $\alpha_1= -0.01$, $\alpha_2=-0.02$.
+\end{enumerate}
+Во всех случаях ранг сигнала с такими параметрами будет равен 2, поэтому для оценки параметров
+использовались только первые два собственных числа матрицы $\bfZ$ из алгоритма~\ref{alg:ho-esprit}.
+В этом разделе RRMSE считалось по 500 различным реализациям шума.
+
+Ниже представлены графики зависимости RRMSE оценки частот методом HO-ESPRIT от размеров траекторного тензора
+(ось $x$) и выбора направления оценивания (цвет и тип линий).
+Чёрной пунктирной линией на рисунках изображены наименьшие по выбору длины окна значения RRMSE
+соответствующего параметра, полученные методом ESPRIT.
+
+Рисунки~\ref{fig:freq1_dims_no_rates} и~\ref{fig:freq2_dims_no_rates} соотвутствуют случаю~\ref{enum:esprit-no-rates}.
+Графики с RRMSE оценок степеней затухания не приводятся в этом случае, так как для них RRMSE не определено.
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=\linewidth]{freq1_dims_no_rates.pdf}
+  \caption{Зависимость RRMSE оценки $\omega_1$ от длины окна и направления восстановления.}
+  \label{fig:freq1_dims_no_rates}
+\end{figure}
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=\linewidth]{freq2_dims_no_rates.pdf}
+  \caption{Зависимость RRMSE оценки $\omega_2$ от длины окна и направления восстановления.}
+  \label{fig:freq2_dims_no_rates}
+\end{figure}
 
 \bibliography{main}
 \bibliographystyle{ugost2008}
