@@ -57,7 +57,8 @@ headsep=1cm, footskip=1cm]{geometry}
 \renewcommand{\listalgorithmname}{Список алгоритмов}
 
 % Document
-\begin{document}\section{Известные сведения об алгоритмах SSA и MSSA}\label{sec:known-results-ssa}
+\begin{document}
+\section{Известные сведения об алгоритмах SSA и MSSA}\label{sec:known-results-ssa}
 В этом разделе приведены описания алгоритмов SSA и MSSA, а также некоторые их свойства и важные определения.
 
 \subsection{SSA}\label{subsec:ssa}
@@ -727,27 +728,113 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
   \item\label{enum:esprit-diff-rates} $\alpha_1= -0.01$, $\alpha_2=-0.02$.
 \end{enumerate}
 Во всех случаях ранг сигнала с такими параметрами будет равен 2, поэтому для оценки параметров
-использовались только первые два собственных числа матрицы $\bfZ$ из алгоритма~\ref{alg:ho-esprit}.
-В этом разделе RRMSE считалось по 500 различным реализациям шума.
+использовались только первые два собственных числа матрицы $\bfZ$ из алгоритмов~\ref{alg:esprit}
+и~\ref{alg:ho-esprit}.
+В этом разделе RRMSE считалось по 500 реализациям шума.
 
 Ниже представлены графики зависимости RRMSE оценки частот методом HO-ESPRIT от размеров траекторного тензора
 (ось $x$) и выбора направления оценивания (цвет и тип линий).
 Чёрной пунктирной линией на рисунках изображены наименьшие по выбору длины окна значения RRMSE
 соответствующего параметра, полученные методом ESPRIT.
 
-Рисунки~\ref{fig:freq1_dims_no_rates} и~\ref{fig:freq2_dims_no_rates} соотвутствуют случаю~\ref{enum:esprit-no-rates}.
+Рисунки~\ref{fig:dims_no_rates} соответствуют случаю~\ref{enum:esprit-no-rates}.
 Графики с RRMSE оценок степеней затухания не приводятся в этом случае, так как для них RRMSE не определено.
+Рисунки~\ref{fig:dims_small_eq_rates},~\ref{fig:dims_large_eq_rates} и~\ref{fig:dims_diff_rates}
+соответствуют случаям~\ref{enum:esprit-smalleq-rates},~\ref{enum:esprit-bigeq-rates} и~\ref{enum:esprit-diff-rates}
+соответственно.
 \begin{figure}[!ht]
   \centering
-  \includegraphics[width=\linewidth]{freq1_dims_no_rates.pdf}
-  \caption{Зависимость RRMSE оценки $\omega_1$ от длины окна и направления восстановления.}
-  \label{fig:freq1_dims_no_rates}
+  \begin{subfigure}{0.9\linewidth}
+    \includegraphics[width=\linewidth]{freq1_dims_no_rates.pdf}
+    \caption{RRMSE оценки $\omega_1$.}
+    \label{fig:freq1_dims_no_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.9\linewidth}
+    \includegraphics[width=\linewidth]{freq2_dims_no_rates.pdf}
+    \caption{RRMSE оценки $\omega_2$.}
+    \label{fig:freq2_dims_no_rates}
+  \end{subfigure}
+  \caption{Зависимость RRMSE оценок параметров от длины окна и направления восстановления,
+  случай~\ref{enum:esprit-no-rates}.}
+  \label{fig:dims_no_rates}
 \end{figure}
 \begin{figure}[!ht]
   \centering
-  \includegraphics[width=\linewidth]{freq2_dims_no_rates.pdf}
-  \caption{Зависимость RRMSE оценки $\omega_2$ от длины окна и направления восстановления.}
-  \label{fig:freq2_dims_no_rates}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rate1_dims_small_eq_rates.pdf}
+    \caption{RRMSE оценки $\alpha_1$.}
+    \label{fig:rate1_dims_small_eq_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rate2_dims_small_eq_rates.pdf}
+    \caption{RRMSE оценки $\alpha_2$.}
+    \label{fig:rate2_dims_small_eq_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{freq1_dims_small_eq_rates.pdf}
+    \caption{RRMSE оценки $\omega_1$.}
+    \label{fig:freq1_dims_small_eq_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{freq2_dims_small_eq_rates.pdf}
+    \caption{RRMSE оценки $\omega_2$.}
+    \label{fig:freq2_dims_small_eq_rates}
+  \end{subfigure}
+  \caption{Зависимость RRMSE оценок параметров от длины окна и направления восстановления,
+  случай~\ref{enum:esprit-smalleq-rates}.}
+  \label{fig:dims_small_eq_rates}
+\end{figure}
+\begin{figure}[!ht]
+  \centering
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rate1_dims_large_eq_rates.pdf}
+    \caption{RRMSE оценки $\alpha_1$.}
+    \label{fig:rate1_dims_large_eq_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rate2_dims_large_eq_rates.pdf}
+    \caption{RRMSE оценки $\alpha_2$.}
+    \label{fig:rate2_dims_large_eq_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{freq1_dims_large_eq_rates.pdf}
+    \caption{RRMSE оценки $\omega_1$.}
+    \label{fig:freq1_dims_large_eq_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{freq2_dims_large_eq_rates.pdf}
+    \caption{RRMSE оценки $\omega_2$.}
+    \label{fig:freq2_dims_large_eq_rates}
+  \end{subfigure}
+  \caption{Зависимость RRMSE оценок параметров от длины окна и направления восстановления,
+  случай~\ref{enum:esprit-bigeq-rates}.}
+  \label{fig:dims_large_eq_rates}
+\end{figure}
+\begin{figure}[!ht]
+  \centering
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rate1_dims.pdf}
+    \caption{RRMSE оценки $\alpha_1$.}
+    \label{fig:rate1_dims}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rate2_dims.pdf}
+    \caption{RRMSE оценки $\alpha_2$.}
+    \label{fig:rate2_dims}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{freq1_dims.pdf}
+    \caption{RRMSE оценки $\omega_1$.}
+    \label{fig:freq1_dims}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{freq2_dims.pdf}
+    \caption{RRMSE оценки $\omega_2$.}
+    \label{fig:freq2_dims}
+  \end{subfigure}
+  \caption{Зависимость RRMSE оценок параметров от длины окна и направления восстановления,
+  случай~\ref{enum:esprit-diff-rates}.}
+  \label{fig:dims_diff_rates}
 \end{figure}
 
 \bibliography{main}
