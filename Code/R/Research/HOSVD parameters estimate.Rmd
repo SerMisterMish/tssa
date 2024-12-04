@@ -11,6 +11,7 @@ library(factoextra)
 library(dplyr)
 library(tidyr)
 library(waldo)
+library(beepr)
 
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
@@ -1395,8 +1396,15 @@ for (j in seq(len.out)) {
   }
 }
 
-
 close(pb)
+beep()
+save(
+  rate1.rrmse,
+  rate2.rrmse,
+  freq1.rrmse,
+  freq2.rrmse,
+  file = paste0("./Research/comp_results/dim_rrmse", plot.name, "_tens.RData")
+)
 ```
 
 ## Нахождение минимума RRMSE для SSA по возможным длинам окна
@@ -1408,12 +1416,16 @@ n <- 25
 
 # no rates
 # rates.true <- c(0, 0)
+# plot.name <- "_no_rates"
 # both rates -0.01
 # rates.true <- c(-0.01, -0.01)
+# plot.name <- "_small_eq_rates"
 # both rates -0.02
 # rates.true <- c(-0.02, -0.02)
+# plot.name <- "_large_eq_rates"
 # rates from paper
 rates.true <- c(-0.01, -0.02)
+plot.name <- ""
 
 freqs.true <- c(0.2, 0.22)
 signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
@@ -1479,11 +1491,27 @@ min.ssa.rrmse <- lapply(
 )
 
 close(pb)
+save(
+  rate1.ssa.rrmse,
+  rate2.ssa.rrmse,
+  freq1.ssa.rrmse,
+  freq2.ssa.rrmse,
+  file = paste0("./Research/comp_results/dim_rrmse", plot.name, "_ssa.RData")
+)
 ```
 
 
 
 ## Графики RRMSE
+```{r}
+pltnms <- c("_no_rates", "_small_eq_rates", "_large_eq_rates", "")
+pn <- 1
+
+load(file = paste0("./Research/comp_results/dim_rrmse", pltnms[pn], "_tens.RData"))
+load(file = paste0("./Research/comp_results/dim_rrmse", pltnms[pn], "_ssa.RData"))
+```
+
+
 ```{r}
 rate1.df <- rate1.rrmse |> as.data.frame() |> 
    mutate(dims = factor(x = apply(tens.dims, 1, paste, collapse = "x"),
