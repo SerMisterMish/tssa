@@ -348,8 +348,9 @@ $a_j^{(p)} \in \mathbb{R}\setminus\{0\}$, фазы ${\varphi_j^{(p)} \in [0, 2\p
   ряда~\eqref{eq:esprit-model}.
 \end{remark}
 
-Алгоритм ESPRIT~(Estimation of signal parameters via rotational invariance technique), как
-и SSA, относится к классу методов, основанных на подпространстве сигнала.
+Алгоритм ESPRIT~(Estimation of signal parameters via rotational
+invariance tech\-nique),
+как и SSA, относится к классу методов, основанных на подпространстве сигнала.
 В отличие от SSA, ESPRIT применяется для решения задачи оценки параметров
 степеней затухания $\alpha_j$ и частот $\omega_j$ многомерного комплекснозначного сигнала в модели~\eqref{eq:esprit-model}.
 
@@ -693,7 +694,7 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
   \end{algorithmic}
 \end{algorithm}
 
-\section{Численные сравнения в задаче оценки параметров}
+\section{Численные сравнения в задаче оценки параметров}\label{sec:esprit-comparison}
 В этом разделе приведены сравнения методов ESPRIT и HO-ESPRIT по точности оценки параметров сигнала
 вида~\eqref{eq:esprit-model} в случае одномерных и многомерных рядов.
 В качестве показателя точности оценки была выбрана метрика относительного среднеквадратичного
@@ -708,14 +709,14 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
 работы~\cite{hosvd-hooi-separation}, в которой использовалась именно такая метрика для определения
 точности оценивания параметров.
 
-\subsection{Одномерный случай}
+\subsection{Одномерный случай}\label{subsec:esprit-comparison}
 Пусть $P=1$ и $R=2$, то есть одномерный временной ряд $\tX = \left(x_0, x_1, \ldots, x_{24}\right)$
 состоит из элементов вида
 \[
-  x_n = a_1 e^{ \alpha_1 n }
-  e^{\iu \left( 2 \pi \omega_1 n + \varphi_1\right)} +
-  a_2 e^{ \alpha_2 n }
-  e^{\iu \left( 2 \pi \omega_2 n + \varphi_2\right)} + \varepsilon_n,
+  x_n = e^{ \alpha_1 n }
+  e^{2 \pi\iu \omega_1 n} +
+  e^{ \alpha_2 n }
+  e^{ 2 \pi \iu \omega_2 n} + \varepsilon_n,
 \]
 где $n \in \overline{0:24}$, а $\varepsilon_n$ "--- последовательность независимых случайных величин из
 распределения $\mathrm{N}(0,\, \sigma^2)$, $\sigma=0.04$.
@@ -732,7 +733,8 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
 и~\ref{alg:ho-esprit}.
 В этом разделе RRMSE считалось по 500 реализациям шума.
 
-Ниже представлены графики зависимости RRMSE оценок частот методом HO-ESPRIT от размеров траекторного тензора
+Ниже представлены графики зависимости RRMSE оценок частот и степеней затухания,
+полученных методом HO-ESPRIT, от размеров траекторного тензора
 (ось $x$) и выбора направления оценивания (цвет и тип линий).
 Чёрной пунктирной линией на рисунках изображены наименьшие по выбору длины окна значения RRMSE
 соответствующего параметра, полученные методом ESPRIT.
@@ -754,7 +756,8 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
     \caption{RRMSE оценок $\omega_2$.}
     \label{fig:freq2_dims_no_rates}
   \end{subfigure}
-  \caption{Зависимость RRMSE оценок параметров от длины окна и направления восстановления,
+  \caption{Зависимость RRMSE оценок параметров одногомерного ряда
+    от длины окна и направления восстановления,
   случай~\ref{enum:esprit-no-rates}.}
   \label{fig:dims_no_rates}
 \end{figure}
@@ -780,7 +783,8 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
     \caption{RRMSE оценок $\omega_2$.}
     \label{fig:freq2_dims_small_eq_rates}
   \end{subfigure}
-  \caption{Зависимость RRMSE оценок параметров от длины окна и направления восстановления,
+  \caption{Зависимость RRMSE оценок параметров одногомерного ряда
+    от длины окна и направления восстановления,
   случай~\ref{enum:esprit-smalleq-rates}.}
   \label{fig:dims_small_eq_rates}
 \end{figure}
@@ -806,7 +810,8 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
     \caption{RRMSE оценок $\omega_2$.}
     \label{fig:freq2_dims_large_eq_rates}
   \end{subfigure}
-  \caption{Зависимость RRMSE оценок параметров от длины окна и направления восстановления,
+  \caption{Зависимость RRMSE оценок параметров одногомерного ряда
+    от длины окна и направления восстановления,
   случай~\ref{enum:esprit-bigeq-rates}.}
   \label{fig:dims_large_eq_rates}
 \end{figure}
@@ -832,7 +837,8 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
     \caption{RRMSE оценок $\omega_2$.}
     \label{fig:freq2_dims}
   \end{subfigure}
-  \caption{Зависимость RRMSE оценок параметров от длины окна и направления восстановления,
+  \caption{Зависимость RRMSE оценок параметров одногомерного ряда
+    от длины окна и направления восстановления,
   случай~\ref{enum:esprit-diff-rates}.}
   \label{fig:dims_diff_rates}
 \end{figure}
@@ -847,12 +853,136 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
 С другой стороны, для стандартного алгоритма ESPRIT требуется меньший набор параметров,
 а множество длин окна, при которых точность оценки близка к оптимальной, довольно велико.
 С учётом этих замечаний, и того, что разница в точности оптимальных
-параметров между методами не велика, использование метода HO-ESPRIT в текущем виде
+параметров между методами невелика, использование метода HO-ESPRIT в текущем виде
 не обосновано.
 
 Стоит заметить, что во всех случаях выбор номера направления $d$ из
 алгоритма~\ref{alg:ho-esprit}, соответствующего направлению наименьшего размера
 траекторного тензора, давал наиболее точные результаты.
+
+\subsection{Многомерный случай}\label{subsec:mv-esprit-comparison}
+Пусть $P=12$ и $R=2$, то есть многомерный временной ряд
+\begin{gather*}
+  \tX = \left(\tX^{(1)}, \tX^{(2)}, \ldots, \tX^{(12)}\right),\\
+  \tX^{(p)} = \left(x_0^{(p)}, x_1^{(p)}, \ldots, x_{24}^{(p)}\right)
+\end{gather*}
+состоит из элементов вида
+\[
+  x_n^{(p)} = a_1^{(p)} e^{ \alpha_1 n }
+  e^{2 \pi \iu \omega_1 n} +
+  a_2^{(p)} e^{ \alpha_2 n }
+  e^{2 \pi \iu \omega_2 n} + \varepsilon_n^{(p)},
+\]
+где $n \in \overline{0:24}$, а $\varepsilon_n$ "--- последовательность независимых случайных величин из
+распределения $\mathrm{N}(0,\, \sigma^2)$, $\sigma=0.2$.
+Значения частот и варианты степеней затухания были взяты такими же, как
+в одномерном случае в разделе~\ref{subsec:esprit-comparison}.
+Как и в одномерном случае, рани сигналов с каждым набором параметров равен 2,
+поэтому для оценки параметров использовались только первые два собственных
+числа матрицы $\bfZ$ из алгоритмов~\ref{alg:esprit} и~\ref{alg:ho-esprit}.
+
+Ниже представлены графики зависимости RRMSE оценок параметров,
+полученных методами ESPROT и HO-ESPRIT, от значения длины окна $L$.
+
+Рисунки~\ref{fig:L_no_rates} соответствуют случаю~\ref{enum:esprit-no-rates}.
+Графики с RRMSE оценок степеней затухания не приводятся в этом случае, так как для них RRMSE не определено.
+Рисунки~\ref{fig:L_small_eq_rates},~\ref{fig:L_large_eq_rates} и~\ref{fig:L_diff_rates}
+соответствуют случаям~\ref{enum:esprit-smalleq-rates},~\ref{enum:esprit-bigeq-rates} и~\ref{enum:esprit-diff-rates}
+соответственно.
+\begin{figure}[!ht]
+  \centering
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{freq1_L_no_rates.pdf}
+    \caption{RRMSE оценок $\omega_1$.}
+    \label{fig:freq1_L_no_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{freq2_L_no_rates.pdf}
+    \caption{RRMSE оценок $\omega_2$.}
+    \label{fig:freq2_L_no_rates}
+  \end{subfigure}
+  \caption{Зависимость RRMSE оценок параметров многомерного ряда от длины окна,
+  случай~\ref{enum:esprit-no-rates}.}
+  \label{fig:L_no_rates}
+\end{figure}
+\begin{figure}[!ht]
+  \centering
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rate1_L_small_eq_rates.pdf}
+    \caption{RRMSE оценок $\alpha_1$.}
+    \label{fig:rate1_L_small_eq_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rate2_L_small_eq_rates.pdf}
+    \caption{RRMSE оценок $\alpha_2$.}
+    \label{fig:rate2_L_small_eq_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{freq1_L_small_eq_rates.pdf}
+    \caption{RRMSE оценок $\omega_1$.}
+    \label{fig:freq1_L_small_eq_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{freq2_L_small_eq_rates.pdf}
+    \caption{RRMSE оценок $\omega_2$.}
+    \label{fig:freq2_L_small_eq_rates}
+  \end{subfigure}
+  \caption{Зависимость RRMSE оценок параметров многомерного ряда от длины окна,
+  случай~\ref{enum:esprit-smalleq-rates}.}
+  \label{fig:L_small_eq_rates}
+\end{figure}
+\begin{figure}[!ht]
+  \centering
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rate1_L_large_eq_rates.pdf}
+    \caption{RRMSE оценок $\alpha_1$.}
+    \label{fig:rate1_L_large_eq_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rate2_L_large_eq_rates.pdf}
+    \caption{RRMSE оценок $\alpha_2$.}
+    \label{fig:rate2_L_large_eq_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{freq1_L_large_eq_rates.pdf}
+    \caption{RRMSE оценок $\omega_1$.}
+    \label{fig:freq1_L_large_eq_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{freq2_L_large_eq_rates.pdf}
+    \caption{RRMSE оценок $\omega_2$.}
+    \label{fig:freq2_L_large_eq_rates}
+  \end{subfigure}
+  \caption{Зависимость RRMSE оценок параметров многомерного ряда от длины окна,
+  случай~\ref{enum:esprit-bigeq-rates}.}
+  \label{fig:L_large_eq_rates}
+\end{figure}
+\begin{figure}[!ht]
+  \centering
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rate1_L.pdf}
+    \caption{RRMSE оценок $\alpha_1$.}
+    \label{fig:rate1_L}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rate2_L.pdf}
+    \caption{RRMSE оценок $\alpha_2$.}
+    \label{fig:rate2_L}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{freq1_L.pdf}
+    \caption{RRMSE оценок $\omega_1$.}
+    \label{fig:freq1_L}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{freq2_L.pdf}
+    \caption{RRMSE оценок $\omega_2$.}
+    \label{fig:freq2_L}
+  \end{subfigure}
+  \caption{Зависимость RRMSE оценок параметров многомерного ряда от длины окна,
+  случай~\ref{enum:esprit-diff-rates}.}
+  \label{fig:L_diff_rates}
+\end{figure}
 
 \bibliography{main}
 \bibliographystyle{ugost2008}

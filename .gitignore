@@ -1,6 +1,5 @@
 *.Rhistory
 *.Ruserdata
-*.Rproj
 .Rproj.user
 .RData
 *aux/
