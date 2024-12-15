@@ -716,11 +716,19 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
   x_n = e^{ \alpha_1 n }
   e^{2 \pi\iu \omega_1 n} +
   e^{ \alpha_2 n }
-  e^{ 2 \pi \iu \omega_2 n} + \varepsilon_n,
+  e^{ 2 \pi \iu \omega_2 n} + \zeta_n,
 \]
-где $n \in \overline{0:24}$, а $\varepsilon_n$ "--- последовательность независимых случайных величин из
-распределения $\mathrm{N}(0,\, \sigma^2)$, $\sigma=0.04$.
-Также пусть $\omega_1 = 0.2$, $\omega_2 = 0.22$.
+где $n \in \overline{0:24}$, $\zeta_n = \xi_n + \iu \eta_n$, а
+$\xi_n$ и $\eta_n$ "--- последовательность независимых случайных величин из
+распределения $\mathrm{N}(0,\, \sigma^2 / 2)$, $\sigma=0.04$.
+Случайные величины $\zeta_n$ являются независимыми и их
+распределение называется кругосимметричным комплексным нормальным
+распределением~(circularly-symmetric complex normal
+distribution)~\cite{ComplexNormal} с дисперсией
+$\sigma^2$ и обозначается
+$\mathrm{CN}(0, \sigma^2)$.
+
+Пусть $\omega_1 = 0.2$, $\omega_2 = 0.22$.
 Ниже приведены рассматриваемые варианты степеней затухания.
 \begin{enumerate}
   \item\label{enum:esprit-no-rates} $\alpha_1=\alpha_2=0$.
@@ -728,6 +736,9 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
   \item\label{enum:esprit-bigeq-rates} $\alpha_1=\alpha_2=-0.02$.
   \item\label{enum:esprit-diff-rates} $\alpha_1= -0.01$, $\alpha_2=-0.02$.
 \end{enumerate}
+Такие параметры были выбраны, так как в статье~\cite{hosvd-hooi-separation}
+рассматривалась модель с такими частотами и степенями затухания из
+варианта~\ref{enum:esprit-diff-rates}.
 Во всех случаях ранг сигнала с такими параметрами будет равен 2, поэтому для оценки параметров
 использовались только первые два собственных числа матрицы $\bfZ$ из алгоритмов~\ref{alg:esprit}
 и~\ref{alg:ho-esprit}.
@@ -871,13 +882,25 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
   x_n^{(p)} = a_1^{(p)} e^{ \alpha_1 n }
   e^{2 \pi \iu \omega_1 n} +
   a_2^{(p)} e^{ \alpha_2 n }
-  e^{2 \pi \iu \omega_2 n} + \varepsilon_n^{(p)},
+  e^{2 \pi \iu \omega_2 n} + \zeta_n^{(p)},
 \]
-где $n \in \overline{0:24}$, а $\varepsilon_n$ "--- последовательность независимых случайных величин из
-распределения $\mathrm{N}(0,\, \sigma^2)$, $\sigma=0.2$.
+где $n \in \overline{0:24}$, а $\zeta_n$ "--- последовательность независимых случайных величин из
+распределения $\mathrm{CN}(0,\, \sigma^2)$, $\sigma=0.2$.
 Значения частот и варианты степеней затухания были взяты такими же, как
 в одномерном случае в разделе~\ref{subsec:esprit-comparison}.
-Как и в одномерном случае, рани сигналов с каждым набором параметров равен 2,
+В качестве амплитуд $a_k^{(p)}$ были взяты независимые реализации
+случайных величин из распределения $\mathrm{CN}(0,\, 1)$,
+их приблизительные значения приведены в уравнении~\eqref{eq:complex-amplitudes}.
+\begin{gather}
+  \label{eq:complex-amplitudes}
+  \begin{split}
+    \operatorname{Re}(a_1) \approx \left( 0, -0.1, -1, -0.4, 0.2, 0.3, -0.9, -0.3, -1.2, -0.2, 0.8, 0.5\right)^{\rmT}, \\
+    \operatorname{Im}(a_1) \approx \left(-0.9, -0.3, -0.5, -0.6, -0.1, -0.2, -1.3, -0.1, 0.7, 0.1, -1, -1 \right)^{\rmT}, \\
+    \operatorname{Re}(a_2) \approx \left( -0.2, 0.7, 0.5, 0.1, -0.7, -0.1, 0.7, 0.3, -0.4, -1.5, -0.5, -1.5\right)^{\rmT}, \\
+    \operatorname{Im}(a_2) \approx \left( 0.3, -1.2, -0.2, -0.5, 0.8, -0.5, -0.6, 0.6, -0.7, 0, 0.2, -0.2\right)^{\rmT}. \\
+  \end{split}
+\end{gather}
+Как и в одномерном случае, ранг сигналов с каждым набором параметров равен 2,
 поэтому для оценки параметров использовались только первые два собственных
 числа матрицы $\bfZ$ из алгоритмов~\ref{alg:esprit} и~\ref{alg:ho-esprit}.
 
@@ -983,6 +1006,11 @@ $\widehat{\calX}$, $\widetilde{\calX}$, $\calX$ соответственно.
   случай~\ref{enum:esprit-diff-rates}.}
   \label{fig:L_diff_rates}
 \end{figure}
+
+\paragraph{Выводы из численных сравнений}
+Метод HO-ESPRIT оказался точнее стандартного метода ESPRIT в задаче оценки параметров
+многомерного ряда во всех рассмотренных случаях для любого выбора параметров
+длины окна.
 
 \bibliography{main}
 \bibliographystyle{ugost2008}
