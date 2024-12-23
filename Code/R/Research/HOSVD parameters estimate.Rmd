@@ -1136,8 +1136,8 @@ set.seed(10)
 n <- 25
 
 # no rates
-rates.true <- c(0, 0)
-plot.name <- "_no_rates"
+# rates.true <- c(0, 0)
+# plot.name <- "_no_rates"
 # both rates -0.01
 # rates.true <- c(-0.01, -0.01)
 # plot.name <- "_small_eq_rates"
@@ -1145,8 +1145,8 @@ plot.name <- "_no_rates"
 # rates.true <- c(-0.02, -0.02)
 # plot.name <- "_large_eq_rates"
 # rates from paper
-# rates.true <- c(-0.01, -0.02)
-# plot.name <- ""
+rates.true <- c(-0.01, -0.02)
+plot.name <- ""
 
 freqs.true <- c(0.2, 0.22)
 signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
@@ -1206,6 +1206,7 @@ for (j in seq(len.out)) {
   }
 }
 
+save(rec.rmse, file = paste0("./Research/comp_results/signal", plot.name, "_hossa.RData"))
 close(pb)
 ```
 
@@ -1217,13 +1218,17 @@ set.seed(10)
 n <- 25
 
 # no rates
-rates.true <- c(0, 0)
+# rates.true <- c(0, 0)
+# plot.name <- "_no_rates"
 # both rates -0.01
 # rates.true <- c(-0.01, -0.01)
+# plot.name <- "_small_eq_rates"
 # both rates -0.02
 # rates.true <- c(-0.02, -0.02)
+# plot.name <- "_large_eq_rates"
 # rates from paper
-# rates.true <- c(-0.01, -0.02)
+rates.true <- c(-0.01, -0.02)
+plot.name <- ""
 
 freqs.true <- c(0.2, 0.22)
 signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
@@ -1262,22 +1267,30 @@ for (j in seq(len.out)) {
   
     rec.ssa.rmse[j] <- mse.ssa |> mean() |> sqrt()
 }
-
-
-min.ssa.rmse <- c(min(rec.ssa.rmse), Ls[which.min(rec.ssa.rmse)])
-
 close(pb)
+
+save(rec.ssa.rmse, file = paste0("./Research/comp_results/signal", plot.name, "_ssa.RData"))
+min.ssa.rmse <- c(min(rec.ssa.rmse), Ls[which.min(rec.ssa.rmse)])
 ```
 
 ## Графики RMSE
 ```{r}
-rec1.df <- rec.rmse |> as.data.frame() |>
+pltnms <- c("_no_rates", "_small_eq_rates", "_large_eq_rates", "")
+pn <- 1
+
+load(file = paste0("./Research/comp_results/signal", pltnms[pn], "_hossa.RData"))
+load(file = paste0("./Research/comp_results/signal", pltnms[pn], "_ssa.RData"))
+```
+
+
+```{r}
+rec.df <- rec.rmse |> as.data.frame() |>
   mutate(dims = factor(x = apply(tens.dims, 1, paste, collapse = "x"),
                        levels = apply(tens.dims, 1, paste, collapse = "x"))) |>
   pivot_longer(!dims, names_to = "trunc dims", names_prefix = "V", values_to = "RMSE") |>
   mutate(`trunc dims` = as.factor(paste(trunc_dims[as.integer(`trunc dims`)])))
 
-rec1.plot <- rec1.df |> ggplot() +
+rec.plot <- rec.df |> ggplot() +
   geom_line(aes(
     x = dims,
     y = RMSE,
@@ -1291,7 +1304,7 @@ rec1.plot <- rec1.df |> ggplot() +
   theme(axis.text.x = element_text(angle = 90))
 
 plot.save(
-  rec1.plot,
+  rec.plot,
   paste0("./img/rec_dim_rmse", plot.name, ".pdf"),
   pdf,
   width = 9,
