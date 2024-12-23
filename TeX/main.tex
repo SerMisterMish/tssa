@@ -1285,7 +1285,7 @@ RMSE здесь и далее в этом разделе высчитывает�
 В данной работе RMSE высчитывается по следующей формуле
 \begin{equation*}
   \text{RMSE} = \sqrt{\frac{1}{m} \sum_{i=1}^{m} \text{MSE}\left(\tS, \widetilde{\tS_i}\right)},
-  \quad \text{MSE}\left(\tS, \widetilde{\tS} \right) = \frac{1}{N} \sum_{j=1}^{N}\left(s_j - \tilde{s}_j\right)^2,
+  \quad \text{MSE}\left(\tS, \widetilde{\tS} \right) = \frac{1}{N} \sum_{j=1}^{N}\left|s_j - \tilde{s}_j\right|^2,
 \end{equation*}
 где $m$ "--- количество реализаций шума, $\widetilde{\tS}_i$ "--- оценка сигнала,
 восстановленная по ряду с $i$-й реализацией шума.
