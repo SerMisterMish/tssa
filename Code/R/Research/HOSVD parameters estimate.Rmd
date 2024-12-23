@@ -1006,7 +1006,7 @@ plot.save(
 )
 ```
 
-# Сравнение точности восстановления
+# Сравнение точности выделения сигнала при разных дисперсиях шума
 ```{r}
 len.out <- 16
 sds <- seq(from = 0, to = 0.2, length.out = len.out)
@@ -1179,31 +1179,35 @@ tens.dims <- tens.dims[order(tens.dims[,1], tens.dims[,2], decreasing = TRUE),]
 R <- 500
 
 rec.rmse <- matrix(numeric(len.out * length(trunc_dims)), nrow = len.out)
+mse.tssa <- rep(list(matrix(numeric(R * len.out), ncol = len.out)), length(trunc_dims))
 
 pb <- txtProgressBar(max = R * len.out, style = 3)
-
-for (j in seq(len.out)) {
-  mse.tssa <- rep(list(numeric(R)), length(trunc_dims))
-  
-  I <- tens.dims[j, 1]
-  L <- tens.dims[j, 2]
-  
-  for (i in seq(R)) {
-    noise <- CCSWGN(n, mean = 0, sd = sd)
-    x <- signal + noise
+for (i in seq(R))
+{
+  noise <- CCSWGN(n, mean = 0, sd = sd)
+  x <- signal + noise
+  for (j in seq(len.out)) {
+    I <- tens.dims[j, 1]
+    L <- tens.dims[j, 2]
     
     for (d in seq_along(trunc_dims)) {
-      rec.tssa <- tens_ssa_reconstruct(x, I, L, groups = groups, decomp = "HOOI",
-                                    trunc_dims = trunc_dims[[d]], status = FALSE)
+      rec.tssa <- tens_ssa_reconstruct(
+        x,
+        I,
+        L,
+        groups = groups,
+        decomp = "HOOI",
+        trunc_dims = trunc_dims[[d]],
+        status = FALSE
+      )
       
-      mse.tssa[[d]][i] <- mean(abs(Reduce(`+`, rec.tssa) - signal)^2)
+      mse.tssa[[d]][i, j] <- mean(abs(Reduce(`+`, rec.tssa) - signal) ^ 2)
     }
     setTxtProgressBar(pb, (j - 1) * R + i)
   }
-  
-  for (d in seq_along(trunc_dims)) {
-    rec.rmse[j, d] <- mse.tssa[[d]] |> mean() |> sqrt()
-  }
+}
+for (d in seq_along(trunc_dims)) {
+  rec.rmse[, d] <- mse.tssa[[d]] |> colMeans() |> sqrt()
 }
 
 save(rec.rmse, file = paste0("./Research/comp_results/signal", plot.name, "_hossa.RData"))
@@ -1245,28 +1249,24 @@ len.out <- length(Ls)
 R <- 500
 
 rec.ssa.rmse <- numeric(len.out)
+mse.ssa <- matrix(numeric(R * len.out), ncol = len.out)
 
 pb <- txtProgressBar(max = R * len.out, style = 3)
-
-for (j in seq(len.out)) {
-  mse.ssa <- numeric(R)
-  
-  L <- Ls[j]
-  
-  for (i in seq(R)) {
-    noise <- CCSWGN(n, mean = 0, sd = sd)
-    x <- signal + noise
-    
+for (i in seq(R))
+{
+  noise <- CCSWGN(n, mean = 0, sd = sd)
+  x <- signal + noise
+  for (j in seq(len.out)) {
+    L <- Ls[j]
     x.ssa <- ssa(x, L = L)
     
     rec.ssa <- reconstruct(x.ssa, groups = groups)
-    mse.ssa[i] <- mean(abs(Reduce(`+`, rec.ssa) - signal)^2)
-   
+    mse.ssa[i, j] <- mean(abs(Reduce(`+`, rec.ssa) - signal) ^ 2)
+    
     setTxtProgressBar(pb, (j - 1) * R + i)
   }
-  
-    rec.ssa.rmse[j] <- mse.ssa |> mean() |> sqrt()
 }
+rec.ssa.rmse <- mse.ssa |> colMeans() |> sqrt()
 close(pb)
 
 save(rec.ssa.rmse, file = paste0("./Research/comp_results/signal", plot.name, "_ssa.RData"))

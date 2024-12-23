@@ -7,28 +7,41 @@ tssa3 <- function(s, I = (length(s) + 2) %/% 3, L = I) {
   return(result)
 }
 
-tens3 <- function(s, I, L) {
+tens3 <- function(s, I, L, kind = c("HO-SSA", "HO-MSSA")) {
   require("rTensor")
-  v <- as.vector(s)
-  N <- length(v)
-  J <- N - I - L + 2
-  X <- outer(1:L, 1:J, function(l, j) l + j) |> outer(1:I, function(lj, i) s[lj + i - 2])
-  return(as.tensor(X))
+  if (identical(kind[1], "HO-SSA")) {
+    N <- length(s)
+    J <- N - I - L + 2
+    X <- outer(1:I, 1:L, `+`) |>
+      outer(1:J, function(il, j)
+        s[il + j - 2]) |> as.tensor()
+  }
+  else if (identical(kind[1], "HO-MSSA")) {
+    if (missing(L))
+      L <- I
+    N <- nrow(s)
+    K <- N - L + 1
+    Q <- ncol(s)
+    X <- apply(s, 2, Rssa::hankel, L = L, simplify = FALSE) |>
+      Reduce(cbind, x = _) |>
+      rTensor::fold(1, 2:3, modes = c(L, K, Q))
+  }
+  return(X)
 }
 
 # diagonal averaging i + j + k = const, const = 3:(I+L+J)
-reconstruct.group3 <- function (X.tens) {
+reconstruct.group3 <- function(X.tens) {
   stopifnot(is(X.tens, "Tensor"))
   X <- X.tens@data
-  I <- length(X[,1,1])
-  L <- length(X[1,,1])
-  J <- length(X[1,1,])
+  I <- length(X[, 1, 1])
+  L <- length(X[1, , 1])
+  J <- length(X[1, 1,])
   s <- vector(mode = "numeric", length = I + L + J - 2)
-  for (C in 3:(I+L+J)){
+  for (C in 3:(I + L + J)) {
     sum <- 0
     count <- 0
-    for (i in 1:(C - 2)){
-      for (l in 1:(C - 1 - i)){
+    for (i in 1:(C - 2)) {
+      for (l in 1:(C - 1 - i)) {
         if (i <= I && l <= L && C - i - l <= J) {
           sum <- sum + X[i, l, C - i - l]
           count <- count + 1
