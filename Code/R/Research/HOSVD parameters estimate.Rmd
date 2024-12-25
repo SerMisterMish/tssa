@@ -18,183 +18,7 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 
 # Функции для тензоризации SSA
 ```{r tensorization}
-tens3 <- function(s, I, L, kind = c("HO-SSA", "HO-MSSA")) {
-  require("rTensor")
-  if (identical(kind[1], "HO-SSA")) {
-    N <- length(s)
-    J <- N - I - L + 2
-    X <- outer(1:I, 1:L, `+`) |>
-      outer(1:J, function(il, j)
-        s[il + j - 2]) |> as.tensor()
-  }
-  else if (identical(kind[1], "HO-MSSA")) {
-    if (missing(L))
-      L <- I
-    N <- nrow(s)
-    K <- N - L + 1
-    Q <- ncol(s)
-    X <- apply(s, 2, Rssa::hankel, L = L, simplify = FALSE) |>
-      Reduce(cbind, x = _) |>
-      rTensor::fold(1, 2:3, modes = c(L, K, Q))
-  }
-  return(X)
-}
-
-reconstruct.group3 <- function(X.tens) {
-  stopifnot(is(X.tens, "Tensor"))
-  X <- X.tens@data
-  I <- length(X[, 1, 1])
-  L <- length(X[1, , 1])
-  J <- length(X[1, 1,])
-  s <- vector(mode = "numeric", length = I + L + J - 2)
-  for (C in 3:(I + L + J)) {
-    sum <- 0
-    count <- 0
-    for (i in 1:(C - 2)) {
-      for (l in 1:(C - 1 - i)) {
-        if (i <= I && l <= L && C - i - l <= J) {
-          sum <- sum + X[i, l, C - i - l]
-          count <- count + 1
-        }
-      }
-    }
-    s[C - 2] <- sum / count
-  }
-  return(s)
-}
-```
-
-# Комплексные модификации тензорных разложений
-```{r fnorm_complex}
-fnorm_complex <- function(x) {
-  sqrt(sum(abs(x) ^ 2))
-}
-
-setMethod("fnorm_complex", "Tensor", function(x) {
-  sqrt(sum(abs(x@data) ^ 2))
-})
-```
-
-```{r hosvd-mod}
-hosvd_mod <- function(tnsr, ranks = NULL, status = TRUE) 
-{
-    stopifnot(is(tnsr, "Tensor"))
-    if (sum(ranks <= 0) != 0) 
-        stop("ranks must be positive")
-    if (all(tnsr@data == 0)) 
-        stop("Zero tensor detected")
-    num_modes <- tnsr@num_modes
-    if (is.null(ranks)) {
-        ranks <- tnsr@modes
-    }
-    else {
-        if (sum(ranks > tnsr@modes) != 0) 
-            stop("ranks must be smaller than the corresponding mode")
-    }
-    if (status) {
-      pb <- txtProgressBar(min = 0, max = num_modes, style = 3)
-      U_list <- vector("list", num_modes)
-      for (m in 1:num_modes) {
-        temp_mat <- rs_unfold(tnsr, m = m)@data
-        U_list[[m]] <- svd(temp_mat, nu = ranks[m])$u
-        setTxtProgressBar(pb, m)
-      }
-      close(pb)
-    }
-    else {
-      U_list <- vector("list", num_modes)
-      for (m in 1:num_modes) {
-        temp_mat <- rs_unfold(tnsr, m = m)@data
-        U_list[[m]] <- svd(temp_mat, nu = ranks[m])$u
-      }
-    }
-    Z <- ttl(tnsr, lapply(U_list, (\(.) Conj(t(.)))), ms = 1:num_modes)
-    est <- ttl(Z, U_list, ms = 1:num_modes)
-    resid <- fnorm_complex(est - tnsr)
-    list(Z = Z, U = U_list, est = est, fnorm_resid = resid)
-}
-
-tucker_mod <- function(tnsr, ranks = NULL, max_iter = 25, tol = 1e-05, status = TRUE) 
-{
-    stopifnot(is(tnsr, "Tensor"))
-    if (is.null(ranks)) 
-        stop("ranks must be specified")
-    if (sum(ranks > tnsr@modes) != 0) 
-        stop("ranks must be smaller than the corresponding mode")
-    if (sum(ranks <= 0) != 0) 
-        stop("ranks must be positive")
-    if (all(tnsr@data == 0)) 
-        stop("Zero tensor detected")
-    num_modes <- tnsr@num_modes
-    U_list <- vector("list", num_modes)
-    for (m in 1:num_modes) {
-        temp_mat <- rs_unfold(tnsr, m = m)@data
-        U_list[[m]] <- svd(temp_mat, nu = ranks[m])$u
-    }
-    tnsr_norm <- fnorm_complex(tnsr)
-    curr_iter <- 1
-    converged <- FALSE
-    fnorm_resid <- rep(0, max_iter)
-    CHECK_CONV <- function(Z, U_list) {
-        est <- ttl(Z, U_list, ms = 1:num_modes)
-        curr_resid <- fnorm_complex(tnsr - est)
-        fnorm_resid[curr_iter] <<- curr_resid
-        if (curr_iter == 1) 
-            return(FALSE)
-        if (abs(curr_resid - fnorm_resid[curr_iter - 1])/tnsr_norm < 
-            tol) 
-            return(TRUE)
-        else {
-            return(FALSE)
-        }
-    }
-    if (status) {
-      pb <- txtProgressBar(min = 0, max = max_iter, style = 3)
-      while ((curr_iter < max_iter) && (!converged)) {
-        setTxtProgressBar(pb, curr_iter)
-        modes <- tnsr@modes
-        modes_seq <- 1:num_modes
-        for (m in modes_seq) {
-          X <- ttl(tnsr, lapply(U_list[-m], (\(.) Conj(t(.)))), ms = modes_seq[-m])
-          U_list[[m]] <- svd(rs_unfold(X, m = m)@data, nu = ranks[m])$u
-        }
-        Z <- ttm(X, mat = Conj(t(U_list[[num_modes]])), m = num_modes)
-        if (CHECK_CONV(Z, U_list)) {
-          converged <- TRUE
-          setTxtProgressBar(pb, max_iter)
-        }
-        else {
-          curr_iter <- curr_iter + 1
-        }
-      }
-      close(pb)
-    }
-    else {
-      while ((curr_iter < max_iter) && (!converged)) {
-        modes <- tnsr@modes
-        modes_seq <- 1:num_modes
-        for (m in modes_seq) {
-          X <- ttl(tnsr, lapply(U_list[-m], (\(.) Conj(t(.)))), ms = modes_seq[-m])
-          U_list[[m]] <- svd(rs_unfold(X, m = m)@data, nu = ranks[m])$u
-        }
-        Z <- ttm(X, mat = Conj(t(U_list[[num_modes]])), m = num_modes)
-        if (CHECK_CONV(Z, U_list)) {
-          converged <- TRUE
-        }
-        else {
-          curr_iter <- curr_iter + 1
-        }
-      }
-    }
-    
-    fnorm_resid <- fnorm_resid[fnorm_resid != 0]
-    norm_percent <- (1 - (tail(fnorm_resid, 1)/tnsr_norm)) * 
-        100
-    est <- ttl(Z, U_list, ms = 1:num_modes)
-    invisible(list(Z = Z, U = U_list, conv = converged, est = est, 
-        norm_percent = norm_percent, fnorm_resid = tail(fnorm_resid, 
-            1), all_resids = fnorm_resid))
-}
+source(file = "./Research/TSSA.R")
 ```
 
 # Проверка корректности модификаций
@@ -220,107 +44,6 @@ cat("2. Modified function\n")
 try(tucker_mod(X.test.complex, c(3, 3, 3)))
 cat("\nFnorm of the residual for modified function:\n")
 tucker_mod(X.test.complex, c(1, 1, 1), status = FALSE)$fnorm_resid
-```
-
-# Тензорные модификации SSA и ESPRIT и вспомогательные функции
-```{r tensor-based-esprit}
-tens_esprit <- function(s, I, L, groups, kind = c("HO-SSA", "HO-MSSA"), est_dim, 
-                        status = TRUE, qrtol = 1e-07) {
-  if (identical(kind[1], "HO-SSA"))
-    H <- tens3(s, I, L)
-  else if (identical(kind[1], "HO-MSSA"))
-  {
-    if (missing(L))
-      L <- I
-    H <- tens3(s, L, kind = "HO-MSSA")
-  }
-  max_rank <- max(sapply(groups, max))
-  H.hooi <- tucker_mod(H, rep(max_rank, 3), status = status)
-  estimates <- list()
-  for (i in seq(groups)) {
-    U <- H.hooi$U[[est_dim]][, groups[[i]], drop = FALSE]
-    Z <- qr.solve(U[-nrow(U), ], U[-1, ], qrtol)
-    poles <- eigen(Z, only.values = TRUE)$values
-    estimates[[i]] <- list(
-      poles = poles,
-      rates = Re(log(poles)),
-      frequencies = Im(log(poles)) / 2 / pi
-    )
-  }
-  estimates
-}
-```
-
-```{r tensor-based-ssa}
-tens_ssa_reconstruct <- function(s,
-                                 I,
-                                 L,
-                                 groups,
-                                 decomp = c("HOSVD", "HOOI"),
-                                 trunc_dims = NULL,
-                                 status = TRUE) {
-  H <- tens3(s, I, L, kind = "HO-SSA")
-  max_rank <- max(sapply(groups, max))
-  if (is.null(trunc_dims))
-    trunc_ranks <- rep(max_rank, 3)
-  else {
-    trunc_ranks <- dim(H)
-    trunc_ranks[trunc_dims] <- max_rank
-  }
-  
-  if (identical(decomp[1], "HOSVD"))
-    H.dec <- hosvd_mod(H, ranks = trunc_ranks, status = status)
-  else
-    H.dec <- tucker_mod(H, ranks = trunc_ranks, status = status)
-  
-  rec <- list()
-  if (is.null(names(groups)))
-    group.names <- paste0("F", seq_along(groups))
-  else
-    group.names <- names(groups)
-  
-  for (i in seq_along(groups)) {
-    group <- rep(list(groups[[i]]), 3)
-    group[-trunc_dims] <- lapply(dim(H)[-trunc_dims], seq)
-    H.rec <- ttl(H.dec$Z[group[[1]], group[[2]], group[[3]], drop = FALSE], list(
-      as.matrix(H.dec$U[[1]][, group[[1]]]),
-      as.matrix(H.dec$U[[2]][, group[[2]]]),
-      as.matrix(H.dec$U[[3]][, group[[3]]])
-    ), 1:3)
-    rec[[i]] <- reconstruct.group3(H.rec)
-  }
-  
-  names(rec) <- group.names
-  rec
-}
-```
-
-```{r complex-nd-esprit}
-cmesprit <- function(s, L, groups, qrtol = 1e-07) {
-  H <- apply(s, 2, Rssa::hankel, L = L, simplify = FALSE) |>
-    Reduce(cbind, x = _) 
-  
-  max_rank <- max(sapply(groups, max))
-  H.svd <- svd(H, nu = max_rank, nv = 0)
-  estimates <- list()
-  for (i in seq(groups)) {
-    U <- H.svd$u[, groups[[i]], drop = FALSE]
-    Z <- qr.solve(U[-nrow(U), ], U[-1, ], qrtol)
-    poles <- eigen(Z, only.values = TRUE)$values
-    estimates[[i]] <- list(
-      poles = poles,
-      rates = Re(log(poles)),
-      frequencies = Im(log(poles)) / 2 / pi
-    )
-  }
-  estimates
-}
-```
-
-```{r complex-noise-generator}
-CCSWGN <- function(n, mean = 0, sd = 1) {
-  rnorm(n, mean = Re(mean), sd = sd / sqrt(2)) + 1i * rnorm(n, mean = Im(mean), sd = sd / sqrt(2))
-}
 ```
 
 ```{r rrmse}
@@ -1726,7 +1449,7 @@ for (j in seq_along(sds)) {
   sd <- sds[j]
   
   for (i in seq(R)) {
-    noise <- CCSWGN(n, mean = 0, sd = sd)
+    noise <- CCSWGN(n * Q, mean = 0, sd = sd)
     x <- signal.mult + noise
     
     par.mssa <- cmesprit(x, L = L, groups = list(1:2))
@@ -1869,14 +1592,14 @@ n <- 25
 Q <- 12
 
 # no rates
-rates.true <- c(0, 0)
-plot.name <- "_no_rates"
+# rates.true <- c(0, 0)
+# plot.name <- "_no_rates"
 # both rates -0.01
 # rates.true <- c(-0.01, -0.01)
 # plot.name <- "_small_eq_rates"
 # both rates -0.02
-# rates.true <- c(-0.02, -0.02)
-# plot.name <- "_large_eq_rates"
+rates.true <- c(-0.02, -0.02)
+plot.name <- "_large_eq_rates"
 # rates from paper
 # rates.true <- c(-0.01, -0.02)
 # plot.name <- ""
@@ -1888,7 +1611,7 @@ sd <- 0.2
 groups <- list(1:2)
 max.r <- max(sapply(groups, max))
 
-Ls <- seq(from = ((n %/% 2) + (max.r + 1)) / 2, to = n - max.r - 1, by = 1)
+Ls <- seq(from = ((n %/% 2) + (max.r + 1)) %/% 2, to = n - max.r - 1, by = 1)
 len.out <- length(Ls)
 
 coef <- matrix(CCSWGN(2 * Q), ncol = 2)
@@ -1904,54 +1627,60 @@ rate2.mult.rrmse <- list(MSSA = numeric(len.out), `HO-MSSA` = numeric(len.out))
 freq1.mult.rrmse <- list(MSSA = numeric(len.out), `HO-MSSA` = numeric(len.out))
 freq2.mult.rrmse <- list(MSSA = numeric(len.out), `HO-MSSA` = numeric(len.out))
 
-pb <- txtProgressBar(max = R * len.out, style = 3)
+pars.mssa <- list(
+  rate1 = matrix(numeric(R * len.out), ncol = len.out),
+  rate2 = matrix(numeric(R * len.out), ncol = len.out),
+  freq1 = matrix(numeric(R * len.out), ncol = len.out),
+  freq2 = matrix(numeric(R * len.out), ncol = len.out)
+)
 
-for (j in seq_along(Ls)) {
-  pars.mssa <- list(
-    rate1 = numeric(R),
-    rate2 = numeric(R),
-    freq1 = numeric(R),
-    freq2 = numeric(R)
-  )
+pars.tmssa <- list(
+  rate1 = matrix(numeric(R * len.out), ncol = len.out),
+  rate2 = matrix(numeric(R * len.out), ncol = len.out),
+  freq1 = matrix(numeric(R * len.out), ncol = len.out),
+  freq2 = matrix(numeric(R * len.out), ncol = len.out)
+)
+
+pb <- txtProgressBar(max = R * len.out, style = 3)
+for (i in seq(R)) {
+  noise <- CCSWGN(n * Q, mean = 0, sd = sd)
+  x <- signal.mult + noise
   
-  pars.tmssa <- list(
-    rate1 = numeric(R),
-    rate2 = numeric(R),
-    freq1 = numeric(R),
-    freq2 = numeric(R)
-  )
-  
-  L <- Ls[j]
-  
-  for (i in seq(R)) {
-    noise <- CCSWGN(n, mean = 0, sd = sd)
-    x <- signal.mult + noise
+  for (j in seq_along(Ls)) {
+    L <- Ls[j]
     
     par.mssa <- cmesprit(x, L = L, groups = groups)
-    pars.mssa$rate1[i] <- max(par.mssa[[1]]$rates[1], par.mssa[[1]]$rates[2])
-    pars.mssa$rate2[i] <- min(par.mssa[[1]]$rates[1], par.mssa[[1]]$rates[2])
-    pars.mssa$freq1[i] <- min(par.mssa[[1]]$frequencies[1], par.mssa[[1]]$frequencies[2])
-    pars.mssa$freq2[i] <- max(par.mssa[[1]]$frequencies[1], par.mssa[[1]]$frequencies[2])
+    pars.mssa$rate1[i, j] <- max(par.mssa[[1]]$rates[1], par.mssa[[1]]$rates[2])
+    pars.mssa$rate2[i, j] <- min(par.mssa[[1]]$rates[1], par.mssa[[1]]$rates[2])
+    pars.mssa$freq1[i, j] <- min(par.mssa[[1]]$frequencies[1], par.mssa[[1]]$frequencies[2])
+    pars.mssa$freq2[i, j] <- max(par.mssa[[1]]$frequencies[1], par.mssa[[1]]$frequencies[2])
     
-    par.tmssa <- tens_esprit(x, L.tens, kind = "HO-MSSA", est_dim = 1, groups = groups, status = FALSE)
-    pars.tmssa$rate1[i] <- max(par.tmssa[[1]]$rates[1], par.tmssa[[1]]$rates[2])
-    pars.tmssa$rate2[i] <- min(par.tmssa[[1]]$rates[1], par.tmssa[[1]]$rates[2])
-    pars.tmssa$freq1[i] <- min(par.tmssa[[1]]$frequencies[1], par.tmssa[[1]]$frequencies[2])
-    pars.tmssa$freq2[i] <- max(par.tmssa[[1]]$frequencies[1], par.tmssa[[1]]$frequencies[2])
+    par.tmssa <- tens_esprit(
+      x,
+      L,
+      kind = "HO-MSSA",
+      est_dim = 1,
+      groups = groups,
+      status = FALSE
+    )
+    pars.tmssa$rate1[i, j] <- max(par.tmssa[[1]]$rates[1], par.tmssa[[1]]$rates[2])
+    pars.tmssa$rate2[i, j] <- min(par.tmssa[[1]]$rates[1], par.tmssa[[1]]$rates[2])
+    pars.tmssa$freq1[i, j] <- min(par.tmssa[[1]]$frequencies[1], par.tmssa[[1]]$frequencies[2])
+    pars.tmssa$freq2[i, j] <- max(par.tmssa[[1]]$frequencies[1], par.tmssa[[1]]$frequencies[2])
     
-    setTxtProgressBar(pb, (j - 1) * R + i)
+    setTxtProgressBar(pb, (i - 1) * len.out + j)
   }
-  
-  rate1.mult.rrmse$MSSA[j] <- rrmse(rates.true[1], pars.mssa$rate1)
-  rate1.mult.rrmse$`HO-MSSA`[j] <- rrmse(rates.true[1], pars.tmssa$rate1)
-  rate2.mult.rrmse$MSSA[j] <- rrmse(rates.true[2], pars.mssa$rate2)
-  rate2.mult.rrmse$`HO-MSSA`[j] <- rrmse(rates.true[2], pars.tmssa$rate2)
-  freq1.mult.rrmse$MSSA[j] <- rrmse(freqs.true[1], pars.mssa$freq1)
-  freq1.mult.rrmse$`HO-MSSA`[j] <- rrmse(freqs.true[1], pars.tmssa$freq1)
-  freq2.mult.rrmse$MSSA[j] <- rrmse(freqs.true[2], pars.mssa$freq2)
-  freq2.mult.rrmse$`HO-MSSA`[j] <- rrmse(freqs.true[2], pars.tmssa$freq2)
 }
 close(pb)
+
+rate1.mult.rrmse$MSSA <- apply(pars.mssa$rate1, 2, rrmse, true = rates.true[1])
+rate1.mult.rrmse$`HO-MSSA` <- apply(pars.tmssa$rate1, 2, rrmse, true = rates.true[1])
+rate2.mult.rrmse$MSSA <- apply(pars.mssa$rate2, 2, rrmse, true = rates.true[2])
+rate2.mult.rrmse$`HO-MSSA` <- apply(pars.tmssa$rate2, 2, rrmse, true = rates.true[2])
+freq1.mult.rrmse$MSSA <- apply(pars.mssa$freq1, 2, rrmse, true = freqs.true[1])
+freq1.mult.rrmse$`HO-MSSA` <-  apply(pars.tmssa$freq1, 2, rrmse, true = freqs.true[1])
+freq2.mult.rrmse$MSSA <- apply(pars.mssa$freq2, 2, rrmse, true = freqs.true[2])
+freq2.mult.rrmse$`HO-MSSA` <- apply(pars.tmssa$freq2, 2, rrmse, true = freqs.true[2])
 
 save(
   rate1.mult.rrmse,
@@ -2051,6 +1780,140 @@ freq2.plot <- freq2.df |> ggplot() + geom_line(aes(
 plot.save(
   freq2.plot,
   paste0("./img/freq2_L", pltnms[pn], ".pdf"),
+  pdf,
+  width = 9,
+  height = 6,
+  save = save
+)
+```
+
+# Сравнение точности выделения от длины окна на многомерных комплексных рядах
+```{r}
+set.seed(10)
+
+n <- 25
+Q <- 12
+
+# no rates
+# rates.true <- c(0, 0)
+# plot.name <- "_no_rates"
+# both rates -0.01
+# rates.true <- c(-0.01, -0.01)
+# plot.name <- "_small_eq_rates"
+# both rates -0.02
+# rates.true <- c(-0.02, -0.02)
+# plot.name <- "_large_eq_rates"
+# rates from paper
+rates.true <- c(-0.01, -0.02)
+plot.name <- ""
+
+freqs.true <- c(0.2, 0.22)
+
+sd <- 0.2
+
+groups <- list(1:2)
+groups3 <- list(1:2)
+max.r <- max(sapply(groups, max))
+
+Ls <- seq(from = max.r + 1, to = n - max.r - 1, by = 2)
+len.out <- length(Ls)
+
+# coef <- matrix(CCSWGN(2 * Q), ncol = 2)
+load(file = paste0("./Research/mv_coef/L", plot.name, ".RData"))
+
+signal.mult <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) %o% coef[, 1] +
+  exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1)) %o% coef[, 2]
+
+R <- 500
+
+mult.rmse <- list(MSSA = numeric(len.out), `HO-MSSA` = numeric(len.out))
+mult.mse <- list(
+  MSSA = matrix(numeric(R * len.out), ncol = len.out),
+  `HO-MSSA` = matrix(numeric(R * len.out), ncol = len.out)
+)
+
+pb <- txtProgressBar(max = R * len.out, style = 3)
+for (i in seq(R)) {
+  noise <- CCSWGN(n * Q, mean = 0, sd = sd)
+  x <- signal.mult + noise
+  
+  for (j in seq_along(Ls)) {
+    L <- Ls[j]
+    
+    x.svd <- svd(Reduce(cbind, apply(x, 2, hankel, L = L, simplify = FALSE)))
+    rec.mssa <- (function() {
+      rec <- list()
+      if (is.null(names(groups)))
+        group.names <- paste0("F", seq_along(groups))
+      else
+        group.names <- names(groups)
+      
+      for (g in seq_along(groups)) {
+        group <- groups[[g]]
+        mat.rec <- x.svd$u[, group, drop = FALSE] %*% 
+          diag(x.svd$d[group], nrow = length(group)) %*%
+          Conj(t(x.svd$v[, group, drop = FALSE]))
+        K <- ncol(mat.rec) / ncol(x)
+        hankel.list <- lapply(seq(from = 1, to = ncol(mat.rec), by = K),
+               function(start) mat.rec[, start:(start + K - 1)])
+        rec[[g]] <- sapply(hankel.list, hankel, simplify = "array")
+      }
+      
+      names(rec) <- group.names
+      rec
+    })()
+    
+    rec.tmssa <- tens_mssa_reconstruct(
+      x,
+      L = L,
+      groups = groups,
+      groups3 = groups3,
+      status = FALSE
+    )
+    
+    mult.mse$MSSA[i, j] <- mean(abs(Reduce(`+`, rec.mssa) - signal.mult) ^ 2)
+    mult.mse$`HO-MSSA`[i, j] <- mean(abs(Reduce(`+`, rec.tmssa) - signal.mult) ^ 2)
+    setTxtProgressBar(pb, (i - 1) * len.out + j)
+  }
+}
+close(pb)
+
+rec.mssa.rmse <- mult.mse$MSSA |> colMeans() |> sqrt()
+rec.tmssa.rmse <- mult.mse$`HO-MSSA` |> colMeans() |> sqrt()
+
+save(
+  rec.mssa.rmse,
+  rec.tmssa.rmse,
+  file = paste0("./Research/comp_results/mv_L_rmse", plot.name, ".RData")
+)
+```
+
+## Графики RMSE
+```{r}
+pltnms <- c("_no_rates", "_small_eq_rates", "_large_eq_rates", "")
+pn <- 4
+
+load(file = paste0("./Research/comp_results/mv_L_rmse", pltnms[pn], ".RData"))
+```
+
+
+```{r}
+rec.df <- cbind(rec.mssa.rmse, rec.tmssa.rmse) |> as.data.frame() |> mutate(L = Ls) |>
+  rename(MSSA = rec.mssa.rmse, `HO-MSSA` = rec.tmssa.rmse) |>
+  pivot_longer(!L, names_to = "Method", values_to = "RMSE")
+
+rec.plot <- rec.df |> ggplot() +
+  geom_line(aes(
+    x = L,
+    y = RMSE,
+    group = Method,
+    colour = Method,
+    linetype = Method
+  ), lwd = 1.2)
+
+plot.save(
+  rec.plot,
+  paste0("./img/rec_L_rmse", pltnms[pn], ".pdf"),
   pdf,
   width = 9,
   height = 6,

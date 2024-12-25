@@ -1350,7 +1350,7 @@ $\mathrm{CN}(0, \sigma^2)$.
   a_2^{(p)} e^{ \alpha_2 n }
   e^{2 \pi \iu \omega_2 n} + \zeta_n^{(p)},
 \]
-где $n \in \overline{0:24}$, а $\zeta_n$ "--- последовательность независимых случайных величин из
+где $n \in \overline{0:24}$, а $\zeta_n^{(p)}$ "--- независимые случайные величины из
 распределения $\mathrm{CN}(0,\, \sigma^2)$, $\sigma=0.2$.
 Значения частот и варианты степеней затухания были взяты такими же, как
 в одномерном случае в разделе~\ref{subsec:esprit-comparison}.
@@ -1478,10 +1478,38 @@ $\mathrm{CN}(0, \sigma^2)$.
 
 \paragraph{Выводы из численных сравнений}
 Метод HO-ESPRIT оказался точнее стандартного метода ESPRIT в задаче оценки параметров
-многомерного ряда во всех рассмотренных случаях для любого выбора параметров
-длины окна.
+многомерного ряда для любого выбора параметров длины окна во всех случаях,
+не считая двух: оценки методом HO-ESPRIT параметра $\alpha_1$ оказались
+менее точными, чем методом ESPRIT, в случаях~\ref{enum:esprit-smalleq-rates}
+и~\ref{enum:esprit-bigeq-rates}.
 
-\FloatBarrier
+\subsection{Сравнение с задачей выделения многомерного сигнала}
+% TODO: дописать раздел
+\begin{figure}[!ht]
+  \centering
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rec_L_rmse_no_rates.pdf}
+    \caption{Случай \ref{enum:esprit-no-rates}.}
+    \label{fig:L_rmse_no_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rec_L_rmse_small_eq_rates.pdf}
+    \caption{Случай \ref{enum:esprit-smalleq-rates}.}
+    \label{fig:L_rmse_smalleq_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rec_L_rmse_large_eq_rates.pdf}
+    \caption{Случай \ref{enum:esprit-bigeq-rates}.}
+    \label{fig:L_rmse_bigeq_rates}
+  \end{subfigure}
+  \begin{subfigure}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{rec_L_rmse.pdf}
+    \caption{Случай \ref{enum:esprit-diff-rates}.}
+    \label{fig:L_rmse_diff_rates}
+  \end{subfigure}
+  \caption{Зависимость RMSE оценок многомерного сигнала от длины окна.}
+  \label{fig:mv_L_rmse}
+\end{figure}
 
 \section{Выбор направления усечения в алгоритме HO-SSA}\label{sec:trunc-dim-ho-ssa}
 В этом разделе рассматривается влияние выбора направлений усечения
