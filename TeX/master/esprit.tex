@@ -133,7 +133,7 @@ MSSA~\cite{ssa-2020},
 Однако методы семейства SSA допускают и комплекснозначные сигналы.
 Метод SSA при применении к комплексным рядам называют CSSA (Complex SSA).
 Специфика CSSA заключается в замене матричного
-транспонирования на матричное комплексное сопряжение.
+транспонирования на эрмитово сопряжение.
 Кроме того, аналогом вещественного гармонического ряда,
 имеющего ранг 2 в терминах SSA, является
 экспонента с комплексным аргументом, которая
@@ -253,12 +253,13 @@ $\tX_k$ и шума $\tE$:
     \State Разложение: проведение SVD траекторной матрицы $\bfX$,
     получение её представления в виде
     \begin{equation*}
-      \bfX=\sum_{i=1}^{d} \sqrt{\lambda_i} U_i V_i^{\rmT}, \quad R
-      \leqslant d \leqslant \min(L, N-L+1).
+      \bfX=\sum_{i=1}^{d} \sqrt{\lambda_i} U_i V_i^{\rmH}, \quad R
+      \leqslant d \leqslant \min(L, N-L+1),
     \end{equation*}
+    где верхний индекс $\rmH$ обозначает эрмитово сопряжение матрицы.
     \State Группировка: построение матриц
     \begin{equation*}
-      \bfX_k=\sum_{i \in \mathfrak{S}_k} \sqrt{\lambda_i} U_i V_i^{\rmT}.
+      \bfX_k=\sum_{i \in \mathfrak{S}_k} \sqrt{\lambda_i} U_i V_i^{\rmH}.
       %            \label{eq:tens-group}
     \end{equation*}
     \State Восстановление: вычисление рядов $\widetilde{\tX}_k$ по
@@ -284,7 +285,7 @@ $\tX_k$ и шума $\tE$:
     \setcounter{ALG@line}{2}
     \State Группировка: построение матрицы
     \begin{equation*}
-      \widetilde{\bfX} = \sum_{i = 1}^{R} \sqrt{\lambda_i} U_i V_i^{\rmT}.
+      \widetilde{\bfX} = \sum_{i = 1}^{R} \sqrt{\lambda_i} U_i V_i^{\rmH}.
       %            \label{eq:tens-group}
     \end{equation*}
     \State Восстановление ряда $\widetilde{\tX}$ по матрице
@@ -806,7 +807,6 @@ $M$ матриц $\mathbf{U}^{(n)}$,
   \left(\mathbf{U}^{(2)}\right)^\mathrm{H}\ldots \times_M
   \left(\mathbf{U}^{(M)}\right)^\mathrm{H},
 \]
-где верхний индекс $\mathrm{H}$ обозначает эрмитово сопряжение матрицы.
 Тогда исходный тензор $\calA$ можно представить в виде~\eqref{eq:hosvd}
 
 \begin{statement}
@@ -907,7 +907,7 @@ $(R_1, R_2, \ldots, R_M)$.
     \left\|X^{\mathrm{H}}[\mathbf{A}]_{n}\right\|^2.
   \]
 \end{definition}
-\begin{property}[Об ориентированной энергии]
+\begin{property}[Оптимальность в терминах ориентированной энергии]
   \label{property:oriented-energy}
   Направления экстремальной ориентированной энергии по направлению
   $n$ соответствуют сингулярным векторам по направлению $n$,
