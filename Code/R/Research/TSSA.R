@@ -227,6 +227,7 @@ tens_esprit <- function(s,
                         L,
                         groups,
                         kind = c("HO-SSA", "HO-MSSA"),
+                        decomp = c("HOOI", "HOSVD"),
                         est_dim,
                         r3 = NULL,
                         status = TRUE,
@@ -236,7 +237,7 @@ tens_esprit <- function(s,
   
   if (identical(kind[1], "HO-SSA"))
     H <- tens3(s, I, L)
-  else if (identical(kind[1], "HO-MSSA"))
+  else
   {
     if (is.null(r3)) {
       simpleWarning("r3 argument was not provided, setting
@@ -249,13 +250,19 @@ tens_esprit <- function(s,
   }
   
   if (identical(kind[1], "HO-MSSA")) {
-    H.hooi <- tucker_mod(H, c(max_rank, max_rank, r3), status = status)
+    if (identical(decomp[1], "HOOI")) {
+      H.decomp <- tucker_mod(H, c(max_rank, max_rank, r3), status = status)
+    } else {
+      H.decomp <- hosvd_mod(H, c(max_rank, max_rank, r3), status = status)
+    }
+  } else if (identical(decomp[1], "HOOI")) {
+    H.decomp <- tucker_mod(H, rep(max_rank, 3), status = status)
   } else {
-    H.hooi <- tucker_mod(H, rep(max_rank, 3), status = status)
+    H.decomp <- hosvd_mod(H, rep(max_rank, 3), status = status)
   }
   estimates <- list()
   for (i in seq(groups)) {
-    U <- H.hooi$U[[est_dim]][, groups[[i]], drop = FALSE]
+    U <- H.decomp$U[[est_dim]][, groups[[i]], drop = FALSE]
     Z <- qr.solve(U[-nrow(U), ], U[-1, ], qrtol)
     poles <- eigen(Z, only.values = TRUE)$values
     estimates[[i]] <- list(
