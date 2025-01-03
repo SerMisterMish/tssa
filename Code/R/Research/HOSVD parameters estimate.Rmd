@@ -999,7 +999,7 @@ min.ssa.rmse <- c(min(rec.ssa.rmse), Ls[which.min(rec.ssa.rmse)])
 ## Графики RMSE
 ```{r}
 pltnms <- c("_no_rates", "_small_eq_rates", "_large_eq_rates", "")
-pn <- 1
+pn <- 4
 
 load(file = paste0("./Research/comp_results/signal", pltnms[pn], "_hossa.RData"))
 load(file = paste0("./Research/comp_results/signal", pltnms[pn], "_ssa.RData"))
@@ -1021,14 +1021,24 @@ rec.plot <- rec.df |> ggplot() +
     colour = `trunc dims`,
     linetype = `trunc dims`
   ), lwd = 1.2) + 
-  geom_abline(slope = 0, intercept = min.ssa.rmse[1], col = "gray10", lty = 3) +
-  annotate(geom = "text", x = 5, y = min.ssa.rmse[1] * 1.02, label = "SSA min RMSE") +
-  ylim(min.ssa.rmse[1], 0.0245) + 
+  geom_abline(
+    slope = 0,
+    intercept = min.ssa.rmse[1],
+    col = "gray10",
+    lty = 3
+  ) +
+  ylim(min.ssa.rmse[1] * 0.985, NA) +
+  annotate(
+    geom = "text",
+    x = 5,
+    y = min.ssa.rmse[1] * 0.99,
+    label = paste0("SSA min RMSE, L=", min.ssa.rmse[2])
+  ) +
   theme(axis.text.x = element_text(angle = 90))
 
 plot.save(
   rec.plot,
-  paste0("./img/rec_dim_rmse", plot.name, ".pdf"),
+  paste0("./img/rec_dim_rmse", pltnms[pn], ".pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -1216,17 +1226,6 @@ for (j in seq(len.out)) {
     freq2.ssa.rrmse[j] <- rrmse(freqs.true[2], pars.ssa$freq2)
 }
 
-
-min.ssa.rrmse <- lapply(
-  list(
-    rate1 = rate1.ssa.rrmse,
-    rate2 = rate2.ssa.rrmse,
-    freq1 = freq1.ssa.rrmse,
-    freq2 = freq2.ssa.rrmse
-  ),
-  (\(v) c(min(v), which.min(Ls[v])))
-)
-
 close(pb)
 save(
   rate1.ssa.rrmse,
@@ -1242,67 +1241,123 @@ save(
 ## Графики RRMSE
 ```{r}
 pltnms <- c("_no_rates", "_small_eq_rates", "_large_eq_rates", "")
-pn <- 1
+pn <- 4
 
 load(file = paste0("./Research/comp_results/dim_rrmse", pltnms[pn], "_tens.RData"))
 load(file = paste0("./Research/comp_results/dim_rrmse", pltnms[pn], "_ssa.RData"))
+
+min.ssa.rrmse <- lapply(
+  list(
+    rate1 = rate1.ssa.rrmse,
+    rate2 = rate2.ssa.rrmse,
+    freq1 = freq1.ssa.rrmse,
+    freq2 = freq2.ssa.rrmse
+  ),
+  (\(v) c(min(v), Ls[which.min(v)]))
+)
 ```
 
 
 ```{r}
-rate1.df <- rate1.rrmse |> as.data.frame() |> 
-   mutate(dims = factor(x = apply(tens.dims, 1, paste, collapse = "x"),
-                       levels = apply(tens.dims, 1, paste, collapse = "x"))) |>
-  pivot_longer(!dims, names_to = "estim dim", names_prefix = "V", values_to = "RRMSE")
-
-rate1.plot <- rate1.df |> ggplot() +
-  geom_line(aes(
-    x = dims,
-    y = RRMSE,
-    group = `estim dim`,
-    colour = `estim dim`,
-    linetype = `estim dim`
-  ), lwd = 1.2) + 
-  geom_abline(slope = 0, intercept = min.ssa.rrmse$rate1[1], col = "gray10", lty = 3) + 
-  annotate(geom = "text", x = 5, y = min.ssa.rrmse$rate1[1] * 1.05, label = "SSA min RRMSE") +
-  theme(axis.text.x = element_text(angle = 90))
-
-plot.save(
-  rate1.plot,
-  paste0("./img/rate1_dims", plot.name, ".pdf"),
-  pdf,
-  width = 9,
-  height = 6,
-  save = save
-)
+if (pltnms[pn] != "_no_rates")
+{
+  rate1.df <- rate1.rrmse |> as.data.frame() |>
+    mutate(dims = factor(
+      x = apply(tens.dims, 1, paste, collapse = "x"),
+      levels = apply(tens.dims, 1, paste, collapse = "x")
+    )) |>
+    pivot_longer(
+      !dims,
+      names_to = "estim dim",
+      names_prefix = "V",
+      values_to = "RRMSE"
+    )
+  
+  rate1.plot <- rate1.df |> ggplot() +
+    geom_line(
+      aes(
+        x = dims,
+        y = RRMSE,
+        group = `estim dim`,
+        colour = `estim dim`,
+        linetype = `estim dim`
+      ),
+      lwd = 1.2
+    ) +
+    geom_abline(
+      slope = 0,
+      intercept = min.ssa.rrmse$rate1[1],
+      col = "gray10",
+      lty = 3
+    ) +
+    annotate(
+      geom = "text",
+      x = 7,
+      y = min.ssa.rrmse$rate1[1] * 0.95,
+      label =  paste0("ESPRIT min RRMSE, L=", min.ssa.rrmse$rate1[2])
+    ) +
+    theme(axis.text.x = element_text(angle = 90))
+  
+  plot.save(
+    rate1.plot,
+    paste0("./img/rate1_dims", pltnms[pn], ".pdf"),
+    pdf,
+    width = 9,
+    height = 6,
+    save = save
+  )
+}
 ```
 
 ```{r}
-rate2.df <- rate2.rrmse |> as.data.frame() |> 
-   mutate(dims = factor(x = apply(tens.dims, 1, paste, collapse = "x"),
-                       levels = apply(tens.dims, 1, paste, collapse = "x"))) |>
-  pivot_longer(!dims, names_to = "estim dim", names_prefix = "V", values_to = "RRMSE")
-
-rate2.plot <- rate2.df |> ggplot() +
-  geom_line(aes(
-    x = dims,
-    y = RRMSE,
-    group = `estim dim`,
-    colour = `estim dim`,
-    linetype = `estim dim`
-  ), lwd = 1.2) + 
-  geom_abline(slope = 0, intercept = min.ssa.rrmse$rate2[1], col = "gray10", lty = 3) + 
-  annotate(geom = "text", x = 5, y = min.ssa.rrmse$rate2[1] * 1.05, label = "SSA min RRMSE") +
-  theme(axis.text.x = element_text(angle = 90))
-
-plot.save(
-  rate2.plot,
-  paste0("./img/rate2_dims", plot.name, ".pdf"),
-  pdf,
-  width = 9,
-  height = 6,
-  save = save
-)
+if (pltnms[pn] != "_no_rates")
+{
+  rate2.df <- rate2.rrmse |> as.data.frame() |>
+    mutate(dims = factor(
+      x = apply(tens.dims, 1, paste, collapse = "x"),
+      levels = apply(tens.dims, 1, paste, collapse = "x")
+    )) |>
+    pivot_longer(
+      !dims,
+      names_to = "estim dim",
+      names_prefix = "V",
+      values_to = "RRMSE"
+    )
+  
+  rate2.plot <- rate2.df |> ggplot() +
+    geom_line(
+      aes(
+        x = dims,
+        y = RRMSE,
+        group = `estim dim`,
+        colour = `estim dim`,
+        linetype = `estim dim`
+      ),
+      lwd = 1.2
+    ) +
+    geom_abline(
+      slope = 0,
+      intercept = min.ssa.rrmse$rate2[1],
+      col = "gray10",
+      lty = 3
+    ) +
+    annotate(
+      geom = "text",
+      x = 7,
+      y = min.ssa.rrmse$rate2[1] * 0.95,
+      label =  paste0("ESPRIT min RRMSE, L=", min.ssa.rrmse$rate2[2])
+    ) +
+    theme(axis.text.x = element_text(angle = 90))
+  
+  plot.save(
+    rate2.plot,
+    paste0("./img/rate2_dims", pltnms[pn], ".pdf"),
+    pdf,
+    width = 9,
+    height = 6,
+    save = save
+  )
+}
 ```
 
 ```{r}
@@ -1319,13 +1374,23 @@ freq1.plot <- freq1.df |> ggplot() +
     colour = `estim dim`,
     linetype = `estim dim`
   ), lwd = 1.2) + 
-  geom_abline(slope = 0, intercept = min.ssa.rrmse$freq1[1], col = "gray10", lty = 3) + 
-  annotate(geom = "text", x = 5, y = min.ssa.rrmse$freq1[1] * 1.05, label = "SSA min RRMSE") +
+  geom_abline(
+    slope = 0,
+    intercept = min.ssa.rrmse$freq1[1],
+    col = "gray10",
+    lty = 3
+  ) +
+  annotate(
+    geom = "text",
+    x = 7,
+    y = min.ssa.rrmse$freq1[1] * 0.95,
+    label = paste0("ESPRIT min RRMSE, L=", min.ssa.rrmse$freq1[2])
+  ) +
   theme(axis.text.x = element_text(angle = 90))
 
 plot.save(
   freq1.plot,
-  paste0("./img/freq1_dims", plot.name, ".pdf"),
+  paste0("./img/freq1_dims", pltnms[pn], ".pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -1347,13 +1412,23 @@ freq2.plot <- freq2.df |> ggplot() +
     colour = `estim dim`,
     linetype = `estim dim`
   ), lwd = 1.2) + 
-  geom_abline(slope = 0, intercept = min.ssa.rrmse$freq2[1], col = "gray10", lty = 3) + 
-  annotate(geom = "text", x = 5, y = min.ssa.rrmse$freq2[1] * 1.05, label = "SSA min RRMSE") +
+  geom_abline(
+    slope = 0,
+    intercept = min.ssa.rrmse$freq2[1],
+    col = "gray10",
+    lty = 3
+  ) +
+  annotate(
+    geom = "text",
+    x = 7,
+    y = min.ssa.rrmse$freq2[1] * 0.95,
+    label = paste0("ESPRIT min RRMSE, L=", min.ssa.rrmse$freq2[2])
+  ) +
   theme(axis.text.x = element_text(angle = 90))
 
 plot.save(
   freq2.plot,
-  paste0("./img/freq2_dims", plot.name, ".pdf"),
+  paste0("./img/freq2_dims", pltnms[pn], ".pdf"),
   pdf,
   width = 9,
   height = 6,
@@ -1706,7 +1781,8 @@ load(file = paste0("./Research/comp_results/mv_L_rrmse", pltnms[pn], ".RData"))
 if (pltnms[pn] != "_no_rates")
 {
   rate1.df <- rate1.mult.rrmse |> as.data.frame() |> mutate(L = Ls) |>
-    pivot_longer(!L, names_to = "Method", values_to = "RRMSE")
+    pivot_longer(!L, names_to = "Method", values_to = "RRMSE") |>
+    mutate(Method = ifelse(Method == "HO.MSSA", "HO-ESPRIT", "ESPRIT"))
   rate1.plot <- rate1.df |> ggplot() +
     geom_line(aes(
       x = L,
@@ -1730,7 +1806,8 @@ if (pltnms[pn] != "_no_rates")
 if (pltnms[pn] != "_no_rates")
 {
   rate2.df <- rate2.mult.rrmse |> as.data.frame() |> mutate(L = Ls) |>
-    pivot_longer(!L, names_to = "Method", values_to = "RRMSE")
+    pivot_longer(!L, names_to = "Method", values_to = "RRMSE") |>
+    mutate(Method = ifelse(Method == "HO.MSSA", "HO-ESPRIT", "ESPRIT"))
   rate2.plot <- rate2.df |> ggplot() + geom_line(aes(
     x = L,
     y = RRMSE,
@@ -1751,7 +1828,8 @@ if (pltnms[pn] != "_no_rates")
 
 ```{r}
 freq1.df <- freq1.mult.rrmse |> as.data.frame() |> mutate(L = Ls) |>
-  pivot_longer(!L, names_to = "Method", values_to = "RRMSE")
+  pivot_longer(!L, names_to = "Method", values_to = "RRMSE") |>
+    mutate(Method = ifelse(Method == "HO.MSSA", "HO-ESPRIT", "ESPRIT"))
 freq1.plot <- freq1.df |> ggplot() + geom_line(aes(
   x = L,
   y = RRMSE,
@@ -1771,7 +1849,8 @@ plot.save(
 
 ```{r}
 freq2.df <- freq2.mult.rrmse |> as.data.frame() |> mutate(L = Ls) |>
-  pivot_longer(!L, names_to = "Method", values_to = "RRMSE")
+  pivot_longer(!L, names_to = "Method", values_to = "RRMSE") |>
+    mutate(Method = ifelse(Method == "HO.MSSA", "HO-ESPRIT", "ESPRIT"))
 freq2.plot <- freq2.df |> ggplot() + geom_line(aes(
   x = L,
   y = RRMSE,
