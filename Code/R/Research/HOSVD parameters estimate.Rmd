@@ -1782,7 +1782,7 @@ if (pltnms[pn] != "_no_rates")
 {
   rate1.df <- rate1.mult.rrmse |> as.data.frame() |> mutate(L = Ls) |>
     pivot_longer(!L, names_to = "Method", values_to = "RRMSE") |>
-    mutate(Method = ifelse(Method == "HO.MSSA", "HO-ESPRIT", "ESPRIT"))
+    mutate(Method = ifelse(Method == "HO.MSSA", "HO-M-ESPRIT", "M-ESPRIT"))
   rate1.plot <- rate1.df |> ggplot() +
     geom_line(aes(
       x = L,
@@ -1807,7 +1807,7 @@ if (pltnms[pn] != "_no_rates")
 {
   rate2.df <- rate2.mult.rrmse |> as.data.frame() |> mutate(L = Ls) |>
     pivot_longer(!L, names_to = "Method", values_to = "RRMSE") |>
-    mutate(Method = ifelse(Method == "HO.MSSA", "HO-ESPRIT", "ESPRIT"))
+    mutate(Method = ifelse(Method == "HO.MSSA", "HO-M-ESPRIT", "M-ESPRIT"))
   rate2.plot <- rate2.df |> ggplot() + geom_line(aes(
     x = L,
     y = RRMSE,
@@ -1829,7 +1829,7 @@ if (pltnms[pn] != "_no_rates")
 ```{r}
 freq1.df <- freq1.mult.rrmse |> as.data.frame() |> mutate(L = Ls) |>
   pivot_longer(!L, names_to = "Method", values_to = "RRMSE") |>
-    mutate(Method = ifelse(Method == "HO.MSSA", "HO-ESPRIT", "ESPRIT"))
+    mutate(Method = ifelse(Method == "HO.MSSA", "HO-M-ESPRIT", "M-ESPRIT"))
 freq1.plot <- freq1.df |> ggplot() + geom_line(aes(
   x = L,
   y = RRMSE,
@@ -1850,7 +1850,7 @@ plot.save(
 ```{r}
 freq2.df <- freq2.mult.rrmse |> as.data.frame() |> mutate(L = Ls) |>
   pivot_longer(!L, names_to = "Method", values_to = "RRMSE") |>
-    mutate(Method = ifelse(Method == "HO.MSSA", "HO-ESPRIT", "ESPRIT"))
+    mutate(Method = ifelse(Method == "HO.MSSA", "HO-M-ESPRIT", "M-ESPRIT"))
 freq2.plot <- freq2.df |> ggplot() + geom_line(aes(
   x = L,
   y = RRMSE,
@@ -2002,3 +2002,48 @@ plot.save(
   save = save
 )
 ```
+
+### Среднее число итераций в HOOI
+```{r}
+set.seed(10)
+
+n <- 25
+Q <- 12
+
+# no rates
+# rates.true <- c(0, 0)
+# plot.name <- "_no_rates"
+# both rates -0.01
+# rates.true <- c(-0.01, -0.01)
+# plot.name <- "_small_eq_rates"
+# both rates -0.02
+# rates.true <- c(-0.02, -0.02)
+# plot.name <- "_large_eq_rates"
+# rates from paper
+rates.true <- c(-0.01, -0.02)
+plot.name <- ""
+
+freqs.true <- c(0.2, 0.22)
+
+sd <- 0.2
+
+groups <- list(1:2)
+groups3 <- list(1:2)
+max.r <- max(sapply(groups, max))
+
+load(file = paste0("./Research/mv_coef/L", plot.name, ".RData"))
+signal.mult <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) %o% coef[, 1] +
+  exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1)) %o% coef[, 2]
+
+L <- 21
+R <- 500
+iters <- replicate(R, {
+  noise <- CCSWGN(n * Q, 0, sd)
+  x <- signal.mult + noise
+  H <- tens3(signal.mult, L = L, kind = "HO-MSSA")
+  tucker_mod(H, rep(max.r, 3), status = FALSE, tol = 1e-8)$iter
+})
+
+mean(iters)
+```
+
