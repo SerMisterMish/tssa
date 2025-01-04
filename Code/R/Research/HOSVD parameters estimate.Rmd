@@ -1896,7 +1896,7 @@ groups <- list(1:2)
 groups3 <- list(1:2)
 max.r <- max(sapply(groups, max))
 
-Ls <- seq(from = max.r + 1, to = n - max.r - 1, by = 2)
+Ls <- seq(from = max.r + 1, to = n - max.r - 1, by = 1)
 len.out <- length(Ls)
 
 # coef <- matrix(CCSWGN(2 * Q), ncol = 2)
@@ -2011,8 +2011,8 @@ n <- 25
 Q <- 12
 
 # no rates
-# rates.true <- c(0, 0)
-# plot.name <- "_no_rates"
+rates.true <- c(0, 0)
+plot.name <- "_no_rates"
 # both rates -0.01
 # rates.true <- c(-0.01, -0.01)
 # plot.name <- "_small_eq_rates"
@@ -2020,8 +2020,8 @@ Q <- 12
 # rates.true <- c(-0.02, -0.02)
 # plot.name <- "_large_eq_rates"
 # rates from paper
-rates.true <- c(-0.01, -0.02)
-plot.name <- ""
+# rates.true <- c(-0.01, -0.02)
+# plot.name <- ""
 
 freqs.true <- c(0.2, 0.22)
 
