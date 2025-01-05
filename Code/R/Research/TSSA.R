@@ -353,8 +353,10 @@ tens_mssa_reconstruct <- function(s,
                                   L,
                                   groups,
                                   groups3,
-                                  decomp = "HOSVD",
-                                  status = TRUE) {
+                                  decomp = c("HOSVD", "HOOI"),
+                                  status = TRUE,
+                                  max_iter = 25,
+                                  tol = 1e-05) {
   if (!is.list(groups))
     groups <- as.list(groups)
   if (!is.list(groups3))
@@ -370,9 +372,19 @@ tens_mssa_reconstruct <- function(s,
   H <- tens3(s, L, kind = "HO-MSSA")
   max_rank <- max(sapply(groups, max))
   max_rank3 <- max(sapply(groups3, max))
-  H.dec <- hosvd_mod(H,
-                     ranks = c(max_rank, max_rank, max_rank3),
-                     status = status)
+  
+  if (identical(decomp[1], "HOSVD"))
+    H.dec <- hosvd_mod(H,
+                       ranks = c(max_rank, max_rank, max_rank3),
+                       status = status)
+  else
+    H.dec <- tucker_mod(
+      H,
+      ranks = c(max_rank, max_rank, max_rank3),
+      status = status,
+      max_iter = max_iter,
+      tol = tol
+    )
   
   rec <- list()
   if (is.null(names(groups)))
