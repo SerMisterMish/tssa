@@ -1126,7 +1126,8 @@ for (j in seq(len.out)) {
                               est_dim = d,
                               decomp = "HOSVD",
                               status = FALSE)
-      
+      if (any(par.tssa[[1]]$frequencies < 0))
+        stop("Negative frequency")
       pars.tssa[[d]]$rate1[i] <- max(par.tssa[[1]]$rates[1], par.tssa[[1]]$rates[2])
       pars.tssa[[d]]$rate2[i] <- min(par.tssa[[1]]$rates[1], par.tssa[[1]]$rates[2])
       pars.tssa[[d]]$freq1[i] <- min(par.tssa[[1]]$frequencies[1], par.tssa[[1]]$frequencies[2])
@@ -1145,13 +1146,13 @@ for (j in seq(len.out)) {
 
 close(pb)
 beep()
-save(
-  rate1.rrmse,
-  rate2.rrmse,
-  freq1.rrmse,
-  freq2.rrmse,
-  file = paste0("./Research/comp_results/dim_rrmse", plot.name, "_tens.RData")
-)
+# save(
+#   rate1.rrmse,
+#   rate2.rrmse,
+#   freq1.rrmse,
+#   freq2.rrmse,
+#   file = paste0("./Research/comp_results/dim_rrmse", plot.name, "_tens.RData")
+# )
 ```
 
 ## Нахождение минимума RRMSE для SSA по возможным длинам окна
