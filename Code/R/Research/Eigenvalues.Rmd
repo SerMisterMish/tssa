@@ -1,0 +1,33 @@
+---
+title: "Eigenvalues"
+output: html_document
+---
+
+```{r, setup, include=FALSE}
+library(Rssa)
+library(rTensor)
+library(ggplot2)
+library(gridExtra)
+library(factoextra)
+library(dplyr)
+library(tidyr)
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+# Функции для тензоризации SSA
+```{r}
+source(file = "./Research/TSSA.R")
+```
+
+```{r}
+N <- 20; Q <- 4; L <- 10; A <- c(1, 1, 1, 3)
+s_const <- matrix(rep(A, N * Q / length(A)), ncol = N) |> t()
+tens3(s_const, L = L, kind = "HO-MSSA") |> 
+  hosvd_mod(status = FALSE) |>
+  get_tensor_eigenvalues() |>
+  lapply(zapsmall) |> 
+  print()
+print(sqrt(mean(A^2)) * sqrt(Q * L * (N - L + 1)))
+```
+

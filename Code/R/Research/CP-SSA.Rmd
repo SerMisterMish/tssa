@@ -1,0 +1,170 @@
+---
+title: "CP-SSA"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(Rssa)
+library(rTensor)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+# library(parallel)
+# library(doSNOW)
+library(future.apply)
+library(progressr)
+
+
+setwd(rprojroot::find_rstudio_root_file())
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+source(file = "./Research/TSSA.R")
+```
+
+# CP-SSA const test
+## Finding best window lengths
+### CP-SSA
+```{r}
+N <- 29
+s <- rep(3, N)
+groups <- list(1)
+sd <- 1
+R <- 200
+
+Is <- seq(from = 1, to = N, by = 1)
+Ls <- seq(from = 1, to = N, by = 1)
+
+correct_dims <- which(outer(Is, Ls, (\(i, l) ifelse((i >= l) &
+                                                      (N - i - l + 2 > 0), TRUE, FALSE
+))), arr.ind = TRUE)
+
+len_out <- nrow(correct_dims)
+
+tens_dims <- matrix(ncol = 3, nrow = len_out)
+colnames(tens_dims) <- c("I", "L", "J")
+tens_dims[, "I"] <- Is[correct_dims[, 1]]
+tens_dims[, "L"] <- Ls[correct_dims[, 2]]
+tens_dims[, "J"] <- N - tens_dims[, "I"] - tens_dims[, "L"] + 2
+
+tens_dims <- tens_dims[order(tens_dims[, 1], tens_dims[, 2], decreasing = TRUE), ]
+
+findL_cp_ssa <- function() {
+  noise <- rnorm(N, sd = sd)
+  x <- s + noise
+  
+  rec <- apply(tens_dims, 1, function(window)
+    tens_ssa_reconstruct(
+      x,
+      I = window["I"],
+      L = window["L"],
+      groups = groups,
+      decomp = "cp",
+      status = FALSE
+    ))
+  sapply(rec, function(r)
+    mean(abs(Reduce("+", r) - s)^2))
+}
+
+plan(multisession)
+# plan(sequential)
+if (!progressr:::register_global_progression_handler("query"))
+  progressr:::register_global_progression_handler("add")
+
+const_rmse_L <- function(R) {
+  p <- progressor(R)
+  future_replicate(R, {
+    p()
+    findL_cp_ssa()
+  }, simplify = "array", future.seed = 5) |> rowMeans() |> sqrt()
+}
+
+const_rmse_L_res <- cbind(tens_dims, const_rmse_L(R))
+save(const_rmse_L_res, file = "./Research/comp_results/cp_const_L,RData")
+const_rmse_L_res[order(const_rmse_L_res[, 4], decreasing = FALSE), ] |> head() |> print()
+```
+
+### Basic SSA
+```{r}
+N <- 29
+s <- rep(3, N)
+groups <- list(1)
+sd <- 1
+R <- 200
+
+Ls <- seq(from = 1, to = N, by = 1)
+
+findL_basic_ssa <- function() {
+  noise <- rnorm(N, sd = sd)
+  x <- s + noise
+  
+  rec <- lapply(Ls, function(L)
+    reconstruct(ssa(x, L = L), groups = groups))
+  sapply(rec, function(r)
+    mean(abs(Reduce("+", r) - s)^2))
+}
+
+plan(multisession)
+# plan(sequential)
+if (!progressr:::register_global_progression_handler("query"))
+  progressr:::register_global_progression_handler("add")
+
+const_rmse_L_ssa <- function(R) {
+  p <- progressor(R)
+  future_replicate(R, {
+    p()
+    findL_basic_ssa()
+  }, simplify = "array", future.seed = 5) |> rowMeans() |> sqrt()
+}
+
+const_rmse_L_ssa_res <- cbind(Ls, const_rmse_L_ssa(R))
+save(const_rmse_L_ssa_res, file = "./Research/comp_results/basic_const_L,RData")
+const_rmse_L_ssa_res[order(const_rmse_L_ssa_res[, 2], decreasing = FALSE), ] |> head() |> print()
+```
+
+### Comparing CP-SSA and Basic SSA on best windows
+```{r}
+N <- 29
+s <- rep(3, N)
+L_ssa <- 12
+I_tens <- 18
+L_tens <- 12
+groups <- list(1)
+sd <- 1
+R <- 1000
+
+compare_cp_ssa <- function() {
+  noise <- rnorm(N, sd = sd)
+  x <- s + noise
+  
+  rec <- list(
+    ssa = reconstruct(ssa(x, L = L_ssa), groups = groups),
+    cp_ssa = tens_ssa_reconstruct(
+      x,
+      I = I_tens,
+      L = L_tens,
+      groups = groups,
+      decomp = "cp",
+      status = FALSE
+    )
+  )
+  sapply(rec, function(r)
+    mean(abs(Reduce("+", r) - s)^2))
+}
+
+plan(multisession)
+# plan(sequential)
+if (!progressr:::register_global_progression_handler("query"))
+  progressr:::register_global_progression_handler("add")
+
+const_rmse <- function(R) {
+  p <- progressor(R)
+  future_replicate(R, {
+    p()
+    compare_cp_ssa()
+  }, simplify = "array", future.seed = 5) |> rowMeans() |> sqrt()
+}
+
+const_rmse_comp_res <- const_rmse(R)
+save(L_ssa, I_tens, L_tens, const_rmse_comp_res, file = "./Research/comp_results/cp_const_comp,RData")
+print(const_rmse_comp_res)
+```
+

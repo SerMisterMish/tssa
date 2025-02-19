@@ -5,16 +5,20 @@ if (!require(rTensor))
 
 # Single-channel series tensorisation
 
-tens3 <- function(s, I, L, kind = c("HO-SSA", "HO-MSSA")) {
-  require("rTensor")
-  if (identical(kind[1], "HO-SSA")) {
+tens3 <- function(s, I, L, kind = c("SSA", "MSSA")) {
+  if (!require(rTensor))
+    install.packages("rTensor")
+  kind <- toupper(kind)
+  kind <- match.arg(kind)
+  
+  if (kind == "SSA") {
     N <- length(s)
     J <- N - I - L + 2
     X <- outer(1:I, 1:L, `+`) |>
       outer(1:J, function(il, j)
         s[il + j - 2]) |> as.tensor()
   }
-  else if (identical(kind[1], "HO-MSSA")) {
+  else if (kind == "MSSA") {
     if (missing(L))
       L <- I
     N <- nrow(s)
@@ -27,11 +31,12 @@ tens3 <- function(s, I, L, kind = c("HO-SSA", "HO-MSSA")) {
   return(X)
 }
 
-reconstruct.group3 <- function(X.tens, kind = c("HO-SSA", "HO-MSSA")) {
+reconstruct.group3 <- function(X.tens, kind = c("SSA", "MSSA")) {
   stopifnot(is(X.tens, "Tensor"))
   X <- X.tens@data
-  
-  if (identical(kind[1], "HO-SSA")) {
+  kind <- toupper(kind)
+  kind <- match.arg(kind)
+  if (kind == "SSA") {
     I <- length(X[, 1, 1])
     L <- length(X[1, , 1])
     J <- length(X[1, 1, ])
@@ -49,12 +54,8 @@ reconstruct.group3 <- function(X.tens, kind = c("HO-SSA", "HO-MSSA")) {
       }
       s[C - 2] <- sum / count
     }
-  } else if (identical(kind[1], "HO-MSSA")) {
+  } else if (kind == "MSSA") {
     s <- Reduce(cbind, apply(X, 3, Rssa::hankel, simplify = FALSE))
-    # s <- reduce(apply(X, 3, Rssa::hankel, simplify = FALSE), cbind)
-  }
-  else {
-    simpleError(paste("Unknown kind", kind))
   }
   return(s)
 }
@@ -62,11 +63,33 @@ reconstruct.group3 <- function(X.tens, kind = c("HO-SSA", "HO-MSSA")) {
 # Complex norm
 
 fnorm_complex <- function(x) {
-  sqrt(sum(abs(x) ^ 2))
+  sqrt(sum(abs(x)^2))
 }
 
 setMethod("fnorm_complex", "Tensor", function(x) {
-  sqrt(sum(abs(x@data) ^ 2))
+  sqrt(sum(abs(x@data)^2))
+})
+
+# Calculate tensor eigenvalues
+
+get_tensor_eigenvalues <- function(X, dims = seq(num_dims)) {
+  num_dims = length(dim(X))
+  
+  lapply(dims, function(d) {
+    mask <- as.list(rep(TRUE, num_dims))
+    sapply(seq(dim(X)[d]), function(i) {
+      mask[[d]] <- i
+      fnorm_complex(do.call(`[`, c(list(X), mask, list(drop = FALSE))))
+    })
+  })
+}
+
+setMethod("get_tensor_eigenvalues", "Tensor", function(X, dims = seq(X@num_modes)) {
+  get_tensor_eigenvalues(X@data, dims)
+})
+
+setMethod("get_tensor_eigenvalues", "list", function(X, dims = seq(X$Z@num_modes)) {
+  get_tensor_eigenvalues(X$Z, dims)
 })
 
 # HOSVD and HOOI modifications for complex cases
@@ -88,25 +111,17 @@ hosvd_mod <- function(tnsr,
     if (sum(ranks > tnsr@modes) != 0)
       stop("ranks must be smaller than the corresponding mode")
   }
-  if (status) {
-    pb <- txtProgressBar(min = 0,
-                         max = num_modes,
-                         style = 3)
-    U_list <- vector("list", num_modes)
-    for (m in 1:num_modes) {
-      temp_mat <- rs_unfold(tnsr, m = m)@data
-      U_list[[m]] <- svd(temp_mat, nu = ranks[m])$u
+  if (status)
+    pb <- txtProgressBar(min = 0, max = num_modes, style = 3)
+  U_list <- vector("list", num_modes)
+  for (m in 1:num_modes) {
+    temp_mat <- rs_unfold(tnsr, m = m)@data
+    U_list[[m]] <- svd(temp_mat, nu = ranks[m])$u
+    if (status)
       setTxtProgressBar(pb, m)
-    }
+  }
+  if (status)
     close(pb)
-  }
-  else {
-    U_list <- vector("list", num_modes)
-    for (m in 1:num_modes) {
-      temp_mat <- rs_unfold(tnsr, m = m)@data
-      U_list[[m]] <- svd(temp_mat, nu = ranks[m])$u
-    }
-  }
   Z <- ttl(tnsr, lapply(U_list, (\(.) Conj(t(
     .
   )))), ms = 1:num_modes)
@@ -158,50 +173,32 @@ tucker_mod <- function(tnsr,
       return(FALSE)
     }
   }
-  if (status) {
-    pb <- txtProgressBar(min = 0,
-                         max = max_iter,
-                         style = 3)
-    while ((curr_iter < max_iter) && (!converged)) {
+  
+  if (status)
+    pb <- txtProgressBar(min = 0, max = max_iter, style = 3)
+  while ((curr_iter < max_iter) && (!converged)) {
+    if (status)
       setTxtProgressBar(pb, curr_iter)
-      modes <- tnsr@modes
-      modes_seq <- 1:num_modes
-      for (m in modes_seq) {
-        X <- ttl(tnsr, lapply(U_list[-m], (\(.) Conj(t(
-          .
-        )))), ms = modes_seq[-m])
-        U_list[[m]] <- svd(rs_unfold(X, m = m)@data, nu = ranks[m])$u
-      }
-      Z <- ttm(X, mat = Conj(t(U_list[[num_modes]])), m = num_modes)
-      if (CHECK_CONV(Z, U_list)) {
-        converged <- TRUE
+    modes <- tnsr@modes
+    modes_seq <- 1:num_modes
+    for (m in modes_seq) {
+      X <- ttl(tnsr, lapply(U_list[-m], (\(.) Conj(t(
+        .
+      )))), ms = modes_seq[-m])
+      U_list[[m]] <- svd(rs_unfold(X, m = m)@data, nu = ranks[m])$u
+    }
+    Z <- ttm(X, mat = Conj(t(U_list[[num_modes]])), m = num_modes)
+    if (CHECK_CONV(Z, U_list)) {
+      converged <- TRUE
+      if (status)
         setTxtProgressBar(pb, max_iter)
-      }
-      else {
-        curr_iter <- curr_iter + 1
-      }
     }
+    else {
+      curr_iter <- curr_iter + 1
+    }
+  }
+  if (status)
     close(pb)
-  }
-  else {
-    while ((curr_iter < max_iter) && (!converged)) {
-      modes <- tnsr@modes
-      modes_seq <- 1:num_modes
-      for (m in modes_seq) {
-        X <- ttl(tnsr, lapply(U_list[-m], (\(.) Conj(t(
-          .
-        )))), ms = modes_seq[-m])
-        U_list[[m]] <- svd(rs_unfold(X, m = m)@data, nu = ranks[m])$u
-      }
-      Z <- ttm(X, mat = Conj(t(U_list[[num_modes]])), m = num_modes)
-      if (CHECK_CONV(Z, U_list)) {
-        converged <- TRUE
-      }
-      else {
-        curr_iter <- curr_iter + 1
-      }
-    }
-  }
   
   fnorm_resid <- fnorm_resid[fnorm_resid != 0]
   norm_percent <- (1 - (tail(fnorm_resid, 1) / tnsr_norm)) *
@@ -218,6 +215,115 @@ tucker_mod <- function(tnsr,
       fnorm_resid = tail(fnorm_resid, 1),
       all_resids = fnorm_resid
     )
+  )
+}
+
+# CPD modification for complex cases
+
+cp_mod <- function (tnsr,
+                    num_components = NULL,
+                    max_iter = 25,
+                    tol = 1e-05,
+                    status = TRUE)
+{
+  if (is.null(num_components))
+    stop("num_components must be specified")
+  stopifnot(is(tnsr, "Tensor"))
+  if (all(tnsr@data == 0))
+    stop("Zero tensor detected")
+  num_modes <- tnsr@num_modes
+  modes <- tnsr@modes
+  U_list <- vector("list", num_modes)
+  unfolded_mat <- vector("list", num_modes)
+  tnsr_norm <- fnorm_complex(tnsr)
+  for (m in 1:num_modes) {
+    unfolded_mat[[m]] <- rs_unfold(tnsr, m = m)@data
+    U_list[[m]] <- matrix(rnorm(modes[m] * num_components),
+                          nrow = modes[m],
+                          ncol = num_components)
+  }
+  est <- tnsr
+  curr_iter <- 1
+  converged <- FALSE
+  fnorm_resid <- rep(0, max_iter)
+  CHECK_CONV <- function(est) {
+    curr_resid <- fnorm_complex(est - tnsr)
+    fnorm_resid[curr_iter] <<- curr_resid
+    if (curr_iter == 1)
+      return(FALSE)
+    if (abs(curr_resid - fnorm_resid[curr_iter - 1]) / tnsr_norm < tol)
+      return(TRUE)
+    else {
+      return(FALSE)
+    }
+  }
+  
+  if (status)
+    pb <- txtProgressBar(min = 0, max = max_iter, style = 3)
+  
+  norm_vec <- function(vec) {
+    norm(as.matrix(vec))
+  }
+  while ((curr_iter < max_iter) && (!converged)) {
+    if (status)
+      setTxtProgressBar(pb, curr_iter)
+    
+    for (m in 1:num_modes) {
+      V <- hadamard_list(lapply(U_list[-m], function(x) {
+        t(x) %*% x
+      }))
+      V_inv <- solve(V)
+      tmp <- unfolded_mat[[m]] %*% khatri_rao_list(U_list[-m], reverse = TRUE) %*% V_inv
+      lambdas <- apply(tmp, 2, norm_vec)
+      U_list[[m]] <- sweep(tmp, 2, lambdas, "/")
+      Z <- rTensor:::.superdiagonal_tensor(num_modes = num_modes,
+                                           len = num_components,
+                                           elements = lambdas)
+      est <- ttl(Z, U_list, ms = 1:num_modes)
+    }
+    if (CHECK_CONV(est)) {
+      converged <- TRUE
+      if (status)
+        setTxtProgressBar(pb, max_iter)
+    }
+    else {
+      curr_iter <- curr_iter + 1
+    }
+  }
+  if (status && !converged) {
+    setTxtProgressBar(pb, max_iter)
+  }
+  if (status)
+    close(pb)
+  
+  fnorm_resid <- fnorm_resid[fnorm_resid != 0]
+  norm_percent <- (1 - (tail(fnorm_resid, 1) / tnsr_norm)) *
+    100
+  invisible(
+    list(
+      lambdas = lambdas,
+      U = U_list,
+      conv = converged,
+      est = est,
+      norm_percent = norm_percent,
+      fnorm_resid = tail(fnorm_resid, 1),
+      all_resids = fnorm_resid
+    )
+  )
+}
+
+# Partially reconstruct CPD
+
+cp_reconstruct_part <- function(cp, ind) {
+  num_modes <- length(cp$U)
+  ttl(
+    rTensor:::.superdiagonal_tensor(
+      num_modes = num_modes,
+      len = length(ind),
+      elements = cp$lambdas[ind]
+    ),
+    list(cp$U[[1]][, ind, drop = FALSE], cp$U[[2]][, ind, drop = FALSE], cp$U[[3]][, ind, drop = FALSE]),
+    seq(num_modes)
   )
 }
 
@@ -275,28 +381,38 @@ tens_esprit <- function(s,
   estimates
 }
 
-# HO-SSA
+# TSSA
 
 tens_ssa_reconstruct <- function(s,
                                  I,
                                  L,
                                  groups,
-                                 decomp = c("HOSVD", "HOOI"),
+                                 decomp = c("HOSVD", "HOOI", "CP"),
                                  trunc_dims = NULL,
-                                 status = TRUE) {
-  H <- tens3(s, I, L, kind = "HO-SSA")
+                                 status = TRUE,
+                                 ...) {
+  
+  H <- tens3(s, I, L, kind = "SSA")
+  decomp <- toupper(decomp)
+  decomp <- match.arg(decomp)
+  if (missing(groups)) {
+    groups = as.list(seq(min(dim(H))))
+  }
   max_rank <- max(sapply(groups, max))
-  if (is.null(trunc_dims))
-    trunc_ranks <- rep(max_rank, 3)
-  else {
-    trunc_ranks <- dim(H)
-    trunc_ranks[trunc_dims] <- max_rank
+  
+  if (decomp != "CP") {
+    if (is.null(trunc_dims))
+      trunc_ranks <- rep(max_rank, 3)
+    else {
+      trunc_ranks <- dim(H)
+      trunc_ranks[trunc_dims] <- max_rank
+    }
   }
   
-  if (identical(decomp[1], "HOSVD"))
-    H.dec <- hosvd_mod(H, ranks = trunc_ranks, status = status)
-  else
-    H.dec <- tucker_mod(H, ranks = trunc_ranks, status = status)
+  H.dec <- switch(decomp,
+                  HOSVD = hosvd_mod(H, ranks = trunc_ranks, status = status),
+                  HOOI = tucker_mod(H, ranks = trunc_ranks, status = status, ...),
+                  CP = cp_mod(H, num_components = max_rank, status = status, ...))
   
   rec <- list()
   if (is.null(names(groups)))
@@ -305,13 +421,17 @@ tens_ssa_reconstruct <- function(s,
     group.names <- names(groups)
   
   for (i in seq_along(groups)) {
-    group <- rep(list(groups[[i]]), 3)
-    group[-trunc_dims] <- lapply(dim(H)[-trunc_dims], seq)
-    H.rec <- ttl(H.dec$Z[group[[1]], group[[2]], group[[3]], drop = FALSE], list(
-      as.matrix(H.dec$U[[1]][, group[[1]]]),
-      as.matrix(H.dec$U[[2]][, group[[2]]]),
-      as.matrix(H.dec$U[[3]][, group[[3]]])
-    ), 1:3)
+    if (decomp == "CP") {
+      H.rec <- cp_reconstruct_part(H.dec, groups[[i]])
+    } else {
+      group <- rep(list(groups[[i]]), 3)
+      group[-trunc_dims] <- lapply(dim(H)[-trunc_dims], seq)
+      H.rec <- ttl(H.dec$Z[group[[1]], group[[2]], group[[3]], drop = FALSE], list(
+        as.matrix(H.dec$U[[1]][, group[[1]]]),
+        as.matrix(H.dec$U[[2]][, group[[2]]]),
+        as.matrix(H.dec$U[[3]][, group[[3]]])
+      ), 1:3)
+    }
     rec[[i]] <- reconstruct.group3(H.rec)
   }
   

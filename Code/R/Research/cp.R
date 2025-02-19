@@ -42,8 +42,8 @@ t.reconstruct <- function(p, groups) {
 }
 
 
-make.group <- function (cp, group) {
-  Reduce("+", lapply(group, function (i) cp$lambdas[i] * (cp$U[[1]][,i] %o% cp$U[[2]][,i] %o% cp$U[[3]][,i])))
+make.group <- function(cp, group) {
+  Reduce("+", lapply(group, function(i) cp$lambdas[i] * (cp$U[[1]][,i] %o% cp$U[[2]][,i] %o% cp$U[[3]][,i])))
 }
 
 tssa3 <- function(s, rank, I = (length(s) + 2) %/% 3, L = I, max_iter = 100, tol = 1e-05) {
