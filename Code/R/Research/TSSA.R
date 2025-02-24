@@ -5,22 +5,38 @@ if (!require(rTensor))
 
 # Single-channel series tensorisation
 
-tens3 <- function(s, I, L, kind = c("SSA", "MSSA")) {
+tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
   if (!require(rTensor))
     install.packages("rTensor")
   kind <- toupper(kind)
   kind <- match.arg(kind)
   
   if (kind == "SSA") {
+    stopifnot(length(L) == 2)
     N <- length(s)
+    I <- L[1]; L <- L[2]
     J <- N - I - L + 2
     X <- outer(1:I, 1:L, `+`) |>
       outer(1:J, function(il, j)
         s[il + j - 2]) |> as.tensor()
   }
+  else if (kind == "CP") {
+    stopifnot(length(L) == 2)
+    N <- length(s)
+    l <- L[1]; J <- L[2];
+    I <- N %/% l
+    K <- l - J + 1
+    X_mat <- matrix(s[1:(I * l)], nrow = I, byrow = TRUE) |>
+      apply(1, function(v)
+        outer(1:J, 1:K, function(k, j)
+          v[k + j - 1])) |>
+      as.matrix()
+    dim(X_mat) <- c(J * K, I)
+    # print(dim(X_mat))
+    # print(paste0("l=", l, " ", paste(I, J, K, sep = "x")))
+    X <- rTensor::fold(X_mat, 2:3, 1, modes = c(I, J, K))
+  }
   else if (kind == "MSSA") {
-    if (missing(L))
-      L <- I
     N <- nrow(s)
     K <- N - L + 1
     Q <- ncol(s)
@@ -31,7 +47,8 @@ tens3 <- function(s, I, L, kind = c("SSA", "MSSA")) {
   return(X)
 }
 
-reconstruct.group3 <- function(X.tens, kind = c("SSA", "MSSA")) {
+
+reconstruct.group3 <- function(X.tens, kind = c("SSA", "MSSA", "CP")) {
   stopifnot(is(X.tens, "Tensor"))
   X <- X.tens@data
   kind <- toupper(kind)
@@ -54,6 +71,8 @@ reconstruct.group3 <- function(X.tens, kind = c("SSA", "MSSA")) {
       }
       s[C - 2] <- sum / count
     }
+  } else if (kind == "CP") {
+    s <- Reduce(c, lapply(seq(dim(X)[1]), function(i) hankel(as.matrix(X[i,,]))))
   } else if (kind == "MSSA") {
     s <- Reduce(cbind, apply(X, 3, Rssa::hankel, simplify = FALSE))
   }
@@ -220,7 +239,7 @@ tucker_mod <- function(tnsr,
 
 # CPD modification for complex cases
 
-cp_mod <- function (tnsr,
+cp_mod <- function(tnsr,
                     num_components = NULL,
                     max_iter = 25,
                     tol = 1e-05,
@@ -384,17 +403,19 @@ tens_esprit <- function(s,
 # TSSA
 
 tens_ssa_reconstruct <- function(s,
-                                 I,
                                  L,
                                  groups,
                                  decomp = c("HOSVD", "HOOI", "CP"),
                                  trunc_dims = NULL,
                                  status = TRUE,
+                                 cp_span = c("mean", "last"),
                                  ...) {
-  
-  H <- tens3(s, I, L, kind = "SSA")
   decomp <- toupper(decomp)
   decomp <- match.arg(decomp)
+  if (decomp == "CP")
+    H <- tens3(s, L, kind = "CP")
+  else
+    H <- tens3(s, L, kind = "SSA")
   if (missing(groups)) {
     groups = as.list(seq(min(dim(H))))
   }
@@ -423,6 +444,21 @@ tens_ssa_reconstruct <- function(s,
   for (i in seq_along(groups)) {
     if (decomp == "CP") {
       H.rec <- cp_reconstruct_part(H.dec, groups[[i]])
+      rec[[i]] <- reconstruct.group3(H.rec, kind = "CP")
+      if (!missing(cp_span)) {
+        if (is.character(cp_span)) {
+          cp_span <- tolower(cp_span)
+          cp_span <- match.arg(cp_span)
+          rec[[i]] <- c(rec[[i]], rep(switch(
+            cp_span, mean = mean(rec[[i]]), last = tail(rec[[i]], 1)
+          ), length(s) - length(rec[[i]])))
+        } else if (is.numeric(cp_span)) {
+          rec[[i]] <- c(rec[[i]], rep(cp_span, length(s) - length(rec[[i]])))
+        } else {
+          cp_span <- match.fun(cp_span)
+          rec[[i]] <- c(rec[[i]], rep(cp_span(rec[[i]]), length(s) - length(rec[[i]])))
+        }
+      }
     } else {
       group <- rep(list(groups[[i]]), 3)
       group[-trunc_dims] <- lapply(dim(H)[-trunc_dims], seq)
@@ -431,8 +467,8 @@ tens_ssa_reconstruct <- function(s,
         as.matrix(H.dec$U[[2]][, group[[2]]]),
         as.matrix(H.dec$U[[3]][, group[[3]]])
       ), 1:3)
+      rec[[i]] <- reconstruct.group3(H.rec, kind = "SSA")
     }
-    rec[[i]] <- reconstruct.group3(H.rec)
   }
   
   names(rec) <- group.names
