@@ -87,6 +87,45 @@ findL_basic_ssa <- function() {
 }
 ```
 
+### MSSA
+```{r}
+findL_mssa <- function() {
+  noise <- rnorm(N, sd = sd)
+  # noise <- gen_nswn(N, lambda = 10 / N)
+  x <- matrix(s + noise, ncol = amp_period)
+  
+  rec <- lapply(Ls, function(L)
+    reconstruct(ssa(x, L = L, kind = "mssa"), groups = groups))
+  sapply(rec, function(r)
+    mean(abs(Reduce("+", r) - s)^2))
+}
+```
+
+### HO-MSSA
+```{r}
+findL_homssa <- function() {
+  noise <- rnorm(N, sd = sd)
+  # noise <- gen_nswn(N, lambda = 10 / N)
+  x <- matrix(s + noise, ncol = amp_period)
+  
+  rec <- lapply(Ls, function(L)
+    tens_mssa_reconstruct(
+      x,
+      L = L,
+      groups = groups,
+      groups3 = groups3,
+      decomp = "hooi",
+      status = FALSE,
+      max_iter = max_iter,
+      tol = tol
+    ))
+  sapply(rec, function(r)
+    mean(abs(Reduce("+", r) - s)^2))
+}
+```
+
+
+
 ## Comparing CP-SSA and Basic SSA on best windows
 ```{r}
 compare_cp_ssa <- function() {
@@ -112,6 +151,44 @@ compare_cp_ssa <- function() {
 }
 ```
 
+## Comparing Basic SSA, MSSA, CP-SSA, and HO-MSSA on best windows
+```{r}
+compare_all_ssa <- function() {
+  noise <- rnorm(N, sd = sd)
+  # noise <- gen_nswn(N, lambda = 10 / N)
+  x <- s + noise
+  x_mat <- matrix(x, ncol = amp_period)
+  
+  rec <- list(
+    ssa = reconstruct(ssa(x, L = L_ssa), groups = groups_ssa),
+    mssa = reconstruct(ssa(x_mat, L = L_mssa, kind = "mssa"), groups = groups_mssa),
+    cp_ssa = tens_ssa_reconstruct(
+      x,
+      L = L_cp,
+      groups = groups_cp,
+      decomp = "cp",
+      status = FALSE,
+      cp_span = cp_span,
+      tol = tol,
+      max_iter = max_iter
+    ),
+    ho_mssa = tens_mssa_reconstruct(
+      x_mat,
+      L = L_homssa,
+      groups = groups_homssa,
+      groups3 = groups3,
+      decomp = "hooi",
+      status = FALSE,
+      tol = tol,
+      max_iter = max_iter
+    )
+  )
+  sapply(rec, function(r)
+    mean(abs(Reduce("+", r) - s)^2))
+}
+```
+
+
 # Extraction precision 
 ## Const ts
 ### Best $(l, J)$ for CP-SSA 
@@ -126,7 +203,9 @@ cp_span <- "mean"
 tol <- 1e-7
 max_iter = 25
 
-ls <- seq(from = 1, to = N %/% 2 + 1, by = 1)
+ls <- seq(from = 1,
+          to = (N + 1) %/% 2,
+          by = 1)
 Js <- seq(from = 1, to = N, by = 1)
 
 correct_dims <- which(outer(ls, Js, (\(l, j) ifelse((l >= j) &
@@ -155,10 +234,10 @@ const_rmse_L <- function(R) {
 }
 
 const_rmse_L_res <- cbind(tens_dims, const_rmse_L(R))
-# save(const_rmse_L_res, file = "./Research/comp_results/cp_const_L.RData")
+save(const_rmse_L_res, file = "./Research/comp_results/cp_const_L.RData")
 const_rmse_L_res[order(const_rmse_L_res[, 4], decreasing = FALSE), ] |> head() |> print()
-# wo/ mean: 14  9 6 0.3580338
-# w/ mean: 12  8  5 0.3534230
+# last: 14  9 6 0.3580338
+# mean: 12  8  5 0.3534230
 ```
 
 ### Best L for basic SSA
@@ -169,7 +248,7 @@ groups <- list(1)
 sd <- 1
 R <- 200
 
-Ls <- seq(from = 1, to = N, by = 1)
+Ls <- seq(from = 1, to = (N + 1) %/% 2, by = 1)
 
 plan(multisession)
 # plan(sequential)
@@ -193,8 +272,8 @@ const_rmse_L_ssa_res[order(const_rmse_L_ssa_res[, 2], decreasing = FALSE), ] |> 
 N <- 28
 s <- rep(3, N)
 L_ssa <- 12
-L_tens <- c(14, 9)
-# L_tens <- c(12, 8)
+# L_tens <- c(14, 9)
+L_tens <- c(12, 8)
 groups_ssa <- list(1)
 groups_tens <- list(1)
 sd <- 1
@@ -225,18 +304,21 @@ print(const_rmse_comp_res)
 N <- 28
 freq <- 1 / 4
 s <- 2 * cos(2 * pi * (1:N) * freq)
-groups <- list(1:2)
+groups <- list(1)
+max.r <- max(sapply(groups, max))
 sd <- 1
 R <- 200
 cp_span <- "last"
 tol <- 1e-7
 max_iter = 25
 
-ls <- seq(from = 1, to = N %/% 2 + 1, by = 1)
-Js <- seq(from = 1, to = N, by = 1)
+ls <- seq(from = max.r,
+          to = (N + 1) %/% 2,
+          by = 1)
+Js <- seq(from = max.r, to = max(ls) - max.r + 1, by = 1)
 
 correct_dims <- which(outer(ls, Js, (\(l, j) ifelse((l >= j) &
-                                                      (l - j + 1 >= 1), TRUE, FALSE
+                                                      (l - j + 1 >= max.r), TRUE, FALSE
 ))), arr.ind = TRUE)
 
 len_out <- nrow(correct_dims)
@@ -261,8 +343,11 @@ cos_rmse_L <- function(R) {
 }
 
 cos_rmse_L_res <- cbind(tens_dims, cos_rmse_L(R))
-save(cos_rmse_L_res, file = "./Research/comp_results/cp_cos_L.RData")
+# save(cos_rmse_L_res, file = "./Research/comp_results/cp_cos_L.RData")
 cos_rmse_L_res[order(cos_rmse_L_res[, 4], decreasing = FALSE), ] |> head() |> print()
+# groups = list(1):   14 12  3 0.6182172
+# groups = list(1:2): 14  7  8 0.5012795
+# groups = list(1:3): 14  9  6 0.6573032
 ```
 
 ### Best L for basic SSA
@@ -271,10 +356,11 @@ N <- 28
 freq <- 1 / 4
 s <- 2 * cos(2 * pi * (1:N) * freq)
 groups <- list(1:2)
+max.r <- max(sapply(groups, max))
 sd <- 1
 R <- 200
 
-Ls <- seq(from = 2, to = N - 1, by = 1)
+Ls <- seq(from = max.r, to = (N + 1) %/% 2, by = 1)
 
 plan(multisession)
 # plan(sequential)
@@ -290,6 +376,7 @@ cos_rmse_L_ssa <- function(R) {
 cos_rmse_L_ssa_res <- cbind(Ls, cos_rmse_L_ssa(R))
 save(cos_rmse_L_ssa_res, file = "./Research/comp_results/basic_cos_L.RData")
 cos_rmse_L_ssa_res[order(cos_rmse_L_ssa_res[, 2], decreasing = FALSE), ] |> head() |> print()
+# 11 0.4400179
 ```
 
 ### Comparing CP-SSA and Basic SSA on best windows
@@ -300,8 +387,7 @@ s <- 2 * cos(2 * pi * (1:N) * freq)
 groups_ssa <- list(1:2)
 groups_tens <- list(1:2)
 L_ssa <- 11
-I_tens <- 17
-L_tens <- 11
+L_tens <- c(14, 12)
 sd <- 1
 R <- 1000
 tol <- 1e-7
@@ -319,18 +405,126 @@ cos_rmse <- function(R) {
 }
 
 cos_rmse_comp_res <- cos_rmse(R)
-save(L_ssa, I_tens, L_tens, cos_rmse_comp_res, file = "./Research/comp_results/cp_cos_comp.RData")
+save(L_ssa, L_tens, cos_rmse_comp_res, file = "./Research/comp_results/cp_cos_comp.RData")
 print(cos_rmse_comp_res)
 ```
 
 ## Example from paper
+### Best $(l, J)$ for CP-SSA 
+```{r, warning=FALSE}
+N <- 6000
+times <- seq(from = 0,
+             to = 1,
+             length.out = N)
+s <- 2 * exp(-0.2 * pi * 50 * times) * sin(2 * pi * 50 * times) + sin(2 * pi * 10 * times)
+
+groups <- list(1:4)
+max.r <- max(sapply(groups, max))
+sd <- 0.5
+R <- 200
+# cp_span <- "mean"
+cp_span <- "last"
+tol <- 1e-7
+max_iter = 25
+
+ls <- seq(from = 2520,
+          to = (N + 1) %/% 2,
+          by = 120)
+Js <- seq(from = 840, to = max(ls) - max.r + 1, by = 120)
+
+correct_dims <- which(outer(ls, Js, (\(l, j) ifelse((l >= j) &
+                                                      (l - j + 1 <= j) &
+                                                      (l - j + 1 >= max.r), TRUE, FALSE
+))), arr.ind = TRUE)
+
+len_out <- nrow(correct_dims)
+
+tens_dims <- matrix(ncol = 3, nrow = len_out)
+colnames(tens_dims) <- c("l", "J", "K")
+tens_dims[, "l"] <- ls[correct_dims[, 1]]
+tens_dims[, "J"] <- Js[correct_dims[, 2]]
+tens_dims[, "K"] <- tens_dims[, "l"] - tens_dims[, "J"] + 1
+
+tens_dims <- tens_dims[order(tens_dims[, 1], tens_dims[, 2], decreasing = TRUE), ]
+
+plan(multisession)
+# plan(sequential)
+
+expmod_rmse_L <- function(R) {
+  p <- progressor(R)
+  future_replicate(R, {
+    p()
+    findL_cp_ssa()
+  }, simplify = "array", future.seed = 5) |> rowMeans() |> sqrt()
+}
+
+expmod_rmse_L_res <- cbind(tens_dims, expmod_rmse_L(R))
+save(expmod_rmse_L_res, file = "./Research/comp_results/cp_expmod_L.RData")
+expmod_rmse_L_res[order(expmod_rmse_L_res[, 4], decreasing = FALSE), ] |> head() |> print()
+# 3000 2760 241 0.05714844
+```
+
+```{r, warning=FALSE}
+N <- 6000
+times <- seq(from = 0,
+             to = 1,
+             length.out = N)
+s <- 2 * exp(-0.2 * pi * 50 * times[1:(N / 5)]) * sin(2 * pi * 50 * times) + sin(2 * pi * 10 * times)
+
+groups <- list(1:4)
+max.r <- max(sapply(groups, max))
+sd <- 0.5
+R <- 200
+# cp_span <- "mean"
+cp_span <- "last"
+tol <- 1e-7
+max_iter = 15
+
+ls <- seq(from = 2520,
+          to = (N + 1) %/% 2,
+          by = 120)
+Js <- seq(from = 840, to = max(ls) - max.r + 1, by = 120)
+
+correct_dims <- which(outer(ls, Js, (\(l, j) ifelse((l >= j) &
+                                                      (l - j + 1 <= j) &
+                                                      (l - j + 1 >= max.r), TRUE, FALSE
+))), arr.ind = TRUE)
+
+len_out <- nrow(correct_dims)
+
+tens_dims <- matrix(ncol = 3, nrow = len_out)
+colnames(tens_dims) <- c("l", "J", "K")
+tens_dims[, "l"] <- ls[correct_dims[, 1]]
+tens_dims[, "J"] <- Js[correct_dims[, 2]]
+tens_dims[, "K"] <- tens_dims[, "l"] - tens_dims[, "J"] + 1
+
+tens_dims <- tens_dims[order(tens_dims[, 1], tens_dims[, 2], decreasing = TRUE), ]
+
+plan(multisession)
+# plan(sequential)
+
+pulse_rmse_L <- function(R) {
+  p <- progressor(R)
+  future_replicate(R, {
+    p()
+    findL_cp_ssa()
+  }, simplify = "array", future.seed = 5) |> rowMeans() |> sqrt()
+}
+
+pulse_rmse_L_res <- cbind(tens_dims, pulse_rmse_L(R))
+save(pulse_rmse_L_res, file = "./Research/comp_results/cp_pulse_L.RData")
+pulse_rmse_L_res[order(pulse_rmse_L_res[, 4], decreasing = FALSE), ] |> head() |> print()
+```
+
 ### Best L for SSA
 ```{r}
 N <- 6000
-times <- seq(from = 0, to = 1, length.out = N)
+times <- seq(from = 0,
+             to = 1,
+             length.out = N)
 s <- 2 * exp(-0.2 * pi * 50 * times) * sin(2 * pi * 50 * times) + sin(2 * pi * 10 * times)
 
-Ls <- seq(from = 120, to = N %/% 2, by = 120)
+Ls <- seq(from = 1920, to = N %/% 2, by = 120)
 groups <- list(1:2, 3:4)
 sd <- 0.5
 R <- 200
@@ -349,11 +543,14 @@ expmod_rmse_L_ssa <- function(R) {
 expmod_rmse_L_ssa_res <- cbind(Ls, pulse_rmse_L_ssa(R))
 save(expmod_rmse_L_ssa_res, file = "./Research/comp_results/basic_expmod_L.RData")
 expmod_rmse_L_ssa_res[order(expmod_rmse_L_ssa_res[, 2], decreasing = FALSE), ] |> head() |> print()
+# 2280 0.02389376
 ```
 
 ```{r}
 N <- 6000
-times <- seq(from = 0, to = 1, length.out = N)
+times <- seq(from = 0,
+             to = 1,
+             length.out = N)
 s <- 2 * exp(-0.2 * pi * 50 * times[1:(N / 5)]) * sin(2 * pi * 50 * times) + sin(2 * pi * 10 * times)
 
 Ls <- seq(from = 1920, to = N %/% 2, by = 120)
@@ -380,10 +577,12 @@ pulse_rmse_L_ssa_res[order(pulse_rmse_L_ssa_res[, 2], decreasing = FALSE), ] |> 
 ### Comparing CP-SSA and Basic SSA
 ```{r}
 N <- 6000
-times <- seq(from = 0, to = 1, length.out = N)
+times <- seq(from = 0,
+             to = 1,
+             length.out = N)
 s <- 2 * exp(-0.2 * pi * 50 * times) * sin(2 * pi * 50 * times) + sin(2 * pi * 10 * times)
 L_ssa <- 2280
-L_tens <- c(600, 300)
+L_tens <- c(3000, 2760)
 groups_ssa <- list(1:2, 3:4)
 groups_tens <- list(c(1, 3), c(2, 4))
 sd <- 0.5
@@ -410,7 +609,9 @@ print(expmod_rmse_comp_res)
 
 ```{r}
 N <- 6000
-times <- seq(from = 0, to = 1, length.out = N)
+times <- seq(from = 0,
+             to = 1,
+             length.out = N)
 s <- 2 * exp(-0.2 * pi * 50 * times[1:(N / 5)]) * sin(2 * pi * 50 * times) + sin(2 * pi * 10 * times)
 L_ssa <- 1920
 L_tens <- c(600, 300)
@@ -434,7 +635,79 @@ pulse_rmse <- function(R) {
 }
 
 pulse_rmse_comp_res <- pulse_rmse(R)
-save(L_ssa, L_tens, pulse_rmse_comp_res, groups_ssa, file = "./Research/comp_results/cp_pulse_comp.RData")
+save(L_ssa, L_tens, pulse_rmse_comp_res,  groups_ssa, file = "./Research/comp_results/cp_pulse_comp.RData")
 print(pulse_rmse_comp_res)
 ```
 
+# Dividing signal from paper and using MSSA
+## Finding best windows
+### MSSA
+```{r}
+N <- 6000
+times <- seq(from = 0,
+             to = 1,
+             length.out = N)
+freq <- 50
+freq2 <- 10
+amp_period <- 5
+s <- 2 * exp(-0.2 * pi * freq * times[1:(N %/% amp_period)]) * sin(2 * pi * freq * times) +
+  sin(2 * pi * freq2 * times)
+  
+groups <- list(1:2, 3:4)
+max.r <- max(sapply(groups, max)) 
+Ls <- seq(from = 120, to = N %/% amp_period - max.r, by = 120)
+
+sd <- 0.5
+R <- 200
+
+plan(multisession)
+# plan(sequential)
+
+pulse_rmse_L_mssa <- function(R) {
+  p <- progressor(R)
+  future_replicate(R, {
+    p()
+    findL_mssa()
+  }, simplify = "array", future.seed = 5) |> rowMeans() |> sqrt()
+}
+
+pulse_rmse_L_mssa_res <- cbind(Ls, pulse_rmse_L_mssa(R))
+save(pulse_rmse_L_mssa_res, file = "./Research/comp_results/mssa_pulse_L.RData")
+pulse_rmse_L_mssa_res[order(pulse_rmse_L_mssa_res[, 2], decreasing = FALSE), ] |> head() |> print()
+# 840 0.03829296
+```
+
+### HO-MSSA
+```{r}
+N <- 6000
+times <- seq(from = 0,
+             to = 1,
+             length.out = N)
+freq <- 50
+freq2 <- 10
+amp_period <- 5
+s <- 2 * exp(-0.2 * pi * freq * times[1:(N %/% amp_period)]) * sin(2 * pi * freq * times) +
+  sin(2 * pi * freq2 * times)
+  
+Ls <- seq(from = 120, to = (N %/% amp_period) %/% 2, by = 120)
+groups <- list(1:2, 3:4)
+groups3 <- list(1:3, 1:3)
+sd <- 0.5
+R <- 200
+
+plan(multisession)
+# plan(sequential)
+
+pulse_rmse_L_homssa <- function(R) {
+  p <- progressor(R)
+  future_replicate(R, {
+    p()
+    findL_homssa()
+  }, simplify = "array", future.seed = 5) |> rowMeans() |> sqrt()
+}
+
+pulse_rmse_L_homssa_res <- cbind(Ls, pulse_rmse_L_homssa(R))
+save(pulse_rmse_L_homssa_res, file = "./Research/comp_results/homssa_pulse_L.RData")
+pulse_rmse_L_homssa_res[order(pulse_rmse_L_homssa_res[, 2], decreasing = FALSE), ] |> head() |> print()
+# 360 0.03752320
+```

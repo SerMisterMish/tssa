@@ -524,23 +524,41 @@ tens_mssa_reconstruct <- function(s,
       " != ",
       length(groups3)
     ))
-  
-  H <- tens3(s, L, kind = "HO-MSSA")
+  H <- tens3(s, L, kind = "MSSA")
   max_rank <- max(sapply(groups, max))
   max_rank3 <- max(sapply(groups3, max))
   
-  if (identical(decomp[1], "HOSVD"))
-    H.dec <- hosvd_mod(H,
-                       ranks = c(max_rank, max_rank, max_rank3),
-                       status = status)
-  else
-    H.dec <- tucker_mod(
+  decomp <- toupper(decomp)
+  decomp <- match.arg(decomp)
+  
+  H.dec <- switch(
+    decomp,
+    HOSVD = hosvd_mod(
+      H,
+      ranks = c(max_rank, max_rank, max_rank3),
+      status = status
+    ),
+    HOOI = tucker_mod(
       H,
       ranks = c(max_rank, max_rank, max_rank3),
       status = status,
       max_iter = max_iter,
       tol = tol
     )
+  )
+  # 
+  # if (identical(decomp[1], "HOSVD"))
+  #   H.dec <- hosvd_mod(H,
+  #                      ranks = c(max_rank, max_rank, max_rank3),
+  #                      status = status)
+  # else
+  #   H.dec <- tucker_mod(
+  #     H,
+  #     ranks = c(max_rank, max_rank, max_rank3),
+  #     status = status,
+  #     max_iter = max_iter,
+  #     tol = tol
+  #   )
   
   rec <- list()
   if (is.null(names(groups)))
@@ -556,7 +574,7 @@ tens_mssa_reconstruct <- function(s,
       as.matrix(H.dec$U[[2]][, group]),
       as.matrix(H.dec$U[[3]][, group3])
     ), 1:3)
-    rec[[i]] <- reconstruct.group3(H.rec, kind = "HO-MSSA")
+    rec[[i]] <- reconstruct.group3(H.rec, kind = "MSSA")
   }
   
   names(rec) <- group.names
