@@ -12,7 +12,6 @@ library(tidyr)
 library(future.apply)
 library(progressr)
 
-
 setwd(rprojroot::find_rstudio_root_file())
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 source(file = "./Research/TSSA.R")
@@ -88,9 +87,9 @@ findL_basic_ssa <- function() {
 }
 ```
 
-### MSSA
+### MSSA for single-channel
 ```{r}
-findL_mssa <- function() {
+findL_mssa_single <- function() {
   noise <- rnorm(N, sd = sd)
   # noise <- gen_nswn(N, lambda = 10 / N)
   x <- matrix(s + noise, ncol = amp_period)
@@ -102,9 +101,9 @@ findL_mssa <- function() {
 }
 ```
 
-### HO-MSSA
+### HO-MSSA for single-channel
 ```{r}
-findL_homssa <- function() {
+findL_homssa_single <- function() {
   noise <- rnorm(N, sd = sd)
   # noise <- gen_nswn(N, lambda = 10 / N)
   x <- matrix(s + noise, ncol = amp_period)
@@ -124,8 +123,6 @@ findL_homssa <- function() {
     mean(abs(Reduce("+", r) - s)^2))
 }
 ```
-
-
 
 ## Comparing CP-SSA and Basic SSA on best windows
 ```{r}
@@ -188,7 +185,6 @@ compare_all_ssa <- function() {
     mean(abs(Reduce("+", r) - s)^2))
 }
 ```
-
 
 # Extraction precision 
 ## Const ts
@@ -670,7 +666,7 @@ pulse_rmse_L_mssa <- function(R) {
   p <- progressor(R)
   future_replicate(R, {
     p()
-    findL_mssa()
+    findL_mssa_single()
   }, simplify = "array", future.seed = 5) |> rowMeans() |> sqrt()
 }
 
@@ -705,7 +701,7 @@ pulse_rmse_L_homssa <- function(R) {
   p <- progressor(R)
   future_replicate(R, {
     p()
-    findL_homssa()
+    findL_homssa_single()
   }, simplify = "array", future.seed = 5) |> rowMeans() |> sqrt()
 }
 
@@ -769,3 +765,4 @@ save(
 )
 print(pulse_all_rmse_comp_res)
 ```
+

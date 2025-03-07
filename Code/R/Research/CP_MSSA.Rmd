@@ -1,0 +1,333 @@
+---
+title: "CP_MSSA"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(Rssa)
+library(rTensor)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(future.apply)
+library(progressr)
+
+setwd(rprojroot::find_rstudio_root_file())
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+source(file = "./Research/TSSA.R")
+```
+
+```{r enable progressr, eval = FALSE}
+# This commands should be executed in R console, not as a chunk
+# Otherwise they fail
+progressr::handlers(global = TRUE)
+progressr::handlers("progress")
+```
+
+```{r}
+gen_nswn <- function(n, lambda = 1, min_sd = 0.1, max_sd = 1.5) {
+  step_change_times <- cumsum(rexp(n = floor(n * lambda), rate = lambda))
+  while (tail(step_change_times, 1) < n) {
+    step_change_times <- c(step_change_times, cumsum(rexp(
+      n = floor(n * lambda), rate = lambda
+    )))
+  }
+  step_change_times <- step_change_times[step_change_times < n]
+  
+  step_variances <- runif(length(step_change_times) + 1, min = min_sd, max = max_sd)
+  
+  variance_modulation <- rep(step_variances[1], n)
+  for (i in seq_along(step_change_times)) {
+    variance_modulation[seq(from = ceiling(step_change_times[i]),
+                            to = n,
+                            by = 1)] <- step_variances[i + 1]
+  }
+  plot(variance_modulation, type = "l")
+  rnorm(n) * variance_modulation
+}
+```
+
+# CP-SSA numerical test functions
+## Finding best window lengths
+### CP-MSSA
+```{r}
+findL_cp_mssa <- function() {
+  noise <- rnorm(N * Q, sd = sd)
+  # noise <- gen_nswn(N, lambda = 10 / N)
+  x <- s + noise
+  
+  rec <- lapply(Ls_cp, function(L)
+    tens_mssa_reconstruct(
+      x,
+      L,
+      groups = groups_cp,
+      decomp = "cp",
+      status = FALSE,
+      tol = tol,
+      max_iter = max_iter
+    ))
+  sapply(rec, function(r)
+    colMeans(abs(Reduce("+", r) - s)^2))
+}
+```
+
+### MSSA
+```{r}
+findL_mssa <- function() {
+  noise <- rnorm(N * Q, sd = sd)
+  # noise <- gen_nswn(N, lambda = 10 / N)
+  x <- s + noise
+  
+  rec <- lapply(Ls_mssa, function(L)
+    reconstruct(ssa(x, L = L, kind = "mssa"), groups = groups_mssa))
+  sapply(rec, function(r)
+    colMeans(abs(Reduce("+", r) - s)^2))
+}
+```
+
+### HO-MSSA
+```{r}
+findL_homssa <- function() {
+  noise <- rnorm(N * Q, sd = sd)
+  # noise <- gen_nswn(N, lambda = 10 / N)
+  x <- s + noise
+  
+  rec <- lapply(Ls_ho, function(L)
+    tens_mssa_reconstruct(
+      x,
+      L = L,
+      groups = groups_mssa,
+      groups3 = groups3,
+      decomp = "hooi",
+      status = FALSE,
+      max_iter = max_iter,
+      tol = tol
+    ))
+  sapply(rec, function(r)
+    colMeans(abs(Reduce("+", r) - s)^2))
+}
+```
+
+## Comparing MV methods on best windows
+```{r}
+compare_all_mssa <- function() {
+  noise <- rnorm(N * Q, sd = sd)
+  # noise <- gen_nswn(N, lambda = 10 / N)
+  x <- s + noise
+  
+  rec <- list(
+    mssa = reconstruct(ssa(x, L = L_mssa, kind = "mssa"), groups = groups_mssa),
+    cp_mssa = tens_mssa_reconstruct(
+      x,
+      L_cp,
+      groups = groups_cp,
+      decomp = "cp",
+      status = FALSE,
+      tol = tol,
+      max_iter = max_iter
+    ),
+    ho_mssa = tens_mssa_reconstruct(
+      x,
+      L = L_ho,
+      groups = groups_mssa,
+      groups3 = groups3,
+      decomp = "hooi",
+      status = FALSE,
+      tol = tol,
+      max_iter = max_iter
+    )
+  )
+  sapply(rec, function(r)
+    colMeans(abs(Reduce("+", r) - s)^2))
+}
+```
+
+# Using CP for MSSA
+## Setup
+```{r}
+N <- 71
+ones <- rep(1, N)
+## 1
+# A <- ones %o% seq(25, 35, 2.5)
+# w <- rep(1 / 12, 5)
+# phi <- ones %o% rep(0, 5)
+# save_file_name <- "same_freq"
+# groups_mssa <- list(1:2)
+# groups3 <- list(1)
+# groups_cp <- list(1:2)
+
+## 2
+# A <- ones %o% c(30, 20, 25, 32)
+# w <- c(1 / 12, 1 / 8, 1/12, 1/8)
+# phi <- ones %o% c(0, pi / 2, 2 * pi / 2, 3 * pi / 2)
+# save_file_name <- "diff_freq_diff_phase"
+# groups_mssa <- list(1:4)
+# groups3 <- list(1:2)
+# groups_cp <- list(1:8)
+
+## 3
+# A <- ones %o% rep(c(30, 28, 26, 24, 22), 2)[1:9]
+# w <- rep(1 / 12, 9)
+# phi <- ones %o% ((0:8) * 2 * pi / 3)
+# save_file_name <- "same_freq_diff_phase"
+# groups_mssa <- list(1:2)
+# groups3 <- list(1:2)
+# groups_cp <- list(1:4)
+
+## 4
+# A <- exp(ones %o% c(-rep(0.05, 9)) * 1:N)
+# w <- rep(1 / 12, 9)
+# phi <- ones %o% rep(0, 9)
+# save_file_name <- "same_exp_same_freq"
+# groups_mssa <- list(1:2)
+# groups3 <- list(1)
+# groups_cp <- list(1:2)
+
+## 5
+A <- exp(ones %o% c(-rep(0.05, 7), -0.03, -0.03) * 1:N)
+w <- rep(1 / 12, 9)
+phi <- ones %o% rep(0, 9)
+save_file_name <- "diff_exp_same_freq"
+groups_mssa <- list(1:4)
+groups3 <- list(1:2)
+# groups_cp <- list(1:4)
+groups_cp <- list(1:2)
+
+s <- A * cos(2 * pi * 1:N %o% w + phi)
+Q <- ncol(s)
+
+max.r <- max(sapply(groups_mssa, max))
+
+Ls_mssa <- seq(from = max.r,
+               to = N - max.r + 1,
+               by = 2)
+Ls_cp <- seq(from = max.r,
+             to = N - max.r + 1,
+             by = 2)
+# Ls_cp <- c(20, 40)
+Ls_ho <- seq(from = max.r,
+                 to = (N + 1) %/% 2,
+                 by = 2)
+
+sd <- 5
+max_iter <- 25
+tol <- 1e-7
+```
+
+## Best L for CP-MSSA
+```{r}
+R <- 200
+
+plan(multisession)
+# plan(sequential)
+
+rmse_L_cpmssa <- function(R) {
+  p <- progressor(R)
+  future_replicate(R, {
+    p()
+    findL_cp_mssa()
+  }, simplify = "array", future.seed = 5) |> apply(1:2, mean) |> sqrt()
+}
+
+rmse_L_cpmssa_res <- t(rbind(Ls_cp, rmse_L_cpmssa(R)))
+save(
+  rmse_L_cpmssa_res,
+  file = paste0(
+    "./Research/comp_results/cpmssa_",
+    save_file_name,
+    "_L.RData"
+  )
+)
+rmse_L_cpmssa_res[order(rowMeans(rmse_L_cpmssa_res[, -1]), decreasing = FALSE), ] |>
+  head() |>
+  print()
+```
+
+## Best L for HO-MSSA
+```{r}
+R <- 200
+
+plan(multisession)
+# plan(sequential)
+
+rmse_L_homssa <- function(R) {
+  p <- progressor(R)
+  future_replicate(R, {
+    p()
+    findL_homssa()
+  }, simplify = "array", future.seed = 5) |> apply(1:2, mean) |> sqrt()
+}
+
+rmse_L_homssa_res <- t(rbind(Ls_ho, rmse_L_homssa(R)))
+save(
+  rmse_L_homssa_res,
+  file = paste0(
+    "./Research/comp_results/homssa_",
+    save_file_name,
+    "_L.RData"
+  )
+)
+rmse_L_homssa_res[order(rowMeans(rmse_L_homssa_res[, -1]), decreasing = FALSE), ] |>
+  head() |>
+  print()
+```
+
+## Best L for MSSA
+```{r}
+R <- 200
+
+plan(multisession)
+# plan(sequential)
+
+rmse_L_mssa <- function(R) {
+  p <- progressor(R)
+  future_replicate(R, {
+    p()
+    findL_mssa()
+  }, simplify = "array", future.seed = 5) |> apply(1:2, mean) |> sqrt()
+}
+
+rmse_L_mssa_res <- t(rbind(Ls_mssa, rmse_L_mssa(R)))
+save(
+  rmse_L_mssa_res,
+  file = paste0("./Research/comp_results/mssa_", save_file_name, "_L.RData")
+)
+rmse_L_mssa_res[order(rowMeans(rmse_L_mssa_res[, -1]), decreasing = FALSE), ] |>
+  head() |>
+  print()
+```
+
+## Comparing MV methods
+```{r}
+R <- 1000
+
+L_cp <- rmse_L_cpmssa_res[which.min(rowMeans(rmse_L_cpmssa_res[, -1])), 1]
+L_ho <- rmse_L_homssa_res[which.min(rowMeans(rmse_L_homssa_res[, -1])), 1]
+L_mssa <- rmse_L_mssa_res[which.min(rowMeans(rmse_L_mssa_res[, -1])), 1]
+
+all_mv_rmse <- function(R) {
+  p <- progressor(R)
+  future_replicate(R, {
+    p()
+    compare_all_mssa()
+  }, simplify = "array", future.seed = 5) |> apply(1:2, mean) |> sqrt()
+}
+
+all_mv_rmse_res <- all_mv_rmse(R)
+save(
+  L_mssa,
+  L_cp,
+  L_ho,
+  groups_mssa,
+  groups_cp,
+  groups3,
+  all_mv_rmse_res,
+  file = paste0(
+    "./Research/comp_results/all_",
+    save_file_name,
+    "_mv_comp.RData"
+  )
+)
+print(all_mv_rmse_res)
+```
+

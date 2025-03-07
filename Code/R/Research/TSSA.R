@@ -509,27 +509,29 @@ tens_mssa_reconstruct <- function(s,
                                   L,
                                   groups,
                                   groups3,
-                                  decomp = c("HOSVD", "HOOI"),
+                                  decomp = c("HOSVD", "HOOI", "CP"),
                                   status = TRUE,
                                   max_iter = 25,
                                   tol = 1e-05) {
   if (!is.list(groups))
     groups <- as.list(groups)
-  if (!is.list(groups3))
-    groups3 <- as.list(groups3)
-  if (length(groups) != length(groups3))
-    simpleError(paste0(
-      "Lengths of groups and groups3 are not equal: ",
-      length(groups),
-      " != ",
-      length(groups3)
-    ))
-  H <- tens3(s, L, kind = "MSSA")
-  max_rank <- max(sapply(groups, max))
-  max_rank3 <- max(sapply(groups3, max))
-  
   decomp <- toupper(decomp)
   decomp <- match.arg(decomp)
+
+  H <- tens3(s, L, kind = "MSSA")
+  max_rank <- max(sapply(groups, max))
+  if (decomp != "CP") {
+    if (!is.list(groups3))
+      groups3 <- as.list(groups3)
+    if (length(groups) != length(groups3))
+      simpleError(paste0(
+        "Lengths of groups and groups3 are not equal: ",
+        length(groups),
+        " != ",
+        length(groups3)
+      ))
+    max_rank3 <- max(sapply(groups3, max))
+  }
   
   H.dec <- switch(
     decomp,
@@ -544,21 +546,15 @@ tens_mssa_reconstruct <- function(s,
       status = status,
       max_iter = max_iter,
       tol = tol
+    ),
+    CP = cp_mod(
+      H,
+      num_components = max_rank,
+      status = status,
+      max_iter = max_iter,
+      tol = tol
     )
   )
-  # 
-  # if (identical(decomp[1], "HOSVD"))
-  #   H.dec <- hosvd_mod(H,
-  #                      ranks = c(max_rank, max_rank, max_rank3),
-  #                      status = status)
-  # else
-  #   H.dec <- tucker_mod(
-  #     H,
-  #     ranks = c(max_rank, max_rank, max_rank3),
-  #     status = status,
-  #     max_iter = max_iter,
-  #     tol = tol
-  #   )
   
   rec <- list()
   if (is.null(names(groups)))
@@ -566,14 +562,22 @@ tens_mssa_reconstruct <- function(s,
   else
     group.names <- names(groups)
   
+  if (decomp == "CP") {
+    l_ord <- order(H.dec$lambdas, decreasing = TRUE)
+  }
+  
   for (i in seq_along(groups)) {
     group <- groups[[i]]
-    group3 <- groups3[[i]]
-    H.rec <- ttl(H.dec$Z[group, group, group3, drop = FALSE], list(
-      as.matrix(H.dec$U[[1]][, group]),
-      as.matrix(H.dec$U[[2]][, group]),
-      as.matrix(H.dec$U[[3]][, group3])
-    ), 1:3)
+    if (decomp == "CP") {
+      H.rec <- cp_reconstruct_part(H.dec, l_ord[group])
+    } else {
+      group3 <- groups3[[i]]
+      H.rec <- ttl(H.dec$Z[group, group, group3, drop = FALSE], list(
+        as.matrix(H.dec$U[[1]][, group]),
+        as.matrix(H.dec$U[[2]][, group]),
+        as.matrix(H.dec$U[[3]][, group3])
+      ), 1:3)
+    }
     rec[[i]] <- reconstruct.group3(H.rec, kind = "MSSA")
   }
   
