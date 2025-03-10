@@ -175,7 +175,7 @@ ones <- rep(1, N)
 # groups_cp <- list(1:4)
 
 ## 4
-# A <- exp(ones %o% c(-rep(0.05, 9)) * 1:N)
+# A <- 20 * exp(ones %o% c(-rep(0.05, 9)) * 1:N)
 # w <- rep(1 / 12, 9)
 # phi <- ones %o% rep(0, 9)
 # save_file_name <- "same_exp_same_freq"
@@ -184,14 +184,13 @@ ones <- rep(1, N)
 # groups_cp <- list(1:2)
 
 ## 5
-A <- exp(ones %o% c(-rep(0.05, 7), -0.03, -0.03) * 1:N)
+A <- 20 * exp(ones %o% c(rep(0.05, 7), 0.03, 0.03) * 1:N)
 w <- rep(1 / 12, 9)
 phi <- ones %o% rep(0, 9)
 save_file_name <- "diff_exp_same_freq"
 groups_mssa <- list(1:4)
 groups3 <- list(1:2)
-# groups_cp <- list(1:4)
-groups_cp <- list(1:2)
+groups_cp <- list(1:4)
 
 s <- A * cos(2 * pi * 1:N %o% w + phi)
 Q <- ncol(s)
@@ -322,6 +321,7 @@ save(
   groups_cp,
   groups3,
   all_mv_rmse_res,
+  sd,
   file = paste0(
     "./Research/comp_results/all_",
     save_file_name,
