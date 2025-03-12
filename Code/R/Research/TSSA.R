@@ -243,6 +243,7 @@ cp_mod <- function(tnsr,
                     num_components = NULL,
                     max_iter = 25,
                     tol = 1e-05,
+                    start = c("rand", "svd"),
                     status = TRUE)
 {
   if (is.null(num_components))
@@ -250,6 +251,7 @@ cp_mod <- function(tnsr,
   stopifnot(is(tnsr, "Tensor"))
   if (all(tnsr@data == 0))
     stop("Zero tensor detected")
+  start <- match.arg(start)
   num_modes <- tnsr@num_modes
   modes <- tnsr@modes
   U_list <- vector("list", num_modes)
@@ -257,9 +259,13 @@ cp_mod <- function(tnsr,
   tnsr_norm <- fnorm_complex(tnsr)
   for (m in 1:num_modes) {
     unfolded_mat[[m]] <- rs_unfold(tnsr, m = m)@data
+    if (start == "rand") {
     U_list[[m]] <- matrix(rnorm(modes[m] * num_components),
                           nrow = modes[m],
                           ncol = num_components)
+    } else {
+      U_list[[m]] <- svd(unfolded_mat[[m]], nu = num_components)$u
+    }
   }
   est <- tnsr
   curr_iter <- 1
@@ -505,6 +511,54 @@ CCSWGN <- function(n, mean = 0, sd = 1) {
 
 # HOSVD-MSSA
 
+tens_mssa_decompose <- function(s,
+                                L,
+                                decomp = c("HOSVD", "HOOI", "CP"),
+                                neig = NULL,
+                                neig3 = NULL,
+                                status = TRUE,
+                                max_iter = 25,
+                                tol = 1e-05,
+                                start = c("rand", "svd")) {
+  decomp <- toupper(decomp)
+  decomp <- match.arg(decomp)
+  
+  if (decomp == "CP" && is.null(neig))
+    stop("For CP decomposition `neig` argument must be provided")
+  else if (is.null(neig))
+    neig = min(50, L, nrow(s) - L + 1)
+  
+  if (decomp != "CP" && is.null(neig3))
+    neig3 = min(50, ncol(s))
+  
+  H <- tens3(s, L, kind = "MSSA")
+  H.dec <- switch(
+    decomp,
+    HOSVD = hosvd_mod(
+      H,
+      ranks = c(neig, neig, neig3),
+      status = status
+    ),
+    HOOI = tucker_mod(
+      H,
+      ranks = c(neig, neig, neig3),
+      status = status,
+      max_iter = max_iter,
+      tol = tol
+    ),
+    CP = cp_mod(
+      H,
+      num_components = neig,
+      status = status,
+      max_iter = max_iter,
+      tol = tol,
+      start = start
+    )
+  )
+  
+  H.dec
+}
+
 tens_mssa_reconstruct <- function(s,
                                   L,
                                   groups,
@@ -512,7 +566,8 @@ tens_mssa_reconstruct <- function(s,
                                   decomp = c("HOSVD", "HOOI", "CP"),
                                   status = TRUE,
                                   max_iter = 25,
-                                  tol = 1e-05) {
+                                  tol = 1e-05,
+                                  start = c("rand", "svd")) {
   if (!is.list(groups))
     groups <- as.list(groups)
   decomp <- toupper(decomp)
@@ -552,7 +607,8 @@ tens_mssa_reconstruct <- function(s,
       num_components = max_rank,
       status = status,
       max_iter = max_iter,
-      tol = tol
+      tol = tol,
+      start = start
     )
   )
   

@@ -64,7 +64,8 @@ findL_cp_mssa <- function() {
       decomp = "cp",
       status = FALSE,
       tol = tol,
-      max_iter = max_iter
+      max_iter = max_iter,
+      start = "svd"
     ))
   sapply(rec, function(r)
     colMeans(abs(Reduce("+", r) - s)^2))
@@ -124,7 +125,8 @@ compare_all_mssa <- function() {
       decomp = "cp",
       status = FALSE,
       tol = tol,
-      max_iter = max_iter
+      max_iter = max_iter,
+      start = "svd"
     ),
     ho_mssa = tens_mssa_reconstruct(
       x,
@@ -196,12 +198,13 @@ s <- A * cos(2 * pi * 1:N %o% w + phi)
 Q <- ncol(s)
 
 max.r <- max(sapply(groups_mssa, max))
+max.rcp <- max(sapply(groups_cp, max))
 
 Ls_mssa <- seq(from = max.r,
                to = N - max.r + 1,
                by = 2)
-Ls_cp <- seq(from = max.r,
-             to = N - max.r + 1,
+Ls_cp <- seq(from = max.rcp,
+             to = N - max.rcp + 1,
              by = 2)
 # Ls_cp <- c(20, 40)
 Ls_ho <- seq(from = max.r,
@@ -229,17 +232,19 @@ rmse_L_cpmssa <- function(R) {
 }
 
 rmse_L_cpmssa_res <- t(rbind(Ls_cp, rmse_L_cpmssa(R)))
-save(
-  rmse_L_cpmssa_res,
-  file = paste0(
-    "./Research/comp_results/cpmssa_",
-    save_file_name,
-    "_L.RData"
-  )
-)
+# save(
+#   rmse_L_cpmssa_res,
+#   file = paste0(
+#     "./Research/comp_results/cpmssa_",
+#     save_file_name,
+#     "_L.RData"
+#   )
+# )
 rmse_L_cpmssa_res[order(rowMeans(rmse_L_cpmssa_res[, -1]), decreasing = FALSE), ] |>
   head() |>
   print()
+# 62 1.139832 1.163155 1.211639 1.165164 1.210579 1.182345 1.168282 2.261075 2.241531
+# 56 1.102377 1.134577 1.175887 1.130599 1.181898 1.151490 1.109888 2.002356 2.020384
 ```
 
 ## Best L for HO-MSSA
