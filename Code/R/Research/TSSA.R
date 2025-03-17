@@ -14,7 +14,8 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
   if (kind == "SSA") {
     stopifnot(length(L) == 2)
     N <- length(s)
-    I <- L[1]; L <- L[2]
+    I <- L[1]
+    L <- L[2]
     J <- N - I - L + 2
     X <- outer(1:I, 1:L, `+`) |>
       outer(1:J, function(il, j)
@@ -23,7 +24,9 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
   else if (kind == "CP") {
     stopifnot(length(L) == 2)
     N <- length(s)
-    l <- L[1]; J <- L[2];
+    l <- L[1]
+    J <- L[2]
+    
     I <- N %/% l
     K <- l - J + 1
     X_mat <- matrix(s[1:(I * l)], nrow = I, byrow = TRUE) |>
@@ -72,7 +75,8 @@ reconstruct.group3 <- function(X.tens, kind = c("SSA", "MSSA", "CP")) {
       s[C - 2] <- sum / count
     }
   } else if (kind == "CP") {
-    s <- Reduce(c, lapply(seq(dim(X)[1]), function(i) hankel(as.matrix(X[i,,]))))
+    s <- Reduce(c, lapply(seq(dim(X)[1]), function(i)
+      hankel(as.matrix(X[i, , ]))))
   } else if (kind == "MSSA") {
     s <- Reduce(cbind, apply(X, 3, Rssa::hankel, simplify = FALSE))
   }
@@ -240,11 +244,11 @@ tucker_mod <- function(tnsr,
 # CPD modification for complex cases
 
 cp_mod <- function(tnsr,
-                    num_components = NULL,
-                    max_iter = 25,
-                    tol = 1e-05,
-                    start = c("rand", "svd"),
-                    status = TRUE)
+                   num_components = NULL,
+                   max_iter = 25,
+                   tol = 1e-05,
+                   start = c("rand", "svd"),
+                   status = TRUE)
 {
   if (is.null(num_components))
     stop("num_components must be specified")
@@ -260,9 +264,9 @@ cp_mod <- function(tnsr,
   for (m in 1:num_modes) {
     unfolded_mat[[m]] <- rs_unfold(tnsr, m = m)@data
     if (start == "rand") {
-    U_list[[m]] <- matrix(rnorm(modes[m] * num_components),
-                          nrow = modes[m],
-                          ncol = num_components)
+      U_list[[m]] <- matrix(rnorm(modes[m] * num_components),
+                            nrow = modes[m],
+                            ncol = num_components)
     } else {
       U_list[[m]] <- svd(unfolded_mat[[m]], nu = num_components)$u
     }
@@ -436,10 +440,12 @@ tens_ssa_reconstruct <- function(s,
     }
   }
   
-  H.dec <- switch(decomp,
-                  HOSVD = hosvd_mod(H, ranks = trunc_ranks, status = status),
-                  HOOI = tucker_mod(H, ranks = trunc_ranks, status = status, ...),
-                  CP = cp_mod(H, num_components = max_rank, status = status, ...))
+  H.dec <- switch(
+    decomp,
+    HOSVD = hosvd_mod(H, ranks = trunc_ranks, status = status),
+    HOOI = tucker_mod(H, ranks = trunc_ranks, status = status, ...),
+    CP = cp_mod(H, num_components = max_rank, status = status, ...)
+  )
   
   rec <- list()
   if (is.null(names(groups)))
@@ -456,7 +462,9 @@ tens_ssa_reconstruct <- function(s,
           cp_span <- tolower(cp_span)
           cp_span <- match.arg(cp_span)
           rec[[i]] <- c(rec[[i]], rep(switch(
-            cp_span, mean = mean(rec[[i]]), last = tail(rec[[i]], 1)
+            cp_span,
+            mean = mean(rec[[i]]),
+            last = tail(rec[[i]], 1)
           ), length(s) - length(rec[[i]])))
         } else if (is.numeric(cp_span)) {
           rec[[i]] <- c(rec[[i]], rep(cp_span, length(s) - length(rec[[i]])))
@@ -513,13 +521,13 @@ CCSWGN <- function(n, mean = 0, sd = 1) {
 
 tens_mssa_decompose <- function(s,
                                 L,
-                                decomp = c("HOSVD", "HOOI", "CP"),
+                                decomp = c("HOSVD", "HOOI", "TSVD", "CP"),
                                 neig = NULL,
                                 neig3 = NULL,
                                 status = TRUE,
                                 max_iter = 25,
                                 tol = 1e-05,
-                                start = c("rand", "svd")) {
+                                cp_start = c("rand", "svd")) {
   decomp <- toupper(decomp)
   decomp <- match.arg(decomp)
   
@@ -534,11 +542,7 @@ tens_mssa_decompose <- function(s,
   H <- tens3(s, L, kind = "MSSA")
   H.dec <- switch(
     decomp,
-    HOSVD = hosvd_mod(
-      H,
-      ranks = c(neig, neig, neig3),
-      status = status
-    ),
+    HOSVD = hosvd_mod(H, ranks = c(neig, neig, neig3), status = status),
     HOOI = tucker_mod(
       H,
       ranks = c(neig, neig, neig3),
@@ -552,7 +556,7 @@ tens_mssa_decompose <- function(s,
       status = status,
       max_iter = max_iter,
       tol = tol,
-      start = start
+      start = cp_start
     )
   )
   
@@ -563,19 +567,19 @@ tens_mssa_reconstruct <- function(s,
                                   L,
                                   groups,
                                   groups3,
-                                  decomp = c("HOSVD", "HOOI", "CP"),
+                                  decomp = c("HOSVD", "HOOI", "TSVD", "CP"),
                                   status = TRUE,
                                   max_iter = 25,
                                   tol = 1e-05,
-                                  start = c("rand", "svd")) {
+                                  cp_start = c("rand", "svd")) {
   if (!is.list(groups))
     groups <- as.list(groups)
   decomp <- toupper(decomp)
   decomp <- match.arg(decomp)
-
+  
   H <- tens3(s, L, kind = "MSSA")
   max_rank <- max(sapply(groups, max))
-  if (decomp != "CP") {
+  if (decomp != "CP" && decomp != "TSVD") {
     if (!is.list(groups3))
       groups3 <- as.list(groups3)
     if (length(groups) != length(groups3))
@@ -602,13 +606,14 @@ tens_mssa_reconstruct <- function(s,
       max_iter = max_iter,
       tol = tol
     ),
+    TSVD = t_svd(H),
     CP = cp_mod(
       H,
       num_components = max_rank,
       status = status,
       max_iter = max_iter,
       tol = tol,
-      start = start
+      start = cp_start
     )
   )
   
@@ -626,6 +631,12 @@ tens_mssa_reconstruct <- function(s,
     group <- groups[[i]]
     if (decomp == "CP") {
       H.rec <- cp_reconstruct_part(H.dec, l_ord[group])
+    } else if (decomp == "TSVD") {
+      H.rec <- t_mult(
+                t_mult(
+                  H.dec$U[, group, , drop = FALSE], 
+                  H.dec$S[group, group, , drop = FALSE]), 
+                H.dec$V[group, , , drop = FALSE])
     } else {
       group3 <- groups3[[i]]
       H.rec <- ttl(H.dec$Z[group, group, group3, drop = FALSE], list(

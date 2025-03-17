@@ -12,36 +12,6 @@ handlers(global = TRUE)
 handlers("progress")
 plan(multisession)
 
-# get_cp_resid_fnorm <- function(R, s, nc) {
-#   p <- progressor(R)
-#   future_replicate(R, {
-#     p()
-#     noise <- matrix(rnorm(N * Q, sd = sd), ncol = Q)
-#     tens_mssa_decompose(s + noise,
-#                         L, 
-#                         decomp = "cp",
-#                         neig = nc, 
-#                         status = FALSE,
-#                         max_iter = max_iter,
-#                         tol = tol,
-#                         start = "svd")$fnorm_resid
-#   }, future.seed = 5)
-# }
-
-# get_ho_resid_fnorm <- function(R, s, r, r3) {
-#   p <- progressor(R)
-#   future_replicate(R, {
-#     p()
-#     noise <- matrix(rnorm(N * Q, sd = sd), ncol = Q)
-#     tens_mssa_decompose(s + noise,
-#                         L, 
-#                         decomp = "hosvd",
-#                         neig = r,
-#                         neig3 = r3,
-#                         status = FALSE)$fnorm_resid
-#   }, future.seed = 5)
-# }
-
 get_resid_fnorm <- function(R) {
   p <- progressor(R)
   future_replicate(R, {
@@ -50,14 +20,14 @@ get_resid_fnorm <- function(R) {
     x <- s + noise
     c(
       noise = noise |> fnorm_complex(),
-      mssa = (x - Reduce("+", reconstruct(ssa(x, L_mssa, kind = "mssa"), groups = groups_mssa))) |> fnorm_complex(),
+      mssa = (x - Reduce("+", reconstruct(ssa(x, L_mssa, kind = "mssa"), groups = groups$mssa))) |> fnorm_complex(),
       cp = (x - Reduce(
         "+",
         tens_mssa_reconstruct(
           x,
           L_cp,
           decomp = "cp",
-          groups = groups_cp,
+          groups = groups$cp,
           status = FALSE,
           max_iter = max_iter,
           tol = tol,
@@ -70,8 +40,8 @@ get_resid_fnorm <- function(R) {
           x,
           L_ho,
           decomp = "hosvd",
-          groups = groups_mssa,
-          groups3 = groups3,
+          groups = groups$mssa,
+          groups3 = groups$ho3,
           status = FALSE,
           max_iter = max_iter,
           tol = tol
@@ -83,14 +53,14 @@ get_resid_fnorm <- function(R) {
 
 get_bias <- function() {
   c(
-    mssa = (s - Reduce("+", reconstruct(ssa(s, L_mssa, kind = "mssa"), groups = groups_mssa))) |> fnorm_complex(),
+    mssa = (s - Reduce("+", reconstruct(ssa(s, L_mssa, kind = "mssa"), groups = groups$mssa))) |> fnorm_complex(),
     cp = (s - Reduce(
       "+",
       tens_mssa_reconstruct(
         s,
         L_cp,
         decomp = "cp",
-        groups = groups_cp,
+        groups = groups$cp,
         status = FALSE,
         max_iter = max_iter,
         tol = tol,
@@ -103,8 +73,8 @@ get_bias <- function() {
         s,
         L_ho,
         decomp = "hosvd",
-        groups = groups_mssa,
-        groups3 = groups3,
+        groups = groups$mssa,
+        groups3 = groups$ho3,
         status = FALSE,
         max_iter = max_iter,
         tol = tol
@@ -115,11 +85,11 @@ get_bias <- function() {
 
 N <- 71
 Q <- 9
-# sd = 5
-sd = 0.03
+sd = 5
+# sd = 0.03
 R <- 500
 ones <- rep(1, N)
-A <- 20 * exp(ones %o% c(rep(0.05, 7), 0.03, 0.03) * 1:N)
+A <- 25 * exp(ones %o% c(-rep(0.05, 7), -0.03, -0.03) * 1:N)
 w <- rep(1 / 12, 9)
 phi <- ones %o% rep(0, 9)
 max_iter = 25
@@ -127,10 +97,12 @@ tol = 1e-7
 
 s <- A * cos(2 * pi * 1:N %o% w + phi)
 
-groups_cp <- list(1:4)
-groups_cp <- list(1:8)
-# groups_mssa <- list(1:4)
-groups3 <- list(1:2)
+groups <- list(
+  mssa = list(1:4),
+  cp = list(1:4),
+  ho3 = list(1:2)
+)
+
 L_mssa <- 56
 L_ho <- 22
 L_cp <- 56
@@ -138,9 +110,9 @@ L_cp <- 56
 resid_fnorms <- get_resid_fnorm(R)
 bias_fnorms <- get_bias()
 cat(sprintf("Ranks: r_mssa = %i, r_3 = %i, r_cp = %i\n\n", 
-            max(sapply(groups_mssa, max)),
-            max(sapply(groups3, max)),
-            max(sapply(groups_cp, max))),
+            max(sapply(groups$mssa, max)),
+            max(sapply(groups$ho3, max)),
+            max(sapply(groups$cp, max))),
   "\rResidual norms:\n", 
     sprintf("%s:\t%f\n", rownames(resid_fnorms), rowMeans(resid_fnorms)),
     "\n\rBias norms:\n",
