@@ -65,7 +65,7 @@ findL_cp_mssa <- function() {
       status = FALSE,
       tol = tol,
       max_iter = max_iter,
-      start = "svd"
+      cp_start = "svd"
     ))
   sapply(rec, function(r)
     colMeans(abs(Reduce("+", r) - s)^2))
@@ -126,7 +126,7 @@ compare_all_mssa <- function() {
       status = FALSE,
       tol = tol,
       max_iter = max_iter,
-      start = "svd"
+      cp_start = "svd"
     ),
     ho_mssa = tens_mssa_reconstruct(
       x,
