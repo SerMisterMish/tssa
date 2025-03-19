@@ -13,7 +13,7 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
   
   if (kind == "SSA") {
     stopifnot(length(L) == 2)
-    N <- length(s)
+    # N <- length(s)
     I <- L[1]
     L <- L[2]
     J <- N - I - L + 2
@@ -356,6 +356,63 @@ cp_reconstruct_part <- function(cp, ind) {
   )
 }
 
+# TSVD modification
+tsvd_mod <- function(tnsr, status = TRUE) 
+{
+  if (tnsr@num_modes != 3) 
+    stop("T-SVD only implemented for 3d so far")
+  if (all(tnsr@data == 0))
+    stop("Zero tensor detected")
+  modes <- tnsr@modes
+  n1 <- modes[1]
+  n2 <- modes[2]
+  n3 <- modes[3]
+  if (status)
+    pb <- txtProgressBar(min = 0, max = n3, style = 3)
+  fftz <- aperm(apply(tnsr@data, MARGIN = 1:2, fft), c(2, 
+                                                       3, 1))
+  U_arr <- array(0, dim = c(n1, n1, n3))
+  V_arr <- array(0, dim = c(n2, n2, n3))
+  m <- min(n1, n2)
+  S_arr <- array(0, dim = c(n1, n2, n3))
+  for (j in 1:n3) {
+    if (status)
+      setTxtProgressBar(pb, j)
+    decomp <- svd(fftz[, , j], nu = n1, nv = n2)
+    U_arr[, , j] <- decomp$u
+    V_arr[, , j] <- decomp$v
+    S_arr[, , j] <- diag(decomp$d, nrow = n1, ncol = n2)
+  }
+  if (status)
+    close(pb)
+  
+  IFFT <- function(x) {
+    as.numeric(fft(x, inverse = TRUE))/length(x)
+  }
+  # U <- as.tensor(aperm(apply(U_arr, MARGIN = 1:2, .ifft), 
+  #                      c(2, 3, 1)))
+  # V <- as.tensor(aperm(apply(V_arr, MARGIN = 1:2, .ifft), 
+  #                      c(2, 3, 1)))
+  # S <- as.tensor(aperm(apply(S_arr, MARGIN = 1:2, .ifft), 
+  
+  U <- as.tensor(aperm(apply(U_arr, MARGIN = 1:2, IFFT), 
+                       c(2, 3, 1)))
+  V <- as.tensor(aperm(apply(V_arr, MARGIN = 1:2, IFFT), 
+                       c(2, 3, 1)))
+  S <- as.tensor(aperm(apply(S_arr, MARGIN = 1:2, IFFT), 
+                       c(2, 3, 1)))
+  invisible(list(U = U, V = V, S = S))
+}
+
+# Partially reconstruct TSVD
+tsvd_reconstruct_part <- function(tsvd, group) {
+  t_mult(
+    t_mult(
+      tsvd$U[, group, , drop = FALSE], 
+      tsvd$S[group, group, , drop = FALSE]), 
+    t(tsvd$V[, group, , drop = FALSE]))
+}
+
 # HO-ESPRIT
 
 tens_esprit <- function(s,
@@ -550,6 +607,7 @@ tens_mssa_decompose <- function(s,
       max_iter = max_iter,
       tol = tol
     ),
+    TSVD = tsvd_mod(H, status = status),
     CP = cp_mod(
       H,
       num_components = neig,
@@ -606,7 +664,7 @@ tens_mssa_reconstruct <- function(s,
       max_iter = max_iter,
       tol = tol
     ),
-    TSVD = t_svd(H),
+    TSVD = tsvd_mod(H, status = status),
     CP = cp_mod(
       H,
       num_components = max_rank,
@@ -632,11 +690,7 @@ tens_mssa_reconstruct <- function(s,
     if (decomp == "CP") {
       H.rec <- cp_reconstruct_part(H.dec, l_ord[group])
     } else if (decomp == "TSVD") {
-      H.rec <- t_mult(
-                t_mult(
-                  H.dec$U[, group, , drop = FALSE], 
-                  H.dec$S[group, group, , drop = FALSE]), 
-                H.dec$V[group, , , drop = FALSE])
+      H.rec <- tsvd_reconstruct_part(H.dec, group)
     } else {
       group3 <- groups3[[i]]
       H.rec <- ttl(H.dec$Z[group, group, group3, drop = FALSE], list(
