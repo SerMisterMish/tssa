@@ -116,6 +116,16 @@ compare_all_mssa <- function() {
 ```{r}
 N <- 71
 ones <- rep(1, N)
+
+## 0
+A <- ones %o% rep(30, 5)
+w <- rep(1 / 12, 5)
+phi <- ones %o% rep(0, 5)
+save_file_name <- "same_all"
+groups_mssa <- list(1:2)
+groups3 <- list(1)
+groups_tsvd <- list(1:2)
+
 ## 1
 # A <- ones %o% seq(25, 35, 2.5)
 # w <- rep(1 / 12, 5)
@@ -126,13 +136,13 @@ ones <- rep(1, N)
 # groups_tsvd <- list(1:2)
 
 ## 2
-A <- ones %o% c(30, 20, 25, 32)
-w <- c(1 / 12, 1 / 8, 1/12, 1/8)
-phi <- ones %o% c(0, pi / 2, 2 * pi / 2, 3 * pi / 2)
-save_file_name <- "diff_freq_diff_phase"
-groups_mssa <- list(1:4)
-groups3 <- list(1:2)
-groups_tsvd <- list(1:4)
+# A <- ones %o% c(30, 20, 25, 32)
+# w <- c(1 / 12, 1 / 8, 1/12, 1/8)
+# phi <- ones %o% c(0, pi / 2, 2 * pi / 2, 3 * pi / 2)
+# save_file_name <- "diff_freq_diff_phase"
+# groups_mssa <- list(1:4)
+# groups3 <- list(1:2)
+# groups_tsvd <- list(1:4)
 
 ## 3
 # A <- ones %o% rep(c(30, 28, 26, 24, 22), 2)[1:9]
@@ -173,8 +183,8 @@ groups_tsvd <- list(1:4)
 s <- A * cos(2 * pi * 1:N %o% w + phi)
 Q <- ncol(s)
 
-max.r <- max(sapply(groups_mssa, max))
-max.rtsvd <- max(sapply(groups_tsvd, max))
+max.r <- max(sapply(groups_mssa, max), 2)
+max.rtsvd <- max(sapply(groups_tsvd, max), 2)
 
 Ls_mssa <- seq(from = max.r,
                to = N - max.r + 1,
@@ -196,7 +206,7 @@ tol <- 1e-7
 R <- 200
 
 plan(multisession)
-# plan(sequential)
+# plan("default")
 
 rmse_L_tsvdmssa <- function(R) {
   p <- progressor(R)
@@ -205,6 +215,7 @@ rmse_L_tsvdmssa <- function(R) {
     findL_tsvd_mssa()
   }, simplify = "array", future.seed = 5) |> apply(1:2, mean) |> sqrt()
 }
+
 
 rmse_L_tsvdmssa_res <- t(rbind(Ls_tsvd, rmse_L_tsvdmssa(R)))
 save(

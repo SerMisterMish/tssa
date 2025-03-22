@@ -389,17 +389,17 @@ tsvd_mod <- function(tnsr, status = TRUE)
   IFFT <- function(x) {
     as.numeric(fft(x, inverse = TRUE))/length(x)
   }
-  # U <- as.tensor(aperm(apply(U_arr, MARGIN = 1:2, .ifft), 
+  # U <- as.tensor(aperm(apply(U_arr, MARGIN = 1:2, rTensor:::.ifft),
   #                      c(2, 3, 1)))
-  # V <- as.tensor(aperm(apply(V_arr, MARGIN = 1:2, .ifft), 
+  # V <- as.tensor(aperm(apply(V_arr, MARGIN = 1:2, rTensor:::.ifft),
   #                      c(2, 3, 1)))
-  # S <- as.tensor(aperm(apply(S_arr, MARGIN = 1:2, .ifft), 
-  
-  U <- as.tensor(aperm(apply(U_arr, MARGIN = 1:2, IFFT), 
+  # S <- as.tensor(aperm(apply(S_arr, MARGIN = 1:2, rTensor:::.ifft),
+  #                      c(2, 3, 1)))
+  U <- as.tensor(aperm(apply(U_arr, MARGIN = 1:2, IFFT),
                        c(2, 3, 1)))
-  V <- as.tensor(aperm(apply(V_arr, MARGIN = 1:2, IFFT), 
+  V <- as.tensor(aperm(apply(V_arr, MARGIN = 1:2, IFFT),
                        c(2, 3, 1)))
-  S <- as.tensor(aperm(apply(S_arr, MARGIN = 1:2, IFFT), 
+  S <- as.tensor(aperm(apply(S_arr, MARGIN = 1:2, IFFT),
                        c(2, 3, 1)))
   invisible(list(U = U, V = V, S = S))
 }
@@ -637,7 +637,7 @@ tens_mssa_reconstruct <- function(s,
   
   H <- tens3(s, L, kind = "MSSA")
   max_rank <- max(sapply(groups, max))
-  if (decomp != "CP" && decomp != "TSVD") {
+  if (decomp == "HOSVD" || decomp == "HOOI") {
     if (!is.list(groups3))
       groups3 <- as.list(groups3)
     if (length(groups) != length(groups3))
@@ -676,10 +676,10 @@ tens_mssa_reconstruct <- function(s,
   )
   
   rec <- list()
-  if (is.null(names(groups)))
+  group.names <- names(groups)
+  
+  if (is.null(group.names))
     group.names <- paste0("F", seq_along(groups))
-  else
-    group.names <- names(groups)
   
   if (decomp == "CP") {
     l_ord <- order(H.dec$lambdas, decreasing = TRUE)
