@@ -389,18 +389,13 @@ tsvd_mod <- function(tnsr, status = TRUE)
   IFFT <- function(x) {
     as.numeric(fft(x, inverse = TRUE))/length(x)
   }
-  # U <- as.tensor(aperm(apply(U_arr, MARGIN = 1:2, rTensor:::.ifft),
-  #                      c(2, 3, 1)))
-  # V <- as.tensor(aperm(apply(V_arr, MARGIN = 1:2, rTensor:::.ifft),
-  #                      c(2, 3, 1)))
-  # S <- as.tensor(aperm(apply(S_arr, MARGIN = 1:2, rTensor:::.ifft),
-  #                      c(2, 3, 1)))
-  U <- as.tensor(aperm(apply(U_arr, MARGIN = 1:2, IFFT),
+  U <- as.tensor(aperm(apply(U_arr, MARGIN = 1:2, rTensor:::.ifft),
                        c(2, 3, 1)))
-  V <- as.tensor(aperm(apply(V_arr, MARGIN = 1:2, IFFT),
+  V <- as.tensor(aperm(apply(V_arr, MARGIN = 1:2, rTensor:::.ifft),
                        c(2, 3, 1)))
-  S <- as.tensor(aperm(apply(S_arr, MARGIN = 1:2, IFFT),
+  S <- as.tensor(aperm(apply(S_arr, MARGIN = 1:2, rTensor:::.ifft),
                        c(2, 3, 1)))
+
   invisible(list(U = U, V = V, S = S))
 }
 
