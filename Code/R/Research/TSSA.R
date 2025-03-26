@@ -13,7 +13,7 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
   
   if (kind == "SSA") {
     stopifnot(length(L) == 2)
-    # N <- length(s)
+    N <- length(s)
     I <- L[1]
     L <- L[2]
     J <- N - I - L + 2
