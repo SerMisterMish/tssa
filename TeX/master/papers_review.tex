@@ -1,0 +1,111 @@
+% Preamble
+\documentclass[12pt]{article}
+
+% Packages
+\usepackage[a4paper, includefoot,
+  left=3cm, right=1.5cm,
+  top=2cm, bottom=2cm,
+headsep=1cm, footskip=1cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english, russian]{babel}
+\usepackage{pdfpages}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{amsthm}
+\usepackage{framed}
+\usepackage{xcolor}
+\usepackage{color}
+\usepackage[unicode]{hyperref}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue,
+}
+
+\include{letters_series_mathbb}
+
+\setcounter{tocdepth}{2}
+\graphicspath{{../img}}
+
+\theoremstyle{plain}
+\newtheorem{statement}{Утверждение}[section]
+\newtheorem{theorem}{Теорема}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Определение}[section]
+\newtheorem{property}{Свойство}[section]
+\newtheorem{example}{Пример}[section]
+\newtheorem*{corollary}{Следствие}
+
+\theoremstyle{remark}
+\newtheorem{remark}{Замечание}[section]
+
+\DeclareEmphSequence{\bfseries}
+
+\begin{document}
+\title{Обзор литературы по Tensor SSA}
+\date{}
+\author{}
+\maketitle
+\section{Статьи с теорией тензорных разложений}
+\subsection{\href{https://doi.org/10.1137/s0895479896305696}
+{A Multilinear Singular Value Decomposition}}\label{DeLathauwer2000}
+Базовая теория
+по \emph{HOSVD} (определения, свойства).
+
+\subsection{\href{https://doi.org/10.1137/s0895479898346995}{On the Best
+    Rank-1 and Rank-\texorpdfstring{$(R_1 ,R_2 ,. . .,R_N)$}{(R1, R2,
+..., RN)}    Approximation of Higher-Order Tensors}}\label{DeLathauwer2000a}
+Про наилучшее приближение тензора
+меньшими рангами, описание алгоритма \emph{HOOI}, некоторые его свойства.
+
+\subsection{\href{https://doi.org/10.1109/TIT.2018.2841377}{Tensor SVD:
+Statistical and Computational Limits}}
+Рассматривается
+точность приближения \emph{HOOI} произвольного тензора по его
+зашумлённому варианту при различных случаях отношения минимального
+сингулярного числа тензора к уровню шума (SNR).
+
+\subsection{
+  \href{https://doi.org/10.1016/j.laa.2010.09.020}{Factorization
+  strategies for third-order tensors} и
+  \href{https://doi.org/10.1137/110837711}{Third-Order
+    Tensors as Operators on Matrices: A Theoretical and Computational
+Framework with Applications in Imaging}}\label{Kilmer2011}
+В основном теория по
+трёхмерным тензорам,
+вводится определение \emph{TSVD} и его свойства.
+
+\section{Tensor SSA с использованием HOSVD или HOOI}
+\subsection{\href{https://doi.org/10.1002/nla.453}{Exponential data
+    fitting using multilinear algebra: the single-channel and
+multi-channel case}}\label{Papy2005}
+Рассматривается задача оценки параметров
+комплексного сигнала (одномерный и многомерный случаи), состоящего из
+суммы экспоненциально-модулированных гармоник с близкими частотами.
+Приводится описание и обоснование тензорной модификации алгоритма
+\emph{ESPRIT} с применением \emph{HOOI}.
+Проводится численное сравнение модификации с базовым \emph{ESPRIT}.
+Выявлено преимущество тензорного метода по точности оценки параметров
+сигнала, причём с увеличением уровня шума, преимущество увеличивается.
+
+\subsection{\href{https://doi.org/10.1002/cem.1212}{Exponential data
+fitting using multilinear algebra: the decimative case}}
+Рассматривается задача оценки параметров
+одномерного комплексного сигнала (только одномерный случаи),
+состоящего из суммы экспоненциально-модулированных гармоник с
+близкими частотами.
+Исследуется алгоритм HTLSDstack: модификация ESPRIT, в которой
+изначальный ряд делится на $D$ равных непересекающихся подрядов (считается,
+что длина ряда $N$ делится на $D$ нацело), затем они считаются
+отдельными каналами одного многомерного ряда, и применяется
+многомерный вариант ESPRIT.
+Это делается для уменьшения трудоёмкости алгоритма в угоду его точности.
+Предлагается тензорная модификация этого алгоритма: HO-HTLSDstack, в которой
+к полученному многомерному ряду применяется тензорная модификация
+многомерного \emph{ESPRIT} из~\ref{Papy2005}.
+\end{document}
