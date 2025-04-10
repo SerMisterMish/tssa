@@ -706,7 +706,7 @@ pulse_rmse_L_homssa <- function(R) {
 }
 
 pulse_rmse_L_homssa_res <- cbind(Ls, pulse_rmse_L_homssa(R))
-save(pulse_rmse_L_homssa_res, file = "./Research/comp_results/homssa_pulse_L.RData")
+# save(pulse_rmse_L_homssa_res, file = "./Research/comp_results/homssa_pulse_L.RData")
 pulse_rmse_L_homssa_res[order(pulse_rmse_L_homssa_res[, 2], decreasing = FALSE), ] |> head() |> print()
 # 360 0.03752320
 ```
