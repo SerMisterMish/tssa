@@ -434,19 +434,24 @@ tens_esprit <- function(s,
     }
     if (missing(L))
       L <- I
-    H <- tens3(s, L, kind = "HO-MSSA")
+    H <- tens3(s, L, kind = "MSSA")
   }
   
+  max_rank1 <- min(max_rank, H@modes[1])
+  max_rank2 <- min(max_rank, H@modes[2])
+  max_rank3 <- min(max_rank, H@modes[3])
+  
   if (identical(kind[1], "HO-MSSA")) {
+    max_rank3 <- min(max_rank3, r3)
     if (identical(decomp[1], "HOOI")) {
-      H.decomp <- tucker_mod(H, c(max_rank, max_rank, r3), status = status)
+      H.decomp <- tucker_mod(H, c(max_rank1, max_rank2, max_rank3), status = status)
     } else {
-      H.decomp <- hosvd_mod(H, c(max_rank, max_rank, r3), status = status)
+      H.decomp <- hosvd_mod(H, c(max_rank1, max_rank2, max_rank3), status = status)
     }
   } else if (identical(decomp[1], "HOOI")) {
-    H.decomp <- tucker_mod(H, rep(max_rank, 3), status = status)
+    H.decomp <- tucker_mod(H, c(max_rank1, max_rank2, max_rank3), status = status)
   } else {
-    H.decomp <- hosvd_mod(H, rep(max_rank, 3), status = status)
+    H.decomp <- hosvd_mod(H, c(max_rank1, max_rank2, max_rank3), status = status)
   }
   estimates <- list()
   for (i in seq(groups)) {
@@ -700,3 +705,37 @@ tens_mssa_reconstruct <- function(s,
   names(rec) <- group.names
   rec
 }
+
+Dstack <- function(x, D = N %/% out_len, out_len = NULL) {
+  N <- length(x)
+  M <- N %/% D
+  if (N %% D != 0)
+    simpleWarning("N %% D != 0, last elements of x will not be considered")
+  
+  outer(1:M, 1:D, function(m, d) x[(m - 1) * D + d])
+}
+
+HTLSDstack <- function(x, D = N %/% out_len, L, groups, method = c("base", "hosvd", "hooi"), r3, est_dim, out_len, ...) {  
+  method <- match.arg(method)
+  
+  xmat <- Dstack(x, D)
+  if (method == "base") {
+    xssa <- ssa(xmat, L = L, kind = "mssa")
+    estimates <- parestimate(xssa, groups = groups)
+  }
+  else {
+    estimates <- tens_esprit(
+      xmat,
+      L = L,
+      kind = "HO-MSSA",
+      decomp = method,
+      groups = groups,
+      r3 = r3,
+      est_dim = est_dim,
+      ...
+    )
+  }
+  
+  estimates
+}
+
