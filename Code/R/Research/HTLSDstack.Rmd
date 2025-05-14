@@ -4,6 +4,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
+library(svd)
 library(Rssa)
 library(rTensor)
 library(ggplot2)
@@ -25,8 +26,9 @@ progressr::handlers("progress")
 ```
 
 ```{r}
-rrmse <- function(true, pred, k) {
-  sqrt(sum((pred - true[k])^2) / length(pred)) * 100 / (0.5 * abs(true[1] - true[2]))
+rrmse <- function(true, pred) {
+  c(sqrt(mean((pred[1, ] - true[1])^2)) * 100 / (0.5 * abs(true[1] - true[2])),
+    sqrt(mean((pred[2, ] - true[2])^2)) * 100 / (0.5 * abs(true[1] - true[2])))
 }
 
 sd_to_snr <- function(s, sd) {
@@ -92,7 +94,6 @@ r3 <- 2
 est_dim <- 1
 dt <- 0.1
 N <- 1000
-true_freq <- freq * dt
 
 s <- colSums(A * exp(1i * phi) * exp((-rate + 1i * 2 * pi * freq) %o% seq(
   from = dt,
@@ -101,10 +102,23 @@ s <- colSums(A * exp(1i * phi) * exp((-rate + 1i * 2 * pi * freq) %o% seq(
 )))
 ```
 
-```{r}
+```{r warning=FALSE}
 sd <- snr_to_sd(s, snr = 30)
 R <- 100
+with(plan(multisession), {
+  library(svd)
+batch_estims <- function(R) {
+  p <- progressor(R)
+  future_replicate(R, {
+    p()
+    compare_htls()
+  }, simplify = "array", future.seed = 5)
+}
+estims <- batch_estims(R)
+})
 
-estims <- replicate(R, compare_htls())
+freq_estims <- apply(estims[3:4,,], 2:3, function(v) c(min(abs(v)), max(abs(v))) / dt)
+
+esprit_rrmse <- apply(freq_estims, 2, rrmse, true = freq)
 ```
 
