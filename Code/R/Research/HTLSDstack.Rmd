@@ -1,0 +1,110 @@
+---
+title: "HTLSDstack"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(Rssa)
+library(rTensor)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(future.apply)
+library(progressr)
+
+setwd(rprojroot::find_rstudio_root_file())
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+source(file = "./Research/TSSA.R")
+```
+
+```{r enable progressr, eval = FALSE}
+# This commands should be executed in R console, not as a chunk
+# Otherwise they fail
+progressr::handlers(global = TRUE)
+progressr::handlers("progress")
+```
+
+```{r}
+rrmse <- function(true, pred, k) {
+  sqrt(sum((pred - true[k])^2) / length(pred)) * 100 / (0.5 * abs(true[1] - true[2]))
+}
+
+sd_to_snr <- function(s, sd) {
+  10 * log10(sum(abs(s)^2) / sd^2)
+}
+
+snr_to_sd <- function(s, snr) {
+  sqrt(sum(abs(s)^2) / 10^(snr / 10))
+}
+```
+
+```{r}
+compare_htls <- function() {
+  noise <- CCSWGN(N, 0, sd)
+  x <- s + noise
+  
+  est <- list(
+    esprit = parestimate(ssa(x, L = L_esprit), groups = groups_esprit, drop = FALSE),
+    htlsd = HTLSDstack(
+      x,
+      D = D,
+      L = L_htlsd,
+      groups = groups_htlsd,
+      method = "base"
+    ),
+    tens = HTLSDstack(
+      x,
+      D = D,
+      L = L_tens,
+      groups = groups_tens,
+      method = "hooi",
+      r3 = r3,
+      est_dim = est_dim,
+      status = FALSE
+    )
+  )
+  
+  sapply(est, function(m)
+    sapply(m, function(e)
+      c(
+        rates = e$rates, frequencies = e$freq
+      )))
+}
+```
+
+
+# Example from [paper](https://doi.org/10.1002/cem.1212)
+```{r}
+
+# Example 1
+A <- c(1, 1)
+phi <- c(0, 0)
+rate <- c(0, 0)
+freq <- c(0.2, 0.205)
+L_esprit <- 500
+L_htlsd <- 50
+L_tens <- 50
+D <- 10
+groups_esprit <- list(1:2)
+groups_htlsd <- list(1:2)
+groups_tens <- list(1:2)
+r3 <- 2
+est_dim <- 1
+dt <- 0.1
+N <- 1000
+true_freq <- freq * dt
+
+s <- colSums(A * exp(1i * phi) * exp((-rate + 1i * 2 * pi * freq) %o% seq(
+  from = dt,
+  length.out = N,
+  by = dt
+)))
+```
+
+```{r}
+sd <- snr_to_sd(s, snr = 30)
+R <- 100
+
+estims <- replicate(R, compare_htls())
+```
+

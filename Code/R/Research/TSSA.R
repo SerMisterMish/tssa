@@ -720,8 +720,9 @@ HTLSDstack <- function(x, D = N %/% out_len, L, groups, method = c("base", "hosv
   
   xmat <- Dstack(x, D)
   if (method == "base") {
-    xssa <- ssa(xmat, L = L, kind = "mssa")
-    estimates <- parestimate(xssa, groups = groups)
+    estimates <- cmesprit(xmat, L, groups, ...)
+    # xssa <- ssa(xmat, L = L, kind = "mssa")
+    # estimates <- parestimate(xssa, groups = groups)
   }
   else {
     estimates <- tens_esprit(
@@ -735,7 +736,9 @@ HTLSDstack <- function(x, D = N %/% out_len, L, groups, method = c("base", "hosv
       ...
     )
   }
-  
+  for (i in seq(estimates)) {
+    estimates[[i]]$freq <- estimates[[i]]$freq / D
+  }
   estimates
 }
 
