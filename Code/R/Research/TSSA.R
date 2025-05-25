@@ -423,6 +423,11 @@ tens_esprit <- function(s,
 {
   max_rank <- max(sapply(groups, max))
   
+  kind <- toupper(kind)
+  kind <- match.arg(kind)
+  decomp <- toupper(decomp)
+  decomp <- match.arg(decomp)
+  
   if (identical(kind[1], "HO-SSA"))
     H <- tens3(s, I, L)
   else
@@ -721,8 +726,6 @@ HTLSDstack <- function(x, D = N %/% out_len, L, groups, method = c("base", "hosv
   xmat <- Dstack(x, D)
   if (method == "base") {
     estimates <- cmesprit(xmat, L, groups, ...)
-    # xssa <- ssa(xmat, L = L, kind = "mssa")
-    # estimates <- parestimate(xssa, groups = groups)
   }
   else {
     estimates <- tens_esprit(
@@ -736,6 +739,7 @@ HTLSDstack <- function(x, D = N %/% out_len, L, groups, method = c("base", "hosv
       ...
     )
   }
+  
   for (i in seq(estimates)) {
     estimates[[i]]$freq <- estimates[[i]]$freq / D
   }
