@@ -27,6 +27,8 @@ progressr::handlers(global = TRUE)
 progressr::handlers("progress")
 ```
 
+# Functions
+## Errors and snr
 ```{r}
 rmse <- function(true, pred) {
   sqrt(mean((pred - true)^2))
@@ -34,6 +36,10 @@ rmse <- function(true, pred) {
 
 rmse_mat <- function(true, pred) {
   apply(cbind(true, pred), 1, function(v) rmse(v[1], v[-1]))
+}
+
+rmse_ts <- function(true, pred) {
+  sqrt(mean(apply(pred, 2, function(p) mean((true - p)^2))))
 }
 
 rrmse_freq <- function(true, pred) {
@@ -49,8 +55,9 @@ snr_to_sd <- function(s, snr) {
 }
 ```
 
+## Compares
 ```{r}
-compare_htls <- function() {
+compare_htls_c <- function() {
   noise <- CCSWGN(N, 0, sd)
   x <- s + noise
   
@@ -90,6 +97,85 @@ compare_htls <- function() {
       c(
         rates = e$rates, frequencies = e$freq
       )))
+}
+
+compare_htls_r <- function() {
+  noise <- rnorm(N, 0, sd)
+  x <- s + noise
+  
+  est <- list(
+    esprit = parestimate(ssa(x, L = L_esprit), groups = groups_esprit, drop = FALSE),
+    htlsd = HTLSDstack(
+      x,
+      D = D,
+      L = L_htlsd,
+      groups = groups_htlsd,
+      method = "base"
+    ),
+    tens1 = HTLSDstack(
+      x,
+      D = D,
+      L = L_tens,
+      groups = groups_tens,
+      method = "hooi",
+      r3 = r3_1,
+      est_dim = est_dim,
+      status = FALSE
+    ),
+    tens2 = HTLSDstack(
+      x,
+      D = D,
+      L = L_tens,
+      groups = groups_tens,
+      method = "hooi",
+      r3 = r3_2,
+      est_dim = est_dim,
+      status = FALSE
+    )
+  )
+  
+  sapply(est, function(m)
+    sapply(m, function(e)
+      c(
+        rates = e$rates, frequencies = e$freq
+      )))
+}
+
+compare_rec_r <- function() {
+  noise <- rnorm(N, 0, sd)
+  x <- s + noise
+  
+  rec <- list(
+    ssa = reconstruct(ssa(x, L = L_ssa), groups = groups_ssa),
+    ssad = SSADstack(
+      x,
+      D = D,
+      L = L_ssad,
+      groups = groups_ssad,
+      method = "base"
+    ),
+    tens1 = SSADstack(
+      x,
+      D = D,
+      L = L_tens,
+      groups = groups_tens,
+      method = "hooi",
+      r3 = r3_1,
+      status = FALSE
+    ),
+    tens2 = SSADstack(
+      x,
+      D = D,
+      L = L_tens,
+      groups = groups_tens,
+      method = "hooi",
+      r3 = r3_2,
+      status = FALSE
+    )
+  )
+  
+  sapply(rec, function(m)
+    Reduce("+", m))
 }
 ```
 
@@ -140,7 +226,7 @@ for (i in seq(sds)) {
       p <- progressor(R)
       future_replicate(R, {
         p()
-        compare_htls()
+        compare_htls_c()
       }, simplify = "array", future.seed = 5)
     }
     estims <- batch_estims(R)
@@ -212,7 +298,7 @@ D <- 10
 groups_esprit <- list(1:4)
 groups_htlsd <- list(1:4)
 groups_tens <- list(1:4)
-r3_1 <- 2
+r3_1 <- 4
 r3_2 <- 1
 est_dim <- 1
 dt <- 0.1
@@ -229,14 +315,21 @@ s <- colSums(A * exp(-rate) * cos(phi + 2 * pi * freq %o% seq(
 # sd <- snr_to_sd(s, snr = 35)
 out_len <- 16
 sds <- seq(0, 1.5, length.out = out_len)
-rmse_df11 <- data.frame(sd = sds, esprit = numeric(out_len), HTLSDstack = numeric(out_len),
+rmse_df <- data.frame(sd = sds, esprit = numeric(out_len), HTLSDstack = numeric(out_len),
                       tens1 = numeric(out_len), tens2 = numeric(out_len))
-rmse_df12 <- data.frame(sd = sds, esprit = numeric(out_len), HTLSDstack = numeric(out_len),
-                      tens1 = numeric(out_len), tens2 = numeric(out_len))
-rmse_df21 <- data.frame(sd = sds, esprit = numeric(out_len), HTLSDstack = numeric(out_len),
-                      tens1 = numeric(out_len), tens2 = numeric(out_len))
-rmse_df22 <- data.frame(sd = sds, esprit = numeric(out_len), HTLSDstack = numeric(out_len),
-                      tens1 = numeric(out_len), tens2 = numeric(out_len))
+# rmse_df1 <- data.frame(sd = sds, esprit = numeric(out_len), HTLSDstack = numeric(out_len),
+#                       tens1 = numeric(out_len), tens2 = numeric(out_len))
+# rmse_df2 <- data.frame(sd = sds, esprit = numeric(out_len), HTLSDstack = numeric(out_len),
+#                       tens1 = numeric(out_len), tens2 = numeric(out_len))
+# rmse_df11 <- data.frame(sd = sds, esprit = numeric(out_len), HTLSDstack = numeric(out_len),
+#                       tens1 = numeric(out_len), tens2 = numeric(out_len))
+# rmse_df12 <- data.frame(sd = sds, esprit = numeric(out_len), HTLSDstack = numeric(out_len),
+#                       tens1 = numeric(out_len), tens2 = numeric(out_len))
+# rmse_df21 <- data.frame(sd = sds, esprit = numeric(out_len), HTLSDstack = numeric(out_len),
+#                       tens1 = numeric(out_len), tens2 = numeric(out_len))
+# rmse_df22 <- data.frame(sd = sds, esprit = numeric(out_len), HTLSDstack = numeric(out_len),
+#       tens1 = numeric(out_len), tens2 = numeric(out_len))
+
 R <- 100
 for (i in seq(sds)) {
   print(i)
@@ -246,100 +339,291 @@ for (i in seq(sds)) {
       p <- progressor(R)
       future_replicate(R, {
         p()
-        compare_htls()
+        compare_htls_r()
       }, simplify = "array", future.seed = 5)
     }
     estims <- batch_estims(R)
   })
   
+  # freq_estims <- apply(estims[5:8, , ], 2:3, function(v)
+  #   sort(abs(v)))
   freq_estims <- apply(estims[5:8, , ], 2:3, function(v)
-    v[order(v, abs(v))] / dt)
-  freq_rmse <- apply(freq_estims, 2, rmse_mat, true = c(-rev(freq), freq))
-  rmse_df11[i,-1] <- freq_rmse[1,]
-  rmse_df12[i,-1] <- freq_rmse[2,]
-  rmse_df21[i,-1] <- freq_rmse[3,]
-  rmse_df22[i,-1] <- freq_rmse[4,]
+    sort(kmeans(abs(v), 2)$centers))
+
+  freq_rmse <- apply(freq_estims, 2, rmse_mat, true = freq * dt)
+  rmse_df[i,-1] <- sqrt((freq_rmse[1,]^2 + freq_rmse[2,]^2) / 2)
+  # rmse_df1[i,-1] <- freq_rmse[1,]
+  # rmse_df2[i,-1] <- freq_rmse[2,]
+  # rmse_df11[i,-1] <- freq_rmse[1,]
+  # rmse_df12[i,-1] <- freq_rmse[2,]
+  # rmse_df21[i,-1] <- freq_rmse[3,]
+  # rmse_df22[i,-1] <- freq_rmse[4,]
 }
-save(rmse_df11, rmse_df12, rmse_df21, rmse_df22, file = paste0("./Research/comp_results/htlsd_", plot_name, ".RData"))
+# save(rmse_df1, rmse_df2, file = paste0("./Research/comp_results/htlsd_", plot_name, ".RData"))
+save(rmse_df, file = paste0("./Research/comp_results/htlsd_", plot_name, ".RData"))
+# save(rmse_df11, rmse_df12, rmse_df21, rmse_df22, file = paste0("./Research/comp_results/htlsd_", plot_name, ".RData"))
 ```
 
 ```{r}
+plot_name <- "real_param_rmse"
 load(file = paste0("./Research/comp_results/htlsd_", plot_name, ".RData"))
-sd_bound <- 0.4
-p1 <- rmse_df11 |> filter(sd <= sd_bound) |> pivot_longer(cols = -sd,
+sd_bound <- 0.3
+
+p1 <- rmse_df |> filter(sd <= sd_bound) |> pivot_longer(cols = -sd,
                                                    names_to = "Method",
                                                    values_to = "RMSE") |>
   ggplot(aes(x = sd, y = RMSE)) +
   geom_line(aes(col = Method, lty = Method)) +
-  scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[1])))
-p2 <- rmse_df11 |> filter(sd >= sd_bound) |> pivot_longer(cols = -sd,
+  scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+  scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) 
+p2 <- rmse_df |> filter(sd >= sd_bound) |> pivot_longer(cols = -sd,
                                                     names_to = "Method",
                                                     values_to = "RMSE") |>
   ggplot(aes(x = sd, y = RMSE)) +
   geom_line(aes(col = Method, lty = Method)) +
-  scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[1])))
-pdf(paste0("./img/htlsd_", plot_name, "_11.pdf"), width = 9, height = 7)
+  scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+  scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) 
+pdf(paste0("./img/htlsd_", plot_name, ".pdf"), width = 9, height = 7)
 grid.arrange(p1, p2)
 dev.off()
 grid.arrange(p1, p2)
 
-p1 <- rmse_df12 |> filter(sd <= sd_bound) |> pivot_longer(cols = -sd,
+
+p1 <- rmse_df |> filter(sd <= sd_bound) |> select(-esprit) |> pivot_longer(cols = -sd,
+                                                    names_to = "Method",
+                                                    values_to = "RMSE") |>
+  ggplot(aes(x = sd, y = RMSE)) +
+  geom_line(aes(col = Method, lty = Method)) +
+  scale_linetype_discrete(labels = c("HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+  scale_color_discrete(labels = c("HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1"))
+p2 <- rmse_df |> filter(sd >= sd_bound) |> select(-esprit) |> pivot_longer(cols = -sd,
+                                                    names_to = "Method",
+                                                    values_to = "RMSE") |>
+  ggplot(aes(x = sd, y = RMSE)) +
+  geom_line(aes(col = Method, lty = Method)) +
+  scale_linetype_discrete(labels = c("HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+  scale_color_discrete(labels = c("HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1"))
+pdf(paste0("./img/htlsd_", plot_name, "_noesprit.pdf"), width = 9, height = 7)
+grid.arrange(p1, p2)
+dev.off()
+grid.arrange(p1, p2)
+
+# p1 <- rmse_df1 |> filter(sd <= sd_bound) |> pivot_longer(cols = -sd,
+#                                                    names_to = "Method",
+#                                                    values_to = "RMSE") |>
+#   ggplot(aes(x = sd, y = RMSE)) +
+#   geom_line(aes(col = Method, lty = Method)) +
+#   scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[1])))
+# p2 <- rmse_df1 |> filter(sd >= sd_bound) |> pivot_longer(cols = -sd,
+#                                                     names_to = "Method",
+#                                                     values_to = "RMSE") |>
+#   ggplot(aes(x = sd, y = RMSE)) +
+#   geom_line(aes(col = Method, lty = Method)) +
+#   scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[1])))
+# pdf(paste0("./img/htlsd_", plot_name, "_1.pdf"), width = 9, height = 7)
+# grid.arrange(p1, p2)
+# dev.off()
+# grid.arrange(p1, p2)
+
+# p1 <- rmse_df2 |> filter(sd <= sd_bound) |> pivot_longer(cols = -sd,
+#                                                    names_to = "Method",
+#                                                    values_to = "RMSE") |>
+#   ggplot(aes(x = sd, y = RMSE)) +
+#   geom_line(aes(col = Method, lty = Method)) +
+#   scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[2])))
+# p2 <- rmse_df2 |> filter(sd >= sd_bound) |> pivot_longer(cols = -sd,
+#                                                     names_to = "Method",
+#                                                     values_to = "RMSE") |>
+#   ggplot(aes(x = sd, y = RMSE)) +
+#   geom_line(aes(col = Method, lty = Method)) +
+#   scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[2])))
+# pdf(paste0("./img/htlsd_", plot_name, "_2.pdf"), width = 9, height = 7)
+# grid.arrange(p1, p2)
+# dev.off()
+# grid.arrange(p1, p2)
+
+# p2 <- rmse_df2 |> filter(sd >= sd_bound) |> select(-esprit) |> pivot_longer(cols = -sd,
+#                                                     names_to = "Method",
+#                                                     values_to = "RMSE") |>
+#   ggplot(aes(x = sd, y = RMSE)) +
+#   geom_line(aes(col = Method, lty = Method)) +
+#   scale_linetype_discrete(labels = c("HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   scale_color_discrete(labels = c("HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   ggtitle(TeX(sprintf("$\\nu = %5.3f$, no ESPRIT", freq[2])))
+# pdf(paste0("./img/htlsd_", plot_name, "_2_noesprit.pdf"), width = 9, height = 7)
+# print(p2)
+# dev.off()
+# print(p2)
+
+# p1 <- rmse_df11 |> filter(sd <= sd_bound) |> pivot_longer(cols = -sd,
+#                                                    names_to = "Method",
+#                                                    values_to = "RMSE") |>
+#   ggplot(aes(x = sd, y = RMSE)) +
+#   geom_line(aes(col = Method, lty = Method)) +
+#   scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[1])))
+# p2 <- rmse_df11 |> filter(sd >= sd_bound) |> pivot_longer(cols = -sd,
+#                                                     names_to = "Method",
+#                                                     values_to = "RMSE") |>
+#   ggplot(aes(x = sd, y = RMSE)) +
+#   geom_line(aes(col = Method, lty = Method)) +
+#   scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[1])))
+# pdf(paste0("./img/htlsd_", plot_name, "_11.pdf"), width = 9, height = 7)
+# grid.arrange(p1, p2)
+# dev.off()
+# grid.arrange(p1, p2)
+# 
+# p1 <- rmse_df12 |> filter(sd <= sd_bound) |> pivot_longer(cols = -sd,
+#                                                    names_to = "Method",
+#                                                    values_to = "RMSE") |>
+#   ggplot(aes(x = sd, y = RMSE)) +
+#   geom_line(aes(col = Method, lty = Method)) +
+#   scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[1])))
+# p2 <- rmse_df12 |> filter(sd >= sd_bound) |> pivot_longer(cols = -sd,
+#                                                     names_to = "Method",
+#                                                     values_to = "RMSE") |>
+#   ggplot(aes(x = sd, y = RMSE)) +
+#   geom_line(aes(col = Method, lty = Method)) +
+#   scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[1])))
+# pdf(paste0("./img/htlsd_", plot_name, "_12.pdf"), width = 9, height = 7)
+# grid.arrange(p1, p2)
+# dev.off()
+# grid.arrange(p1, p2)
+
+# p1 <- rmse_df21 |> filter(sd <= sd_bound) |> pivot_longer(cols = -sd, names_to = "Method", values_to = "RMSE") |>
+#   ggplot(aes(x = sd, y = RMSE)) + 
+#   geom_line(aes(col = Method, lty = Method)) +
+#   scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[2])))
+# p2 <- rmse_df21 |> filter(sd >= sd_bound) |> pivot_longer(cols = -sd, names_to = "Method", values_to = "RMSE") |>
+#   ggplot(aes(x = sd, y = RMSE)) + 
+#   geom_line(aes(col = Method, lty = Method)) +
+#   scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[2])))
+# pdf(paste0("./img/htlsd_", plot_name, "_21.pdf"), width = 9, height = 7)
+# grid.arrange(p1, p2)
+# dev.off()
+# grid.arrange(p1, p2)
+# 
+# p1 <- rmse_df22 |> filter(sd <= sd_bound) |> pivot_longer(cols = -sd, names_to = "Method", values_to = "RMSE") |>
+#   ggplot(aes(x = sd, y = RMSE)) + 
+#   geom_line(aes(col = Method, lty = Method)) +
+#   scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[2])))
+# p2 <- rmse_df22 |> filter(sd >= sd_bound) |> pivot_longer(cols = -sd, names_to = "Method", values_to = "RMSE") |>
+#   ggplot(aes(x = sd, y = RMSE)) + 
+#   geom_line(aes(col = Method, lty = Method)) +
+#   scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+#   ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[2])))
+# pdf(paste0("./img/htlsd_", plot_name, "_22.pdf"), width = 9, height = 7)
+# grid.arrange(p1, p2)
+# dev.off()
+# grid.arrange(p1, p2)
+```
+
+# Real case for signal reconstruction
+```{r}
+plot_name <- "real_rec_rmse"
+A <- c(1, 1)
+phi <- c(0, 0)
+rate <- c(0, 0)
+freq <- c(0.2, 0.205)
+L_ssa <- 500
+L_ssad <- 50
+L_tens <- 50
+D <- 10
+groups_ssa <- list(1:4)
+groups_ssad <- list(1:4)
+groups_tens <- list(1:4)
+r3_1 <- 4
+r3_2 <- 1
+dt <- 0.1
+N <- 1000
+
+s <- colSums(A * exp(-rate) * cos(phi + 2 * pi * freq %o% seq(
+  from = 0,
+  length.out = N,
+  by = dt
+)))
+```
+
+```{r warning=FALSE}
+# sd <- snr_to_sd(s, snr = 35)
+out_len <- 16
+sds <- seq(0, 1.5, length.out = out_len)
+rmse_df <- data.frame(sd = sds, esprit = numeric(out_len), HTLSDstack = numeric(out_len),
+                      tens1 = numeric(out_len), tens2 = numeric(out_len))
+R <- 100
+for (i in seq_along(sds)) {
+  print(i)
+  sd <- sds[i]
+  with(plan(multisession), {
+    batch_recs <- function(R) {
+      p <- progressor(R)
+      future_replicate(R, {
+        p()
+        compare_rec_r()
+      }, simplify = "array", future.seed = 5)
+    }
+    recs <- batch_recs(R)
+  })
+  
+  
+  rmse_df[i,-1] <- apply(recs, 2, rmse_ts, true = s)
+}
+save(rmse_df, file = paste0("./Research/comp_results/htlsd_", plot_name, ".RData"))
+```
+
+```{r}
+plot_name <- "real_rec_rmse"
+load(file = paste0("./Research/comp_results/htlsd_", plot_name, ".RData"))
+sd_bound <- 0.5
+p1 <- rmse_df |> filter(sd <= sd_bound) |> pivot_longer(cols = -sd,
                                                    names_to = "Method",
                                                    values_to = "RMSE") |>
   ggplot(aes(x = sd, y = RMSE)) +
   geom_line(aes(col = Method, lty = Method)) +
-  scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[1])))
-p2 <- rmse_df12 |> filter(sd >= sd_bound) |> pivot_longer(cols = -sd,
+  scale_linetype_discrete(labels = c("SSA", "SSADstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+  scale_color_discrete(labels = c("SSA", "SSADstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) 
+
+p2 <- rmse_df |> filter(sd >= sd_bound) |> pivot_longer(cols = -sd,
                                                     names_to = "Method",
                                                     values_to = "RMSE") |>
   ggplot(aes(x = sd, y = RMSE)) +
   geom_line(aes(col = Method, lty = Method)) +
-  scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[1])))
-pdf(paste0("./img/htlsd_", plot_name, "_12.pdf"), width = 9, height = 7)
+  scale_linetype_discrete(labels = c("SSA", "SSADstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+  scale_color_discrete(labels = c("SSA", "SSADstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) 
+pdf(paste0("./img/htlsd_", plot_name, ".pdf"), width = 9, height = 7)
 grid.arrange(p1, p2)
 dev.off()
 grid.arrange(p1, p2)
+```
 
-p1 <- rmse_df21 |> filter(sd <= sd_bound) |> pivot_longer(cols = -sd, names_to = "Method", values_to = "RMSE") |>
-  ggplot(aes(x = sd, y = RMSE)) + 
-  geom_line(aes(col = Method, lty = Method)) +
-  scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[2])))
-p2 <- rmse_df21 |> filter(sd >= sd_bound) |> pivot_longer(cols = -sd, names_to = "Method", values_to = "RMSE") |>
-  ggplot(aes(x = sd, y = RMSE)) + 
-  geom_line(aes(col = Method, lty = Method)) +
-  scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[2])))
-pdf(paste0("./img/htlsd_", plot_name, "_21.pdf"), width = 9, height = 7)
-grid.arrange(p1, p2)
-dev.off()
-grid.arrange(p1, p2)
 
-p1 <- rmse_df22 |> filter(sd <= sd_bound) |> pivot_longer(cols = -sd, names_to = "Method", values_to = "RMSE") |>
-  ggplot(aes(x = sd, y = RMSE)) + 
-  geom_line(aes(col = Method, lty = Method)) +
-  scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[2])))
-p2 <- rmse_df22 |> filter(sd >= sd_bound) |> pivot_longer(cols = -sd, names_to = "Method", values_to = "RMSE") |>
-  ggplot(aes(x = sd, y = RMSE)) + 
-  geom_line(aes(col = Method, lty = Method)) +
-  scale_linetype_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  scale_color_discrete(labels = c("ESPRIT", "HTLSDstack", "Tensor, r3 = 2", "Tesnor, r3 = 1")) +
-  ggtitle(TeX(sprintf("$\\nu = %5.3f$", freq[2])))
-pdf(paste0("./img/htlsd_", plot_name, "_22.pdf"), width = 9, height = 7)
-grid.arrange(p1, p2)
-dev.off()
-grid.arrange(p1, p2)
+```{r}
+# Для ускорения тензорных методов посмотреть 
+# View(Rssa:::decompose.ssa)
+# Rssa::hbhmatmul
+# RSpectra::svds
+# Как происходит разложение для 2d-ssa
 ```
 

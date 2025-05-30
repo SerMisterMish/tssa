@@ -746,3 +746,20 @@ HTLSDstack <- function(x, D = N %/% out_len, L, groups, method = c("base", "hosv
   estimates
 }
 
+unstack <- function(X) {
+  as.vector(t(X))
+}
+
+SSADstack <- function(x, D = N %/% out_len, L, groups, method = c("base", "hosvd", "hooi"), r3, out_len, ...) {  
+  method <- match.arg(method)
+  
+  xmat <- Dstack(x, D)
+  if (method == "base") {
+    s <- reconstruct(ssa(xmat, L, kind = "mssa", ...), groups = groups)
+  }
+  else {
+    s <- tens_mssa_reconstruct(xmat, L, groups, list(1:r3), decomp = method, ...)
+  }
+  
+  lapply(s, unstack)
+}
