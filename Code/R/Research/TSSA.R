@@ -411,7 +411,6 @@ tsvd_reconstruct_part <- function(tsvd, group) {
 # HO-ESPRIT
 
 tens_esprit <- function(s,
-                        I,
                         L,
                         groups,
                         kind = c("HO-SSA", "HO-MSSA"),
@@ -429,7 +428,7 @@ tens_esprit <- function(s,
   decomp <- match.arg(decomp)
   
   if (identical(kind[1], "HO-SSA"))
-    H <- tens3(s, I, L)
+    H <- tens3(s, L)
   else
   {
     if (is.null(r3)) {
@@ -437,9 +436,7 @@ tens_esprit <- function(s,
                     r3 as maximum across groups")
       r3 <- max_rank
     }
-    if (missing(L))
-      L <- I
-    H <- tens3(s, L, kind = "MSSA")
+      H <- tens3(s, L, kind = "MSSA")
   }
   
   max_rank1 <- min(max_rank, H@modes[1])

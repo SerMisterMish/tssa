@@ -22,6 +22,7 @@
 \usepackage{color}
 \usepackage{makecell}
 \usepackage{multirow}
+\usepackage{tabularx}
 \usepackage{bbm}
 \usepackage{lastpage}
 \usepackage{longtable}
@@ -69,6 +70,8 @@
 \newcommand{\calH}{\mathcal{H}}
 \newcommand{\rmH}{\mathrm{H}}
 \newcommand{\iu}{\mathrm{i}}
+
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
 
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}
@@ -273,7 +276,51 @@ D \Delta t)$.
 
 
 \section{Сравнение тензорных методов с матричными}
-Тут привести какие-нибудь таблички и, может, графики.
+Сравнение для одномерных методов в таблицах~\ref{tab:1d-rec},~\ref{tab:1d-est}.
+\begin{table}[!ht]
+  \centering
+  \caption{Сравнение результатов для одномерных методов выделения сигнала.}
+  \label{tab:1d-rec}
+  \begin{tabularx}{\textwidth}{|p{32mm}|X|} \hline
+    Метод & Результат сравнения точности \\ \hline
+    SSA & Обычно наиболее точный, ошибка с увеличением шума растёт
+    медленно. \\ \hline
+    HO-SSA & В большинстве случаев значительно менее точный, чем SSA, однако
+    можно подобрать примеры, когда он слегка точнее SSA.\\ \hline
+    SSADstack & Точность ниже, чем у базового SSA. \\ \hline
+    HO-SSADstack ($R_3 = \max$) & Слегка точнее, чем SSADstack, но всё ещё
+    менее точен, чем SSA.  \\ \hline
+    HO-SSADstack ($R_3 = 1$)& При малом шуме точность сильно ниже,
+    чем у SSA за счёт большого сдвига, с увеличением шума становится точнее, чем
+    SSADstack и HO-SSADstack, но всё ещё менее точный, чем базовый SSA.\\ \hline
+  \end{tabularx}
+\end{table}
+\begin{table}[!ht]
+  \caption{Сравнение результатов для одномерных методов оценки параметров.}
+  \label{tab:1d-est}
+  \begin{tabularx}{\textwidth}{|p{32mm}|X|} \hline
+    HTLS & При малом уровне шума точнее, чем Dstack варианты.
+    С увеличением шума в случае, когда частоты сигнала близки, перестаёт
+    идентифицировать одну из компонент быстрее, чем Dstack методы. \\ \hline
+    HO-HTLS & При выборе оптимальных параметров оказывается точнее, чем
+    HTLS, однако различие точности невелико.\\ \hline
+    HTLSDstack & Точность ниже, чем у базового HTLS.\\ \hline
+    HO-HTLSDstack ($R_3 = \max$) & Немного точнее HTLS, но заметно менее точен,
+    чем при $R_3=1$.\\ \hline
+    HO-HTLSDstack ($R_3 = 1$) & При малом шуме немного менее точный, чем
+    HTLS, но точнее остальных методов.
+    Более устойчив к большому шуму при близких частотах. \\ \hline
+  \end{tabularx}
+\end{table}
+
+Сравнение результатов для многомерных методов:
+\begin{enumerate}
+  \item Выделение сигнала: HO-MSSA точнее базового MSSA при выборе
+    одинаковых длин окна. Чем сильнее ряды похожи друг на друга, тем
+    больше преимущество.
+  \item Оценка параметров: аналогично выделению сигнала.
+\end{enumerate}
+
 %% please make bibitems content in a style below !!!
 %% papers with "free style" bibitems content will be rejected !!!
 
