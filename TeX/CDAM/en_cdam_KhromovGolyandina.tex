@@ -129,7 +129,7 @@ Let $\tX = (x_1, x_2, \ldots, x_N)$ be a single-channel time series
 of length $N$, $x_n \in \mathbb{C}$.
 \begin{definition}
   The tensor embedding operator for a single-channel time series with
-  window lengths $I$ and $J=L$ (then $K=N-I-L+2$) such that ${1< I,L < N},\, {I + L < N + 1}$
+  window lengths $I$ and $L$ (then $K=N-I-L+2$) such that ${1< I,L < N},\, {I + L < N + 1}$
   is a mapping $\calT_{I,L}$ that transfers the series
   $\tX$ into the tensor $\calX \in \mathbb{C}^{I\times L \times K}$
   as follows: ${\mathcal{X}_{ilk}=x_{i+l+k-2}}$, where
@@ -140,7 +140,7 @@ Let $\tX = (\tX^{(1)}, \tX^{(2)}, \ldots, \tX^{(P)})$ be a multi-channel
 time series consisting of $P$ single-channel series, also called channels.
 \begin{definition}
   The tensor embedding operator for a multi-channel time series with
-  window length $L$ (that is, $I=P$, $J=L$, $K=N-L+1$) such that ${1< L < N}$ is a mapping $\calT_{L}$
+  window length $L$ (that is, $I=P$, $L$, $K=N-L+1$) such that ${1< L < N}$ is a mapping $\calT_{L}$
   that translates the
   $P$-channel time-series $\tX$ into the tensor $\calX \in
   \mathbb{C}^{L\times K \times P}$ (${K = N - L + 1}$) as follows
@@ -192,12 +192,12 @@ All numerical comparisons are made using time series that are expressed as sums 
 
 The following methods were compared for single channel time series
 and signal extraction problem: SSA, HO-SSA, SSADstack, HO-SSADstack
-with $R_3=r$ and HO-SSADstack with $R_3=1$. It has been shown that, in most cases, the SSA method significantly outperforms other methods in terms of accuracy. When the SSA method is less accurate, the difference is negligible and only occurs for a very narrow range of parameters. This minor disadvantage is therefore not a practical consideration. Of the Dstack methods, SSADstack and HO-SSADstack are the most accurate, with a small difference in accuracy when $R_3=r$.
+with $R_1=r$ and HO-SSADstack with $R_1=1$. It has been shown that, in most cases, the SSA method significantly outperforms other methods in terms of accuracy. When the SSA method is less accurate, the difference is negligible and only occurs for a very narrow range of parameters. This minor disadvantage is therefore not a practical consideration. Of the Dstack methods, SSADstack and HO-SSADstack are the most accurate, with a small difference in accuracy when $R_1=r$.
 
 For single-channel time series and frequency estimation problem, a
 signal in the form of two sinusoids with close frequencies was
 considered. The ESPRIT, HO-ESPRIT, HTLSDstack, HO-HTLSDstack with
-$R_3=r$ and HO-HTLSDstack with $R_3=1$ methods were compared. It was found that ESPRIT performs more accurately at a low noise level. However, at a medium or high noise level, HO-ESPRIT with optimal parameter selection becomes more accurate. Furthermore, HO-HTLSDstack with $R_3=1$ outperforms all methods.
+$R_1=r$ and HO-HTLSDstack with $R_1=1$ methods were compared. It was found that ESPRIT performs more accurately at a low noise level. However, at a medium or high noise level, HO-ESPRIT with optimal parameter selection becomes more accurate. Furthermore, HO-HTLSDstack with $R_1=1$ outperforms all methods.
 
 For multi-channel time series, it has been demonstrated that, when all channels are expressed as a sum of sinusoids with equal frequencies, tensor modifications provide more accurate results for both signal extraction and frequency estimation.
 
