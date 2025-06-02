@@ -1,0 +1,319 @@
+%LaTeX SAMPLE FILE FOR PAPERS OF CDAM
+
+% LaTeX 2e
+\documentclass[12pt]{article}
+
+\usepackage{graphicx}
+\usepackage{epsfig}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage[boxed]{algorithm2e}
+\usepackage{caption}
+\usepackage{wrapfig}
+\usepackage{subcaption}
+\usepackage{upgreek}
+\usepackage{adjustbox}
+\usepackage{pbox}
+\usepackage{index}
+\usepackage{color}
+\usepackage{makecell}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{bbm}
+\usepackage{lastpage}
+\usepackage{longtable}
+\usepackage{changepage}
+
+% LaTeX 2.09
+%\documentstyle[12pt]{article}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% paper layout %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\hoffset=-1in
+\voffset=-1in
+% Please, don't change this layout
+\parindent=6mm
+\topskip=0mm
+\topmargin=30mm
+\oddsidemargin=27.5mm
+\evensidemargin=27.5mm
+\textwidth=155mm
+\textheight=237mm
+\headheight=0pt
+\headsep=0pt
+\footskip=2\baselineskip
+\addtolength{\textheight}{-\footskip}
+
+\providecommand{\keywords}[1]
+{
+  \vspace{2mm}\hspace{20pt}\textbf{\textit{Keywords:}} #1
+}
+
+\providecommand{\abskeyw}[2]
+{
+  \begin{small}
+    \begin{adjustwidth}{10mm}{10mm}
+      \vspace{1mm}\hspace{20pt}#1
+
+      \keywords{#2}
+    \end{adjustwidth}
+  \end{small}
+}
+
+\newcommand{\tX}{\mathsf{X}}
+\newcommand{\bfX}{\mathbf{X}}
+\newcommand{\calX}{\mathcal{X}}
+\newcommand{\calT}{\mathcal{T}}
+\newcommand{\calH}{\mathcal{H}}
+\newcommand{\rmH}{\mathrm{H}}
+\newcommand{\iu}{\mathrm{i}}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
+\begin{document}
+
+%%% Title section
+\begin{center}
+  {\Large\bf TENSORS FOR SIGNAL AND FREQUENCY ESTIMATION IN
+  SUBSPACE-BASED METHODS: WHEN THEY ARE USEFUL?}\\\vspace{2mm} {\sc N.A.
+  Khromov$^1$, N.E. Golyandina$^2$}\\\vspace{2mm}
+  {\it $^{1}$ $^{2}$St.\,Petersburg State University\\
+  St.\,Petersburg, Russia\\} e-mail: {\tt $^1$hromovn@mail.ru,
+  $^2$n.golyandina@spbu.ru}
+
+  \abskeyw{Tensor modifications of singular spectrum analysis for
+    signal extraction and frequency estimation problems in a noisy sum
+    of exponentially modulated sinusoids are reviewed. Modifications
+    using Higher-Order SVD are considered. Numerical comparisons are
+    carried out. It is shown numerically that for the signal extraction
+    problem, tensor methods are inferior to matrix methods in most
+    cases for a single-channel series, but can outperform multichannel
+    SSA for a series system. For frequency estimation, tensor
+  modifications are generally advantageous.}{time series,
+  signal, frequency estimation, tensor, singular spectrum analysis}
+\end{center}
+
+\section{Introduction}
+
+One of the methods for time series analysis is singular spectrum
+analysis (SSA)~\cite{Golyandina2001}, in which the original time
+series is transformed into a matrix, called trajectory matrix, by a
+given window length $L$ and then the singular value decomposition
+(SVD) of this matrix is analyzed. If the task is to estimate the
+signal and its properties from the observed noisy series, the first
+$r$ components of the SVD are considered, where $r$ is the rank of
+the signal trajectory matrix. Based on the selected components, the
+signal estimation is constructed. A distinctive feature of the method
+is that it does not require the specification of a signal model.
+However, at the same time SSA allows to handle a parametric model of
+the signal in the form of a sum of products of polynomials, exponents
+and sinusoids. A special role is played by the frequency estimation
+problem. Based on the estimation of the signal subspace using the
+first $r$ left singular vectors of the trajectory matrix SVD,
+the ESPRIT method estimates the frequencies present in the signal.
+The LS version of ESPRIT~\cite{Roy1986} is also called HSVD, and the TLS
+version~\cite{Roy1989} is called HTLS.
+%Пусть сигнал задан в виде суммы синусоид (или комплексных экспонент
+% в комплексном случае).
+%Свойства оценок частот и оценок сигнала сильно различаются. В
+% частности, дисперсия  оценки сигнала имеет порядок $1/N$, в то
+% время как дисперсия оценок частот имеет порядок $1/N^3$, где $N$
+% --- длина временного ряда и шум белый, гауссовский.
+
+A number of works propose tensor modifications of the SSA and ESPRIT
+methods, where the original series is transformed into a tensor,
+usually of 3rd order, instead of a matrix.  One of the common
+variants of tensor decompositions is Higher-Order SVD (HO-SVD), which
+generalizes the matrix SVD.
+
+The purpose of this work is to numerically compare tensor and matrix
+modifications of SSA for solving signal extraction and frequency
+estimation problems. We will consider the tensor modifications
+proposed in~\cite{Papy2005} and~\cite{Papy2009}, extended for signal extraction.
+
+\section{Methods description}
+\subsection{Tensor SSA algorithm layout for signal extraction}
+The general structure of tensor SSA algorithms based on HO-SVD is as
+follows (basic SSA is its special case). Let $\tX$ be the observed
+object. The tensor dimensions $I$, $L$ and $K$ are considered as the
+window length, where some of them are expressed through others or
+fixed. The parameters of the algorithm are the values $R_1$, $R_2$ and
+$R_3$. They are frequently chosen to be equal to $r$, for example,
+but not always.
+\begin{enumerate}
+  \item
+    Embedding $\bfX = \calT(\tX)$ --- trajectory tensor.
+  \item
+    Decomposition $\bfX =\sum_{i=1}^{I} \sum_{l=1}^{J} \sum_{k=1}^{K}
+    \mathcal{Z}_{ilk} U^{(1)}_{i}
+    \circ U^{(2)}_{l} \circ U^{(3)}_{k}$.
+  \item
+    Grouping $\hat\bfX =\sum_{i=1}^{R_1} \sum_{l=1}^{R_2} \sum_{k=1}^{R_3}
+    \mathcal{Z}_{ilk} U^{(1)}_{i}
+    \circ U^{(2)}_{l} \circ U^{(3)}_{k}$.
+  \item
+    Obtaining from $\hat\bfX$ the signal estimate $\hat\tX$ based on
+    the structure of the trajectory tensor and the operation inverse
+    to embedding.
+\end{enumerate}
+
+We will further consider two variants of input objects:
+single-channel and multi-channel time series.
+
+\subsection{Trajectory tensors}
+Let $\tX = (x_1, x_2, \ldots, x_N)$ be a single-channel time series
+of length $N$, $x_n \in \mathbb{C}$.
+\begin{definition}
+  The tensor embedding operator for a single-channel time series with
+  window lengths $I$ and $L$ such that ${1< I,L < N},\, {I + L < N + 1}$
+  is a mapping $\calT_{I,L}$ that translates the series
+  $\tX$ into the tensor $\calX \in \mathbb{C}^{I\times L \times K}$
+  as follows ${\mathcal{X}_{ilk}=x_{i+l+k-2}}$, where
+  $i\in \overline{1:I},\, l \in\overline{1:L},\, k \in\overline{1:K}$,
+  $K= N - I - L + 2$.
+\end{definition}
+
+Let $\tX = (\tX^{(1)}, \tX^{(2)}, \ldots, \tX^{(P)})$ be a multi-channel
+time series consisting of $P$ single-channel series, also called channels.
+\begin{definition}
+  The tensor embedding operator for a multi-channel time series with
+  window length $L$ such that ${1< L < N}$ is a mapping $\calT_{L}$
+  that translates the
+  $P$-channel time-series $\tX$ into the tensor $\calX \in
+  \mathbb{C}^{L\times K \times P}$ (${K = N - L + 1}$) as follows
+  $\mathcal{X}_{lkp} =  x_{l+k-1}^{(p)}$, where ${l \in
+  \overline{1:L}},\, {k \in \overline{1:K}},\, {p \in \overline{1:P}}$.
+\end{definition}
+
+\subsection{Algorithm for signal parameters estimation.}
+Consider the $P$-channel time series (including $P=1$) with elements
+\begin{gather*}
+  x_n^{(p)}= \sum_{r=1}^{R} a_r^{(p)} e^{\alpha_r n} e^{\iu\left(2\pi
+  \omega_r n + \varphi_r^{(p)}\right)},
+\end{gather*}
+where the model parameters are the amplitudes $a_r^{(p)} \in
+\mathbb{C}\setminus\{0\}$, phases ${\varphi_r^{(p)} \in [0, 2\pi)}$,
+frequencies $\omega_r\in [0, 1/2]$, and damping factors $\alpha_r \in
+\mathbb{R}$. The HO-ESPRIT algorithm that estimates the frequencies
+and damping factors of a time series is defined as follows.
+After the embedding step the matrix $\mathbf{U} = \mathbf{U}_d =
+\left[U_1^{(d)} :
+U_2^{(d)}:\ldots : U_{R_d}^{(d)}\right]$ for $d\in \{1, 2,
+3\}$ is constructed and the following matrix equation
+\begin{equation*}
+  \mathbf{U}^{\uparrow}=\mathbf{U}_{\downarrow}\mathbf{Z}
+\end{equation*}
+is solved with respect to matrix $\mathbf{Z}$, where the up and down
+arrows placed
+behind the matrix $\mathbf{U}$ stand for deleting its first and last
+rows accordingly.
+The $R$ largest eigenvalues of the matrix $\mathbf{Z}$ are considered
+to be the estimates of poles $\lambda_r = e^{\alpha_r + 2\pi\iu
+\omega_r}$, from which the parameters $\alpha_r$ and $\omega_r$ can be obtained.
+%Базовые алгоритмы ESPRIT, использующие траекторную матрицу и SVD,
+%можно получить из HO-ESPRIT аналогично тому, как из HO-SSA и HO-MSSA
+%можно получить базовые SSA и MSSA.
+
+\subsection{Dstack modifications}
+In the paper~\cite{Papy2009}, to improve the speed of the method, it
+is proposed to transform a single-channel series into a multi-channel
+series before applying the tensor modification: $x_m^{(d)} =
+x_{(m-1)D + d}$, where $m \in \overline{1:(N/D)}$. In that paper only
+the ESPRIT modification called HTLSDstack is considered, but we will
+apply this time series transformation for the signal estimation
+problem as well, and will call the resulting method SSADstack.
+Tensor modifications are constructed as for a multichannel series.
+
+\section{Comparison of tensor methods with matrix methods}
+All numerical comparisons were made for time series expressed as a
+sum of sinusoids.
+
+The following methods were compared for single channel time series
+and signal extraction problem: SSA, HO-SSA, SSADstack, HO-SSADstack
+with $R_3=r$ and HO-SSADstack with $R_3=1$. It was shown that in
+most cases the SSA method significantly outperforms other methods in
+terms of accuracy, and when it is less accurate, the difference is
+insignificant and is present only in a very narrow range of
+parameters, which makes this small advantage unrealizable in actual
+practice. Among Dstack methods the most accurate are SSADstack and
+HO-SSADstack with $R_3=r$ with small difference in accuracy.
+
+For single-channel time series and frequency estimation problem, a
+signal in the form of two sinusoids with close frequencies was
+considered. The ESPRIT, HO-ESPRIT, HTLSDstack, HO-HTLSDstack with
+$R_3=r$ and HO-HTLSDstack with $R_3=1$ methods were compared. It was
+obtained that at low noise level ESPRIT performs more accurately, but
+at medium and high noise level HO-ESPRIT becomes more accurate with
+optimal parameter selection, and HO-HTLSDstack with $R_3=1$
+outperforms all methods.
+
+For multi-channel time series, it was shown that in the case when
+all the channels of the series are expressed as a sum of sinusoids, and
+the frequencies presented in each channel are equal, tensor
+modifications give more accurate results, both in the signal
+extraction problem and in the frequency estimation problem.
+
+\section{Conclusion}
+The performed numerical comparisons showed different effects of the
+tensor HO-SVD modifications for different time series. For signal
+extraction of a single-channel time series, the basic matrix method is
+unambiguously more accurate. For multi-channel time series with equal
+set of frequencies in the channels and for the frequency estimation
+problem, the tensor methods can give an advantage in accuracy.
+
+%% please make bibitems content in a style below !!!
+%% papers with "free style" bibitems content will be rejected !!!
+
+\begin{thebibliography}{10}
+  \bibitem{Golyandina2001}
+  Golyandina~N.E., Nekrutkin~V.V., Zhigljavsky~A.A.~(2001).
+  {\sl Analysis of Time Series Structure}.
+  Chapman and Hall/CRC: Boca Raton.
+
+  \bibitem{Roy1986}
+  Roy~R., Paulraj~A., Kailath~T.~(1986).
+  ESPRIT-A subspace rotation approach to estimation of parameters of
+  cisoids in noise.
+  {\sl IEEE Transactions on Acoustics, Speech, and Signal Processing}.
+  Vol.~{\bf 34}, Num.~{\bf 5},
+  pp.~1340-1342.
+
+  \bibitem{Roy1989}
+  Roy~R., Kailath~T.~(1989).
+  ESPRIT-estimation of signal parameters via rotational invariance techniques.
+  {\sl IEEE Transactions on Acoustics, Speech, and Signal Processing}.
+  Vol.~{\bf 37}, Num.~{\bf 7},
+  pp.~984-995.
+
+  \bibitem{Papy2005}
+  Papy~J.M., De~Lathauwer~L., Van~Huffel~S.~(2005).
+  Exponential data fitting using multilinear algebra: the
+  single-channel and multi-channel case.
+  {\sl Linear Algebra with Applications}. Vol.~{\bf 12}, Num.~{\bf 8},
+  pp.~809-826.
+
+  \bibitem{Papy2009}
+  Papy~J.M., De~Lathauwer~L., Van~Huffel~S.~(2009).
+  Exponential data fitting using multilinear algebra: the decimative case.
+  {\sl Journal of Chemometrics}. Vol.~{\bf 23}, Num.~{\bf 7-8},
+  pp.~341-351s.
+
+  % \bibitem{paper}
+  % Jacobs~P.A., Lewis~P.A.W.~(1983). Stationary Discrete
+  % Autoregressive-Moving Average
+  % Time Series Generated by Mixtures. {\sl Journal of Time Series
+  % Analysis}. Vol.~{\bf 4}, Num.~{\bf 1},
+  % pp.~19-36.
+
+  % \bibitem{book}
+  % Johnson~N.L., Kotz~S., Balakrishnan~N.~(1997). {\sl Discrete
+  % Multivariate Distributions}. Wiley: New York.
+
+  % \bibitem{web}
+  % Worldometers.info [Electronic resource] Mode of access:
+  % \texttt{https://www.worldometers.info/coronavirus.} Date of access:
+  % 27.02.2022.
+
+\end{thebibliography}
+
+\end{document}
