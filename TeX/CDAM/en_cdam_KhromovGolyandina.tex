@@ -81,14 +81,14 @@
   St.\,Petersburg, Russia\\} e-mail: {\tt $^1$hromovn@mail.ru,
   $^2$n.golyandina@spbu.ru}
 
-  \abskeyw{Tensor modifications of singular spectrum analysis for  signal extraction and frequency estimation problems in a noisy sum  of exponentially modulated sinusoids are reviewed. Modifications using Higher-Order SVD are considered. Numerical comparisons are  carried out. It is shown numerically that for, the signal extraction problem, tensor methods generally perform worse than matrix methods for a single-channel series, but can outperform multichannel SSA for a series system. For frequency estimation, tensor modifications are generally advantageous.}{time series,
+  \abskeyw{Tensor modifications of singular spectrum analysis for  signal extraction and frequency estimation problems in a noisy sum  of exponentially modulated sinusoids are reviewed. Modifications using Higher-Order SVD are considered. Numerical comparisons are  carried out. It is shown numerically that for, the signal extraction problem, tensor methods generally perform worse than matrix methods for a single-channel series, but can outperform multi-channel SSA for a series system. For frequency estimation, tensor modifications are generally advantageous.}{time series,
   signal, frequency estimation, tensor, singular spectrum analysis}
 \end{center}
 
 \section{Introduction}
 
 Singular spectrum analysis (SSA) is one of the methods used for time series analysis~\cite{Golyandina2001}, in which the original time series is transformed into a matrix, called the trajectory matrix, using a given window length $L$. The singular value decomposition (SVD) of this matrix is then analyzed. When the objective is to estimate the signal and its properties from an observed noisy series, the first $r$ components of the SVD are considered, where $r$ is the rank of the signal trajectory matrix. Based on the selected components, the signal estimation is constructed. A distinctive feature of the method is that it does not require the specification of a signal model. However, SSA can also handle a parametric signal model in the form of a sum of products of polynomials, exponentials and sinusoids. The frequency estimation problem plays a special role. The ESPRIT method uses the estimation of the signal subspace based on the $r$ leading left singular vectors of the trajectory matrix SVD to estimate the frequencies present in the signal.
-The least squares (LS) version of ESPRIT~\cite{Roy1986} is also known as Hankel SVD (HSVD), and the total least squares (TLS) version is known as HTLS \cite{https://www.sciencedirect.com/science/article/abs/pii/S1064185884712095}.
+The least squares (LS) version of ESPRIT~\cite{Roy1989} is also known as Hankel SVD (HSVD), and the total least squares (TLS) version is known as HTLS \cite{VanHuffel1994}.
 %Пусть сигнал задан в виде суммы синусоид (или комплексных экспонент
 % в комплексном случае).
 %Свойства оценок частот и оценок сигнала сильно различаются. В
@@ -98,7 +98,7 @@ The least squares (LS) version of ESPRIT~\cite{Roy1986} is also known as Hankel 
 
 A number of works propose tensor modifications of the SSA and ESPRIT
 methods, where the original series is transformed into a tensor,
-usually of 3rd order, instead of a matrix \cite{at least three refs}.  One of the common
+usually of 3rd order, instead of a matrix \cite{DeLathauwer2011,Papy2009,Trung2024}.  One of the common
 variants of tensor decompositions is Higher-Order SVD (HO-SVD), which
 generalizes the matrix SVD.
 
@@ -143,7 +143,7 @@ time series consisting of $P$ single-channel series, also called channels.
   window length $L$ (that is, $I=P$, $L$, $K=N-L+1$) such that ${1< L < N}$ is a mapping $\calT_{L}$
   that translates the
   $P$-channel time-series $\tX$ into the tensor $\calX \in
-  \mathbb{C}^{L\times K \times P}$ (${K = N - L + 1}$) as follows
+  \mathbb{C}^{L\times K \times P}$ as follows
   $\mathcal{X}_{lkp} =  x_{l+k-1}^{(p)}$, where ${l \in
   \overline{1:L}},\, {k \in \overline{1:K}},\, {p \in \overline{1:P}}$.
 \end{definition}
@@ -185,7 +185,7 @@ x_{(m-1)D + d}$, where $m \in \overline{1:(N/D)}$. In that paper only
 the ESPRIT modification called HTLSDstack is considered, but we will
 apply this time series transformation for the signal estimation
 problem as well, and will call the resulting method SSADstack.
-Tensor modifications are constructed as for a multichannel series.
+Tensor modifications are constructed as for a multi-channel series.
 
 \section{Comparison of tensor methods with matrix methods}
 All numerical comparisons are made using time series that are expressed as sums of sinusoids.
@@ -207,26 +207,15 @@ Numerical comparisons revealed the varying effects of the HO-SVD tensor modifica
 %% papers with "free style" bibitems content will be rejected !!!
 
 \begin{thebibliography}{10}
+  \bibitem{DeLathauwer2011}
+  De Lathauwer~L.~(2011). Blind separation of exponential polynomials and the decomposition of a tensor in rank-$(L\_r,L\_r,1)$ terms. {\sl SIAM Journal on Matrix Analysis and Applications}. Vol.~{\bf 32}, Num.~{\bf 4},
+  pp.~1451-1474.
+
   \bibitem{Golyandina2001}
   Golyandina~N.E., Nekrutkin~V.V., Zhigljavsky~A.A.~(2001).
   {\sl Analysis of Time Series Structure}.
   Chapman and Hall/CRC: Boca Raton.
-
-  \bibitem{Roy1986}
-  Roy~R., Paulraj~A., Kailath~T.~(1986).
-  ESPRIT-A subspace rotation approach to estimation of parameters of
-  cisoids in noise.
-  {\sl IEEE Transactions on Acoustics, Speech, and Signal Processing}.
-  Vol.~{\bf 34}, Num.~{\bf 5},
-  pp.~1340-1342.
-
-  \bibitem{Roy1989}
-  Roy~R., Kailath~T.~(1989).
-  ESPRIT-estimation of signal parameters via rotational invariance techniques.
-  {\sl IEEE Transactions on Acoustics, Speech, and Signal Processing}.
-  Vol.~{\bf 37}, Num.~{\bf 7},
-  pp.~984-995.
-
+  
   \bibitem{Papy2005}
   Papy~J.M., De~Lathauwer~L., Van~Huffel~S.~(2005).
   Exponential data fitting using multilinear algebra: the
@@ -240,16 +229,23 @@ Numerical comparisons revealed the varying effects of the HO-SVD tensor modifica
   {\sl Journal of Chemometrics}. Vol.~{\bf 23}, Num.~{\bf 7-8},
   pp.~341-351s.
 
-  % \bibitem{paper}
-  % Jacobs~P.A., Lewis~P.A.W.~(1983). Stationary Discrete
-  % Autoregressive-Moving Average
-  % Time Series Generated by Mixtures. {\sl Journal of Time Series
-  % Analysis}. Vol.~{\bf 4}, Num.~{\bf 1},
-  % pp.~19-36.
 
-  % \bibitem{book}
-  % Johnson~N.L., Kotz~S., Balakrishnan~N.~(1997). {\sl Discrete
-  % Multivariate Distributions}. Wiley: New York.
+  \bibitem{Roy1989}
+  Roy~R., Kailath~T.~(1989).
+  ESPRIT-estimation of signal parameters via rotational invariance techniques.
+  {\sl IEEE Transactions on Acoustics, Speech, and Signal Processing}.
+  Vol.~{\bf 37}, Num.~{\bf 7},
+  pp.~984-995.
+  
+  \bibitem{Trung2024}
+  Trung Le~T., Abed-Meraim~K., Trung ~N.L.~(2024). Higher-Order Singular Spectrum Analysis for Multichannel Biomedical Signal Analysis. {\sl 2024 32nd European Signal Processing Conference (EUSIPCO), Lyon, France}. Pp.~1337-1341.
+
+
+  \bibitem{VanHuffel1994}
+  Van Huffel~S., Chen~H.,Decanniere~C., van Hecke~P.~(1994). Algorithm for time-domain {NMR} data fitting based on total least squares. {\sl Journal of Magnetic Resonance, Series A}. Vol.~{\bf 110}, Num.~{\bf 2},
+  pp.~19-36.
+
+
 
   % \bibitem{web}
   % Worldometers.info [Electronic resource] Mode of access:
