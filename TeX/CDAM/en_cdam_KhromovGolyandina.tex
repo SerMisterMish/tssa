@@ -63,8 +63,6 @@
 \newcommand{\bfX}{\mathbf{X}}
 \newcommand{\calX}{\mathcal{X}}
 \newcommand{\calT}{\mathcal{T}}
-\newcommand{\calH}{\mathcal{H}}
-\newcommand{\rmH}{\mathrm{H}}
 \newcommand{\iu}{\mathrm{i}}
 
 \theoremstyle{definition}
@@ -81,35 +79,65 @@
   St.\,Petersburg, Russia\\} e-mail: {\tt $^1$hromovn@mail.ru,
   $^2$n.golyandina@spbu.ru}
 
-  \abskeyw{Tensor modifications of singular spectrum analysis for  signal extraction and frequency estimation problems in a noisy sum  of exponentially modulated sinusoids are reviewed. Modifications using Higher-Order SVD are considered. Numerical comparisons are  carried out. It is shown numerically that for, the signal extraction problem, tensor methods generally perform worse than matrix methods for a single-channel series, but can outperform multi-channel SSA for a series system. For frequency estimation, tensor modifications are generally advantageous.}{time series,
+  \abskeyw{Tensor modifications of singular spectrum analysis for
+    signal extraction and frequency estimation problems in a noisy sum
+    of exponentially modulated sinusoids are reviewed. Modifications
+    using Higher-Order SVD are considered. Numerical comparisons are
+    carried out. It is shown numerically that for, the signal
+    extraction problem, tensor methods generally perform worse than
+    matrix methods for a single-channel series, but can outperform
+    multi-channel SSA for a series system. For frequency estimation,
+  tensor modifications are generally advantageous.}{time series,
   signal, frequency estimation, tensor, singular spectrum analysis}
 \end{center}
 
 \section{Introduction}
 
-Singular spectrum analysis (SSA) is one of the methods used for time series analysis~\cite{Golyandina2001}, in which the original time series is transformed into a matrix, called the trajectory matrix, using a given window length $L$. The singular value decomposition (SVD) of this matrix is then analyzed. When the objective is to estimate the signal and its properties from an observed noisy series, the first $r$ components of the SVD are considered, where $r$ is the rank of the signal trajectory matrix. Based on the selected components, the signal estimation is constructed. A distinctive feature of the method is that it does not require the specification of a signal model. However, SSA can also handle a parametric signal model in the form of a sum of products of polynomials, exponentials and sinusoids. The frequency estimation problem plays a special role. The ESPRIT method uses the estimation of the signal subspace based on the $r$ leading left singular vectors of the trajectory matrix SVD to estimate the frequencies present in the signal.
-The least squares (LS) version of ESPRIT~\cite{Roy1989} is also known as Hankel SVD (HSVD), and the total least squares (TLS) version is known as HTLS \cite{VanHuffel1994}.
-%Пусть сигнал задан в виде суммы синусоид (или комплексных экспонент
-% в комплексном случае).
-%Свойства оценок частот и оценок сигнала сильно различаются. В
-% частности, дисперсия  оценки сигнала имеет порядок $1/N$, в то
-% время как дисперсия оценок частот имеет порядок $1/N^3$, где $N$
-% --- длина временного ряда и шум белый, гауссовский.
+Singular spectrum analysis (SSA) is one of the methods used for time
+series analysis~\cite{Golyandina2001}, in which the original time
+series is transformed into a matrix, called the trajectory matrix,
+using a given window length $L$. The singular value decomposition
+(SVD) of this matrix is then analyzed. When the objective is to
+estimate the signal and its properties from an observed noisy series,
+the first $r$ components of the SVD are considered, where $r$ is the
+rank of the signal trajectory matrix. Based on the selected
+components, the signal estimation is constructed. A distinctive
+feature of the method is that it does not require the specification
+of a signal model. However, SSA can also handle a parametric signal
+model in the form of a sum of products of polynomials, exponentials
+and sinusoids. The frequency estimation problem plays a special role.
+The ESPRIT method uses the estimation of the signal subspace based on
+the $r$ leading left singular vectors of the trajectory matrix SVD to
+estimate the frequencies present in the signal.
+The least squares (LS) version of ESPRIT~\cite{Roy1989} is also known
+as Hankel SVD (HSVD), and the total least squares (TLS) version is
+known as HTLS~\cite{VanHuffel1994}.
 
 A number of works propose tensor modifications of the SSA and ESPRIT
 methods, where the original series is transformed into a tensor,
-usually of 3rd order, instead of a matrix \cite{DeLathauwer2011,Papy2009,Trung2024}.  One of the common
+usually of 3rd order, instead of a
+matrix~\cite{DeLathauwer2011,Papy2005,Trung2024}.  One of the common
 variants of tensor decompositions is Higher-Order SVD (HO-SVD), which
 generalizes the matrix SVD.
 
-This work aims to compare the performance of matrix and tensor modifications of SSA in solving signal extraction and frequency estimation problems. We will consider the tensor modifications proposed in~\cite{Papy2005} and~\cite{Papy2009},  which have been adapted for signal extraction.
+This work aims to compare the performance of matrix and tensor
+modifications of SSA in solving signal extraction and frequency
+estimation problems. We will consider the tensor modifications
+proposed in~\cite{Papy2005} and~\cite{Papy2009},  which have been
+adapted for signal extraction.
 
 \section{Methods description}
 \subsection{Tensor SSA algorithm layout for signal extraction}
-The general structure of tensor SSA algorithms based on HO-SVD is as follows (Basic SSA is a special case). Let $\tX$ be the observed object. The tensor dimensions $I$, $L$ and $K$ are considered as the window length; some of these dimensions are expressed in terms of the others, or are fixed. The parameters of the algorithm are the values $R_1$, $R_2$ and $R_3$. These are often chosen to be equal to $r$, but not always.
+The general structure of tensor SSA algorithms based on HO-SVD is as
+follows (Basic SSA is a special case). Let $\tX$ be the observed
+object. The tensor dimensions $I$, $L$ and $K$ are considered as the
+window length; some of these dimensions are expressed in terms of the
+others, or are fixed. The parameters of the algorithm are the values
+$R_1$, $R_2$ and $R_3$. These are often chosen to be equal to $r$,
+but not always.
 \begin{enumerate}
   \item
-    Embedding to the trajectory tensor: $\bfX = \calT(\tX)$.
+    Embedding to the trajectory tensor $\bfX = \calT(\tX)$.
   \item
     Tensor decomposition $\bfX =\sum_{i=1}^{I} \sum_{l=1}^{J} \sum_{k=1}^{K}
     \mathcal{Z}_{ilk} U^{(1)}_{i}
@@ -119,37 +147,45 @@ The general structure of tensor SSA algorithms based on HO-SVD is as follows (Ba
     \mathcal{Z}_{ilk} U^{(1)}_{i}
     \circ U^{(2)}_{l} \circ U^{(3)}_{k}$.
   \item
-    Obtaining from $\hat\bfX$ the signal estimate $\hat\tX$ based on  the structure of the trajectory tensor and the operation that is inversed  to embedding.
+    Obtaining from $\hat\bfX$ the signal estimate $\hat\tX$ based on
+    the structure of the trajectory tensor and the operation that is
+    inversed  to embedding.
 \end{enumerate}
 
-We will further consider two types of input object: single-channel and multi-channel time series.
+We will further consider two types of input object: single-channel
+and multi-channel time series.
 
 \subsection{Trajectory tensors}
 Let $\tX = (x_1, x_2, \ldots, x_N)$ be a single-channel time series
 of length $N$, $x_n \in \mathbb{C}$.
 \begin{definition}
   The tensor embedding operator for a single-channel time series with
-  window lengths $I$ and $L$ (then $K=N-I-L+2$) such that ${1< I,L < N},\, {I + L < N + 1}$
+  window lengths $I$ and $L$ (then $K=N-I-L+2$) such that ${1< I,L <
+  N},\, {I + L < N + 1}$
   is a mapping $\calT_{I,L}$ that transfers the series
   $\tX$ into the tensor $\calX \in \mathbb{C}^{I\times L \times K}$
   as follows: ${\mathcal{X}_{ilk}=x_{i+l+k-2}}$, where
   $i\in \overline{1:I},\, l \in\overline{1:L},\, k \in\overline{1:K}$.
 \end{definition}
 
-Let $\tX = (\tX^{(1)}, \tX^{(2)}, \ldots, \tX^{(P)})$ be a multi-channel
+Let $\tX = \left(\tX^{(1)}, \tX^{(2)}, \ldots, \tX^{(P)}\right)$ be a
+multi-channel
 time series consisting of $P$ single-channel series, also called channels.
 \begin{definition}
   The tensor embedding operator for a multi-channel time series with
-  window length $L$ (that is, $I=P$, $L$, $K=N-L+1$) such that ${1< L < N}$ is a mapping $\calT_{L}$
+  window length $L$ (that is, $I=P$, $L$, $K=N-L+1$) such that ${1< L
+  < N}$ is a mapping $\calT_{L}$
   that translates the
   $P$-channel time-series $\tX$ into the tensor $\calX \in
-  \mathbb{C}^{L\times K \times P}$ as follows
-  $\mathcal{X}_{lkp} =  x_{l+k-1}^{(p)}$, where ${l \in
-  \overline{1:L}},\, {k \in \overline{1:K}},\, {p \in \overline{1:P}}$.
+  \mathbb{C}^{P \times L \times K}$ as follows
+  $\mathcal{X}_{plk} =  x_{l+k-1}^{(p)}$, where ${{p \in
+    \overline{1:P}},\, l \in
+  \overline{1:L}},\, {k \in \overline{1:K}}$.
 \end{definition}
 
 \subsection{Algorithm for signal parameters estimation}
-Consider the $P$-channel time series (including the one-channel case $P=1$) with elements
+Consider the $P$-channel time series (including the single-channel case
+$P=1$) with elements
 \begin{gather*}
   x_n^{(p)}= \sum_{r=1}^{R} a_r^{(p)} e^{\alpha_r n} e^{\iu\left(2\pi
   \omega_r n + \varphi_r^{(p)}\right)},
@@ -173,9 +209,6 @@ rows accordingly.
 The $R$ largest eigenvalues of the matrix $\mathbf{Z}$ are considered
 to be the estimates of the poles $\lambda_r = e^{\alpha_r + 2\pi\iu
 \omega_r}$, from which the parameters $\alpha_r$ and $\omega_r$ can be obtained.
-%Базовые алгоритмы ESPRIT, использующие траекторную матрицу и SVD,
-%можно получить из HO-ESPRIT аналогично тому, как из HO-SSA и HO-MSSA
-%можно получить базовые SSA и MSSA.
 
 \subsection{Dstack modifications}
 In the paper~\cite{Papy2009}, to improve the speed of the method, it
@@ -187,35 +220,78 @@ apply this time series transformation for the signal estimation
 problem as well, and will call the resulting method SSADstack.
 Tensor modifications are constructed as for a multi-channel series.
 
-\section{Comparison of tensor methods with matrix methods}
-All numerical comparisons are made using time series that are expressed as sums of sinusoids.
+\section{Comparison of tensor and matrix methods}
+All numerical comparisons are made using time series that are
+expressed as sums of sinusoids.
 
 The following methods were compared for single channel time series
 and signal extraction problem: SSA, HO-SSA, SSADstack, HO-SSADstack
-with $R_1=r$ and HO-SSADstack with $R_1=1$. It has been shown that, in most cases, the SSA method significantly outperforms other methods in terms of accuracy. When the SSA method is less accurate, the difference is negligible and only occurs for a very narrow range of parameters. This minor disadvantage is therefore not a practical consideration. Of the Dstack methods, SSADstack and HO-SSADstack are the most accurate, with a small difference in accuracy when $R_1=r$.
+with $R_1=r$ and HO-SSADstack with $R_1=1$. It has been shown that,
+in most cases, the SSA method significantly outperforms other methods
+in terms of accuracy. When the SSA method is less accurate, the
+difference is negligible and only occurs for a very narrow range of
+parameters. This minor disadvantage is therefore not a practical
+consideration. Of the Dstack methods, SSADstack and HO-SSADstack are
+the most accurate, with a small difference in accuracy when $R_1=r$.
 
 For single-channel time series and frequency estimation problem, a
 signal in the form of two sinusoids with close frequencies was
 considered. The ESPRIT, HO-ESPRIT, HTLSDstack, HO-HTLSDstack with
-$R_1=r$ and HO-HTLSDstack with $R_1=1$ methods were compared. It was found that ESPRIT performs more accurately at a low noise level. However, at a medium or high noise level, HO-ESPRIT with optimal parameter selection becomes more accurate. Furthermore, HO-HTLSDstack with $R_1=1$ outperforms all methods.
+$R_1=r$ and HO-HTLSDstack with $R_1=1$ methods were compared. It was
+found that ESPRIT performs more accurately at a low noise level.
+However, at a medium or high noise level, HO-ESPRIT with optimal
+parameter selection becomes more accurate. Furthermore, HO-HTLSDstack
+with $R_1=1$ outperforms all methods.
 
-For multi-channel time series, it has been demonstrated that, when all channels are expressed as a sum of sinusoids with equal frequencies, tensor modifications provide more accurate results for both signal extraction and frequency estimation.
+For multi-channel time series, it has been demonstrated that, when
+all channels are expressed as a sum of sinusoids with equal
+frequencies, tensor modifications provide more accurate results for
+both signal extraction and frequency estimation.
 
 \section{Conclusions}
-Numerical comparisons revealed the varying effects of the HO-SVD tensor modifications on different time series problems. For signal extraction from a single-channel time series, the basic matrix method is certainly more accurate. However, for multi-channel time series with an equal set of frequencies across the channels, and for frequency estimation problems, the tensor methods can offer improved accuracy.
+Numerical comparisons revealed the varying effects of the HO-SVD
+tensor modifications on different time series problems. For signal
+extraction from a single-channel time series, the basic matrix method
+is certainly more accurate. However, for multi-channel time series
+with an equal set of frequencies across the channels, and for
+frequency estimation problems, the tensor methods can offer improved accuracy.
 %% please make bibitems content in a style below !!!
 %% papers with "free style" bibitems content will be rejected !!!
 
 \begin{thebibliography}{10}
-  \bibitem{DeLathauwer2011}
-  De Lathauwer~L.~(2011). Blind separation of exponential polynomials and the decomposition of a tensor in rank-$(L\_r,L\_r,1)$ terms. {\sl SIAM Journal on Matrix Analysis and Applications}. Vol.~{\bf 32}, Num.~{\bf 4},
-  pp.~1451-1474.
 
   \bibitem{Golyandina2001}
   Golyandina~N.E., Nekrutkin~V.V., Zhigljavsky~A.A.~(2001).
   {\sl Analysis of Time Series Structure}.
   Chapman and Hall/CRC: Boca Raton.
-  
+
+  \bibitem{Roy1989}
+  Roy~R., Kailath~T.~(1989).
+  ESPRIT-estimation of signal parameters via rotational invariance techniques.
+  {\sl IEEE Transactions on Acoustics, Speech, and Signal Processing}.
+  Vol.~{\bf 37}, Num.~{\bf 7},
+  pp.~984-995.
+
+  \bibitem{VanHuffel1994}
+  Van Huffel~S., Chen~H., Decanniere~C., van Hecke~P.~(1994).
+  Algorithm for time-domain {NMR} data fitting based on total least
+  squares. {\sl Journal of Magnetic Resonance, Series A}. Vol.~{\bf
+  110}, Num.~{\bf 2},
+  pp.~19-36.
+
+  \bibitem{DeLathauwer2011}
+  De Lathauwer~L.~(2011). Blind separation of exponential polynomials
+  and the decomposition of a tensor in rank-$(L\_r,L\_r,1)$ terms.
+  {\sl SIAM Journal on Matrix Analysis and Applications}. Vol.~{\bf
+  32}, Num.~{\bf 4},
+  pp.~1451-1474.
+
+  \bibitem{Trung2024}
+  Trung Le~T., Abed-Meraim~K., Trung ~N.L.~(2024). Higher-order
+  singular spectrum analysis for multichannel biomedical signal
+  analysis. {\sl 2024 32nd European Signal Processing Conference
+  (EUSIPCO), Lyon, France}. Pp.~1337-1341.
+
   \bibitem{Papy2005}
   Papy~J.M., De~Lathauwer~L., Van~Huffel~S.~(2005).
   Exponential data fitting using multilinear algebra: the
@@ -228,24 +304,6 @@ Numerical comparisons revealed the varying effects of the HO-SVD tensor modifica
   Exponential data fitting using multilinear algebra: the decimative case.
   {\sl Journal of Chemometrics}. Vol.~{\bf 23}, Num.~{\bf 7-8},
   pp.~341-351s.
-
-
-  \bibitem{Roy1989}
-  Roy~R., Kailath~T.~(1989).
-  ESPRIT-estimation of signal parameters via rotational invariance techniques.
-  {\sl IEEE Transactions on Acoustics, Speech, and Signal Processing}.
-  Vol.~{\bf 37}, Num.~{\bf 7},
-  pp.~984-995.
-  
-  \bibitem{Trung2024}
-  Trung Le~T., Abed-Meraim~K., Trung ~N.L.~(2024). Higher-Order Singular Spectrum Analysis for Multichannel Biomedical Signal Analysis. {\sl 2024 32nd European Signal Processing Conference (EUSIPCO), Lyon, France}. Pp.~1337-1341.
-
-
-  \bibitem{VanHuffel1994}
-  Van Huffel~S., Chen~H.,Decanniere~C., van Hecke~P.~(1994). Algorithm for time-domain {NMR} data fitting based on total least squares. {\sl Journal of Magnetic Resonance, Series A}. Vol.~{\bf 110}, Num.~{\bf 2},
-  pp.~19-36.
-
-
 
   % \bibitem{web}
   % Worldometers.info [Electronic resource] Mode of access:
