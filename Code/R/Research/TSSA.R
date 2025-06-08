@@ -459,7 +459,7 @@ tens_esprit <- function(s,
   for (i in seq(groups)) {
     U <- H.decomp$U[[est_dim]][, groups[[i]], drop = FALSE]
     Z <- qr.solve(U[-nrow(U), ], U[-1, ], qrtol)
-    poles <- eigen(Z, only.values = TRUE)$values
+    poles <- as.complex(eigen(Z, only.values = TRUE)$values)
     estimates[[i]] <- list(
       poles = poles,
       rates = Re(log(poles)),
@@ -560,9 +560,9 @@ cmesprit <- function(s, L, groups, qrtol = 1e-07) {
   for (i in seq(groups)) {
     U <- H.svd$u[, groups[[i]], drop = FALSE]
     Z <- qr.solve(U[-nrow(U), ], U[-1, ], qrtol)
-    poles <- eigen(Z, only.values = TRUE)$values
+    poles <- as.complex(eigen(Z, only.values = TRUE)$values)
     estimates[[i]] <- list(
-      poles = poles,
+      poles = as.complex(poles),
       rates = Re(log(poles)),
       frequencies = Im(log(poles)) / 2 / pi
     )

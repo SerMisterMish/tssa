@@ -1,0 +1,152 @@
+% Preamble
+\documentclass[12pt]{article}
+
+% Packages
+\usepackage[a4paper, includefoot,
+  left=3cm, right=1.5cm,
+  top=2cm, bottom=2cm,
+headsep=1cm, footskip=1cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english, russian]{babel}
+\usepackage{stmaryrd}
+\usepackage{pdfpages}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{amsthm}
+\usepackage{framed}
+\usepackage{xcolor}
+\usepackage{color}
+\usepackage[unicode]{hyperref}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue,
+}
+
+\input{letters_series_mathbb}
+
+\setcounter{tocdepth}{2}
+\graphicspath{{../img}}
+
+\theoremstyle{plain}
+\newtheorem{statement}{Утверждение}
+\newtheorem{theorem}{Теорема}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Определение}
+\newtheorem{property}{Свойство}
+\newtheorem{example}{Пример}
+\newtheorem*{corollary}{Следствие}
+
+\theoremstyle{remark}
+\newtheorem{remark}{Замечание}
+
+\DeclareEmphSequence{\bfseries}
+
+\begin{document}
+Пусть элементы одномерного временного ряда $\tX$ длины $N$ имеют вид
+\begin{equation*}
+  x_n = \sum_{i=1}^{M} a_i e^{-\alpha_i n} \cos(2 \pi n \omega_i + \varphi_i),
+\end{equation*}
+где $a_i \in \bbR \setminus \{0\}$, $\alpha_i \in \bbR$, $\omega_i
+\in (0, 1/2]$, $\varphi_i \in [0, 2\pi)$.
+\begin{theorem}
+  В условиях выше алгоритм ESPRIT способен точно оценить параметры
+  $\omega_i$ при отсутствии шума тогда и только тогда, когда
+  $\omega_i \ne \omega_j\
+  \forall i\ne j$ и $\min(L, K) > \operatorname{rank}(\tX)$~\cite{?}.
+\end{theorem}
+\begin{remark}
+  Условия предыдущей теоремы равносильны тому, что в пространстве
+  подрядов $\tX$ длины $L$ существует базис из векторов вида
+  \begin{gather*}
+    \left\{\left(e^{-\alpha}\cos(2\pi n \omega)\right)_{n=1}^{L},\, \omega \in
+    \Omega,\, \alpha \in A \right\}, \\
+    \left\{\left(e^{-\alpha}\sin(2\pi n \omega)\right)_{n=1}^{L},\, \omega \in
+    \Omega \setminus\{1/2\},\, \alpha \in A\right\},
+  \end{gather*}
+  где $\Omega$ и $A$ "--- множества всех частот $\omega_i$ и степеней
+  затухания $\alpha_i$ соответственно, присутствующих в ряде.
+\end{remark}
+
+Рассмотрим преобразование исходного одномерного ряда $\tX$ в многомерный ряд
+$\tX_D$, в котором $i$-й элемент ряда $\tX_D^{(d)}$ выбирается как
+$x_n^{(d)} = x_{(n-1)D + d}$.
+То есть ряд с номером $d$ строится выбором каждой $D$-й точки исходного ряда,
+начиная с элемента $x_d$ и имеет длину $N_D = \lfloor N / D \rfloor$.
+Это преобразование будем назвать Dstack.
+Визуализация представлена на рисунке~\ref{fig:dstack-diagram}.
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=\textwidth]{dstack_diagram.pdf}
+  \caption{Визуализация Dstack преобразования одномерного ряда в многомерный.}
+  \label{fig:dstack-diagram}
+\end{figure}
+
+\begin{theorem}
+  Рассмотрим алгоритмы ESPRIT и HO-ESPRIT для многомерных рядов с
+  выбором длины окна $L$,
+  применённые к результату преобразования Dstack одномерного ряда
+  $\tX$ с параметром $D$.
+  Тогда между частотами $\omega$ в исходном ряде и оценками
+  $\widetilde{\omega}$ частот преобразованного ряда существует
+  взаимно однозначное соответствие тогда и только тогда, когда
+  \begin{enumerate}
+    \item  $\omega_i \ne \omega_j\ \forall i\ne j$,
+    \item  $\min(L, N_D - L + 1) > \operatorname{rank}(\tX)$
+    \item
+      \begin{equation*}
+        \max_{\omega \in \Omega}\omega \leqslant \frac{1}{2D},
+      \end{equation*}
+  \end{enumerate}
+  причём это соответствие задаётся выражением
+  \begin{equation*}
+    \omega = \frac{|\widetilde{\omega}|}{D}.
+  \end{equation*}
+\end{theorem}
+\begin{proof}
+  Достаточно доказать, что указанные условия равносильны тому, что в
+  пространстве подрядов $\tX_D^{(d)}$ длины $L$
+  существует базис из векторов вида
+  \begin{gather*}
+    \left\{\left(e^{-\alpha n}\cos(2\pi n
+      D\omega)\right)_{n=1}^{L},\, \omega \in
+    \Omega,\, \alpha \in \bbR \right\},\\
+    \left\{\left(e^{-\alpha n }\sin(2\pi n
+      D\omega)\right)_{n=1}^{L},\, \omega \in
+    \Omega \setminus\{1/2\},\, \alpha \in \bbR\right\}.
+  \end{gather*}
+
+  Элементы ряда $\tX_D^{(d)}$ имеют вид
+  \begin{align*}
+    x_n^{(d)} &= \sum_{i=1}^{M} a_i e^{-\alpha_i ((n - 1)D + d)}
+    \cos(2 \pi ((n - 1)D + d) \omega_i + \varphi_i) \\
+    &=\sum_{i=1}^{M} a_i e^{-\alpha_i(d - D)} e^{-\alpha_i nD }
+    \cos(2 \pi nD \omega_i + \omega_i (d - D) + \varphi_i).
+  \end{align*}
+  Тогда существование искомого базиса равносильно тому, что длина $L$
+  каждого подряда больше размерности этого базиса, то есть больше
+  $\operatorname{rank}(\tX)$, и количество $K = N_D - L + 1$ таких подрядов тоже
+  больше $\operatorname{rank}(\tX)$.
+\end{proof}
+\begin{corollary}
+  Из доказательства следует, что всегда существует взаимно
+  однозначное соответствие между степенями затухания $\alpha$ исходного ряда и
+  оценками степеней затухания $\widetilde{\alpha}$ методами ESPRIT и
+  HO-ESPRIT после применения преобразования Dstack,
+  и это соответствие выражается как $\alpha = \widetilde{\alpha} / D$.
+\end{corollary}
+\begin{corollary}
+  Так как в пространствах подрядов каждого ряда $\tX_D^{(d)}$
+  существует нужный базис, то в методе HO-ESPRIT выбор параметра $R_3
+  < \operatorname{rank}_3(\calX_D)$, где $\calX$ "--- траекторный
+  тензор $\tX_D$, не даёт смещения в оценке параметров.
+  Это отличительная особенность задачи оценки параметров, в
+  задаче выделения сигнала выбор $R_3 < \operatorname{rank}_3(\calX)$ даёт
+  смещение всегда.
+\end{corollary}
+\end{document}
