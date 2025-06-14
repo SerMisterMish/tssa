@@ -789,6 +789,80 @@ for (i in seq_along(sds)) {
 save(rmse_df, file = paste0("./Research/comp_results/htlsd_byL_", plot_name, ".RData"))
 ```
 
+```{r}
+plot_name <- "real_rec_rmse"
+load(file = paste0("./Research/comp_results/htlsd_byL_", plot_name, ".RData"))
+methods_names <- list(ssa = "SSA", SSADstack = "SSADstack", 
+                      tens1 = "Tensor, r3 = 4")
+extreme_rmse <- rmse_df |>  pivot_longer(cols = ssa:tens1,
+                                         names_to = "Method",
+                                         values_to = "RMSE") |>
+  group_by(sd, Method) |> summarize(min = min(RMSE), max = max(RMSE))
+
+for (sd_k in sds[sds != 0]) {
+  ext_rmse_oth <- filter(extreme_rmse, sd == sd_k, Method != "ssa")
+  ext_rmse_esprit <- filter(extreme_rmse, sd == sd_k, Method == "ssa")
+  p1 <- rmse_df |> filter(sd == sd_k) |>
+    pivot_longer(cols = ssa:tens1,
+                 names_to = "Method",
+                 values_to = "RMSE") |>
+    filter(Method == "ssa") |>
+    ggplot(aes(x = Ls_ssa, y = RMSE)) +
+    geom_line() +
+    geom_hline(
+      yintercept = min(ext_rmse_oth$min),
+      linetype = 2,
+      color = "gray20"
+    ) +
+    annotate(
+      "label",
+      x = (Ls_ssa[Ls_len] + Ls_ssa[1]) * 0.38,
+      y = min(ext_rmse_oth$min) * 0.95,
+      label = paste0("Minimum for other methods\n(achieved on ", methods_names[[ext_rmse_oth$Method[which.min(ext_rmse_oth$min)]]], ")")
+    ) +
+    ggtitle(paste0("SSA, sd = ", sd_k)) +
+    theme_minimal() +
+    xlab("L")
+  
+  p2 <- rmse_df |> filter(sd == sd_k) |>
+    pivot_longer(cols = ssa:tens1,
+                 names_to = "Method",
+                 values_to = "RMSE") |>
+    filter(Method != "ssa") |>
+    ggplot(aes(x = Ls_dstack, y = RMSE)) +
+    geom_line(aes(col = Method, lty = Method)) +
+    geom_hline(
+      yintercept = min(ext_rmse_esprit$min),
+      linetype = 2,
+      color = "gray20"
+    ) +
+    annotate(
+      "label",
+      x = (Ls_dstack[Ls_len] + Ls_dstack[1]) * 0.38,
+      y = min(ext_rmse_esprit$min) * 1.01,
+      label = paste0("Minimum for SSA")
+    ) +
+    scale_linetype_discrete(labels = c("SSADstack", "Tensor, r3 = 4")) +
+    scale_color_discrete(labels = c("SSADstack", "Tensor, r3 = 4")) +
+    ggtitle(paste0("Dstack methods, sd = ", sd_k)) +
+    theme_minimal() +
+    xlab("L")
+  pdf(paste0("./img/htlsd_byL_", plot_name, "_ssa_", which(sds == sd_k), ".pdf"),
+      width = 9,
+      height = 7)
+    print(p1)
+  dev.off()
+  pdf(paste0("./img/htlsd_byL_", plot_name, "_dstack_", which(sds == sd_k), ".pdf"),
+      width = 9,
+      height = 7)
+    print(p2)
+  dev.off()
+  print(p1)
+  print(p2)
+}
+```
+
+
 # Real case for signal reconstruction
 ```{r}
 plot_name <- "real_rec_rmse"
