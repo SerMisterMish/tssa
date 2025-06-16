@@ -294,7 +294,7 @@ r3_1 <- 2
 r3_2 <- 1
 est_dim <- 1
 dt <- 0.1
-N <- 999
+N <- 990
 
 s <- colSums(A * exp(1i * phi) * exp((-rate + 1i * 2 * pi * freq) %o% seq(
   from = 0,
@@ -381,7 +381,7 @@ grid.arrange(p1, p2)
 # Real case with same parameters by L
 ```{r}
 plot_name <- "real_param_rmse"
-N <- 999
+N <- 990
 A <- c(1, 1)
 phi <- c(0, 0)
 rate <- c(0, 0)
@@ -513,12 +513,12 @@ for (sd_k in sds[sds != 0]) {
     ) +
     annotate(
       "label",
-      x = (Ls_htlsd[Ls_len] + Ls_htlsd[1]) * 0.38,
+      x = (Ls_dstack[Ls_len] + Ls_dstack[1]) * 0.38,
       y = min(ext_rmse_esprit$min) * 1.015,
       label = paste0("Minimum for ESPRIT")
     ) +
-    scale_linetype_discrete(labels = c("HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
-    scale_color_discrete(labels = c("HTLSDstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+    scale_linetype_discrete(labels = c("Dstack ESPRIT", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
+    scale_color_discrete(labels = c("Dstack ESPRIT", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
     ggtitle(paste0("Dstack methods, sd = ", sd_k)) +
     theme_minimal() +
     xlab("L")
@@ -842,8 +842,8 @@ for (sd_k in sds[sds != 0]) {
       y = min(ext_rmse_esprit$min) * 1.01,
       label = paste0("Minimum for SSA")
     ) +
-    scale_linetype_discrete(labels = c("SSADstack", "Tensor, r3 = 4")) +
-    scale_color_discrete(labels = c("SSADstack", "Tensor, r3 = 4")) +
+    scale_linetype_discrete(labels = c("Dstack SSA", "Tensor, r3 = 4")) +
+    scale_color_discrete(labels = c("Dstack SSA", "Tensor, r3 = 4")) +
     ggtitle(paste0("Dstack methods, sd = ", sd_k)) +
     theme_minimal() +
     xlab("L")
