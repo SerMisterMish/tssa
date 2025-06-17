@@ -404,13 +404,13 @@ $\tX_k$ и шума $\tE$:
   SSA, если выполнены следующие условия:
   \begin{enumerate}
     \item $\displaystyle \sum_{k=0}^{L - 1} \hat{x}_{i +
-      k}\left(\tilde{x}_{j + k}\right)^* = 0,
+      k}\left(\tilde{x}_{j + k}\right)^{\rmH} = 0,
       \quad \forall i, j \in \overline{1:(N - L + 1)}$,
     \item $\displaystyle \sum_{k=0}^{N - L}\hat{x}_{i +
-      k}\left(\tilde{x}_{j + k}\right)^* = 0,
+      k}\left(\tilde{x}_{j + k}\right)^{\rmH} = 0,
       \quad \forall i, j \in \overline{1:L}$,
   \end{enumerate}
-  где верхний индекс $*$ обозначает комплексное сопряжение.
+  где верхний индекс $\rmH$ обозначает комплексное сопряжение.
 \end{definition}
 
 \begin{statement}
@@ -434,23 +434,23 @@ $\tX_k$ и шума $\tE$:
 Все определения и утверждения из этого раздела можно найти в
 работах~\cite{mssa, mssa2, ssa-2020}.
 
-Пусть дан $P$-мерный временной ряд $\tX$ длины $N$
+Пусть дан $M$-мерный временной ряд $\tX$ длины $N$
 \begin{gather*}
-  \tX = (\tX_1: \tX_2: \ldots: \tX_P), \\
-  \tX_p = \left(x_1^{(p)}, x_2^{(p)}, \ldots, x_N^{(p)}\right)^{\rmT}.
+  \tX = (\tX_1: \tX_2: \ldots: \tX_M), \\
+  \tX_m = \left(x_1^{(m)}, x_2^{(m)}, \ldots, x_N^{(m)}\right)^{\rmT}.
 \end{gather*}
 
 \begin{definition}[Траекторная матрица многомерного временного ряда]
-  Пусть \linebreak $\bfX_j = \calT_L(\tX_j)$, $j \in \overline{1:P}$.
+  Пусть \linebreak $\bfX_m = \calT_L(\tX_m)$, $m \in \overline{1:M}$.
   Траекторной матрицей многомерного временного ряда $\tX$ называется
-  матрица $\bfX\in \bbR^{L \times KP}$, $K = N - L + 1$, построенная
-  соединением матриц $\bfX_p$ по столбцам, то есть
+  матрица $\bfX\in \bbR^{L \times KM}$, $K = N - L + 1$, построенная
+  соединением матриц $\bfX_m$ по столбцам, то есть
   \[
-    \bfX = [\bfX_1 : \bfX_2 : \ldots : \bfX_P].
+    \bfX = [\bfX_1 : \bfX_2 : \ldots : \bfX_M].
   \]
 \end{definition}
 
-\begin{definition}[Оператор вложения многомернрого временного ряда]
+\begin{definition}[Оператор вложения многомерного временного ряда]
   Отображение $\tX \stackrel{L}{\longmapsto} \bfX$ будем обозначать
   $\calT_L(\tX) = \bfX$ и называть его оператором вложения многомерного
   временного ряда $\tX$.
@@ -459,7 +459,7 @@ $\tX_k$ и шума $\tE$:
 \begin{remark}
   Оператор вложения из определения~\ref{def:injection-op} является
   частным случаем оператора вложения многомерного временного ряда
-  ($P=1$).
+  ($M=1$).
 \end{remark}
 
 Методы MSSA для разделения компонент и выделения сигнала совпадают с
@@ -472,11 +472,11 @@ $\tX_k$ и шума $\tE$:
 
 \begin{definition}[MSSA-ранг временного ряда]
   \label{def:mssa-rank}
-  Число $d$ называется MSSA-рангом $P$-мерного временного ряда $\tX$
-  длины $N$, если $d \leqslant P(N+1) / (P+1)$,
+  Число $d$ называется MSSA-рангом $M$-мерного временного ряда $\tX$
+  длины $N$, если $d \leqslant M(N+1) / (M+1)$,
   и для любой допустимой
   длины окна $L$,
-  то есть такой, что $d \leqslant \min(L, P(N- L + 1))$, ранг
+  то есть такой, что $d \leqslant \min(L, M(N- L + 1))$, ранг
   траекторной матрицы $\bfX$ этого ряда,
   построенной по длине окна $L$, равен $d$.
 \end{definition}
@@ -487,32 +487,32 @@ $\tX_k$ и шума $\tE$:
 \end{remark}
 \begin{example}
   \label{ex:mssa-ranks}
-  Рассмотрим $P$-мерный временной ряд $\tX$ длины $N$ с элементами
-  $x_n^{(p)}$.
+  Рассмотрим $M$-мерный временной ряд $\tX$ длины $N$ с элементами
+  $x_n^{(m)}$.
   \begin{enumerate}
     \item\label{enum:mssa-ranks-complex} Если элементы этого ряда имеют вид
       \begin{equation}
         \label{eq:nd-complex-sum-model}
-        x_n^{(p)} = \sum_{j=1}^{R(p)} a_j^{(p)} e^{\alpha_j^{(p)} n},
+        x_n^{(m)} = \sum_{j=1}^{R(m)} a_j^{(m)} e^{\alpha_j^{(m)} n},
       \end{equation}
-      где $a_j^{(p)}$, $\alpha_j^{(p)} \in \bbC$ и $a_j^{(p)} \ne 0$,
-      то MSSA ранг $\tX$ равен количеству уникальных значений $\alpha_j^{(p)}$
+      где $a_j^{(m)}$, $\alpha_j^{(m)} \in \bbC$ и $a_j^{(m)} \ne 0$,
+      то MSSA ранг $\tX$ равен количеству уникальных значений $\alpha_j^{(m)}$
       в ряде.
     \item\label{enum:mssa-ranks-real} Если элементы этого ряда имеют вид
       \begin{equation}
         \label{eq:nd-cos-sum-model}
-        x_n^{(p)} = \sum_{j=1}^{R(p)} a_j^{(p)} e^{\alpha_j^{(p)} n}
-        \cos\left(2 \pi \omega_j^{(p)} n + \varphi_j^{(p)}\right),
+        x_n^{(m)} = \sum_{j=1}^{R(m)} a_j^{(m)} e^{\alpha_j^{(m)} n}
+        \cos\left(2 \pi \omega_j^{(m)} n + \varphi_j^{(m)}\right),
       \end{equation}
-      где $a_j^{(p)}$, $\alpha_j^{(p)}$, $\omega_j^{(p)}$,
-      $\varphi_j^{(p)} \in \bbR$ и $a_j^{(0)} \ne 0$,
+      где $a_j^{(m)}$, $\alpha_j^{(m)}$, $\omega_j^{(m)}$,
+      $\varphi_j^{(m)} \in \bbR$ и $a_j^{(0)} \ne 0$,
       то MSSA-ранг $\tX$ равен
       \begin{equation*}
         \sum_{(\omega, \alpha)\in \Omega} r(\omega),
       \end{equation*}
       где функция $r(\omega)$ определена в уравнении~\eqref{eq:cos-rank},
       а $\Omega$ "--- множество уникальных пар
-      \linebreak $\left(\omega_i^{(p)}, \alpha_i^{(p)}\right)$,
+      \linebreak $\left(\omega_i^{(m)}, \alpha_i^{(m)}\right)$,
       представленных в данном временном ряде.
       Стоит заметить, что как и в замечании~\ref{remark:cos-exp},
       вещественнозначный временной ряд~\eqref{eq:nd-cos-sum-model}
@@ -527,8 +527,8 @@ $\tX_k$ и шума $\tE$:
   HO-SSA и HO-MSSA на многомерных сигналах вида~\eqref{eq:nd-cos-sum-model}
   и~\eqref{eq:nd-complex-sum-model}.
   Это обосновано тем, что такая модель, а точнее её частный случай, в
-  котором параметры $R(p)$, $\omega_i^{(p)}$
-  и $\alpha_i^{(p)}$ не зависят от номера ряда $p$, применяется в
+  котором параметры $R(m)$, $\omega_i^{(m)}$
+  и $\alpha_i^{(m)}$ не зависят от номера ряда $m$, применяется в
   спектроскопии ядерного магнитного
   резонанса~\cite{NMR}.
   Кроме того, в работе~\cite{hosvd-hooi-separation} также
@@ -537,16 +537,16 @@ $\tX_k$ и шума $\tE$:
 
 \begin{definition}[Слабая MSSA-разделимость]
   \label{def:mssa-separability}
-  $P$-мерные временные ряды $\widehat{\tX}$ и $\widetilde{\tX}$ длины
+  $M$-мерные временные ряды $\widehat{\tX}$ и $\widetilde{\tX}$ длины
   $N$ называются слабо $L$-разделимыми, если
   выполнены следующие условия:
   \begin{enumerate}
     \item $\displaystyle \sum_{k=0}^{L-1}
-      \hat{x}_{i+k}^{(p)}\left(\tilde{x}_{j+k}^{(p')}\right)^* = 0,
-      \qquad \forall i, j \in \overline{1:(N-L+1)},\, p, p' \in
-      \overline{1:P}$,
-    \item $\displaystyle \sum_{p=1}^{P} \sum_{i=0}^{K-1}
-      \hat{x}_{k+i}^{(p)} \left(\tilde{x}_{m+i}^{(p)}\right)^* = 0, \quad
+      \hat{x}_{i+k}^{(m)}\left(\tilde{x}_{j+k}^{(m')}\right)^{\rmH} = 0,
+      \qquad \forall i, j \in \overline{1:(N-L+1)},\, m, m' \in
+      \overline{1:M}$,
+    \item $\displaystyle \sum_{m=1}^{M} \sum_{i=0}^{K-1}
+      \hat{x}_{k+i}^{(m)} \left(\tilde{x}_{m+i}^{(m)}\right)^{\rmH} = 0, \quad
       \forall k, m \in \overline{1:L}$.
   \end{enumerate}
 \end{definition}
@@ -573,19 +573,21 @@ $\tX_k$ и шума $\tE$:
 Пусть элементы многомерного временного ряда $\tX$ имеют вид
 \begin{equation}
   \label{eq:esprit-model}
-  x_n^{(p)} = \sum_{j=1}^{R} a_j^{(p)} e^{ \alpha_j n }
-  e^{\iu \left( 2 \pi \omega_j n + \varphi_j^{(p)}\right)},
+  x_n^{(m)} = s_n^{(m)} + \xi_n^{(m)} = \sum_{j=1}^{J} a_j^{(m)} e^{
+  \alpha_j n }
+  e^{\iu 2 \pi \omega_j n} + \xi_n^{(m)},
 \end{equation}
-где параметрами модели являются амплитуды
-$a_j^{(p)} \in \mathbb{C}\setminus\{0\}$, фазы ${\varphi_j^{(p)} \in
-[0, 2\pi)}$,
-частоты $\omega_j\in [0, 1/2]$ и степени затухания $\alpha_j \in \mathbb{R}$.
+где $s_n^{(m)}$ "--- элементы сигнала, $\xi_n^{(m)}$ "--- элементы
+шума, то есть одинаково распределённые случайные величины с
+$\rmE\xi_n^{(m)} = 0$, а параметрами модели являются амплитуды
+$a_j^{(m)} \in \mathbb{C}\setminus\{0\}$, частоты $\omega_j\in (-1/2,
+1/2]$ и степени затухания $\alpha_j \in \mathbb{R}$.
 % \begin{remark}
 %   В статье~\cite{esprit} приводится алгоритм ESPRIT для модели
 %   временного ряда вида
 %   \[
-%     x_n^{(p)} = \sum_{j=1}^{R} a^{(p)}(\theta_j)
-%     u_j(n) e^{\iu(\omega_0 (n - \tau^{(p)}(\theta_j)) + \varphi_j(n))},
+%     x_n^{(m)} = \sum_{j=1}^{R} a^{(m)}(\theta_j)
+%     u_j(n) e^{\iu(\omega_0 (n - \tau^{(m)}(\theta_j)) + \varphi_j(n))},
 %   \]
 %   где оцениваемые параметры обозначены $\theta_j$,
 %   но в работе будет рассматриваться модель
@@ -643,7 +645,7 @@ invariance tech\-nique),
   ряда~\eqref{eq:esprit-model}.
 \end{remark}
 \begin{remark}
-  Алгоритм~\ref{alg:esprit} применим и для одномерных временных рядов ($P=1$).
+  Алгоритм~\ref{alg:esprit} применим и для одномерных временных рядов ($M=1$).
 \end{remark}
 
 В дальнейшем в работе ESPRIT будет обозначать одномерный вариант
@@ -1539,13 +1541,13 @@ HO-ESPRIT и HO-M-ESPRIT}\label{subsec:ho-esprit-r3}
 \begin{theorem}\label{theorem:ho-m-esprit-r3}
   Пусть элементы многомерного временного ряда $\tX$ длины $N$ имеют вид
   \begin{equation*}
-    x_n^{(m)} = \sum_{j=1}^{J^{(m)}} a_j^{(m)} e^{-\alpha_j^{(m)} n} e^{\iu
-      \left(2 \pi n \omega_j^{(m)}
-    + \varphi_j^{(m)}\right)},
+    x_n^{(m)} = s_n^{(m)} + \xi_n^{(m)} = \sum_{j=1}^{J^{(m)}}
+    a_j^{(m)} e^{-\alpha_j^{(m)} n} e^{\iu
+    2 \pi n \omega_j^{(m)}} + \xi_n^{(m)},
   \end{equation*}
-  где $a_j^{(m)} \in \bbR \setminus \{0\}$, $\alpha_j^{(m)} \in
-  \bbR$, $\omega_j^{(m)}
-  \in (0, 1/2]$, $\varphi_j^{(m)} \in [0, 2\pi)$.
+  где $s_n^{(m)}$ "--- элементы сигнала, $\xi_n^{(m)}$ "--- элементы шума,
+  $a_j^{(m)} \in \bbR \setminus \{0\}$, $\alpha_j^{(m)} \in \bbR$,
+  $\omega_j^{(m)} \in (-1/2, 1/2]$.
   Пусть в алгоритме~\ref{alg:ho-esprit} $d \ne 3$, а $N$ и $L$ такие,
   что $\min(L, KM) > \operatorname{rank}(\tX)$
   при $d=1$ или $\min(K, LM) > \operatorname{rank}(\tX)$ при $d=2$.
@@ -1555,12 +1557,11 @@ HO-ESPRIT и HO-M-ESPRIT}\label{subsec:ho-esprit-r3}
 \end{theorem}
 \begin{proof}
   Пусть $d = 1$ (для $d=2$ доказательство аналогичное). Достаточно
-  доказать, что в пространстве, порождённом столбцами
+  доказать, что в случае отсутствия шума в пространстве, порождённом столбцами
   матрицы $\bfU$ из 2-го шага алгоритма содержатся все векторы вида
   \[
     \left\{a_j^{(m)} e^{-\alpha_j^{(m)} n} e^{\iu
-        \left(2 \pi n \omega_j^{(m)}
-    + \varphi_j^{(m)}\right)}\right\}_{n=l}^{l+L-1}.
+    2 \pi n \omega_j^{(m)}}\right\}_{n=l}^{l+L-1}.
   \]
   По построению траекторного тензора многомерного ряда, и по
   свойствам HOSVD, это
@@ -1568,8 +1569,7 @@ HO-ESPRIT и HO-M-ESPRIT}\label{subsec:ho-esprit-r3}
   тензора имеют вид
   \[
     \left\{\sum_{j=1}^{J^{(m)}} a_j^{(m)} e^{-\alpha_j^{(m)} n} e^{\iu
-        \left(2 \pi n \omega_j^{(m)}
-    + \varphi_j^{(m)}\right)}\right\}_{n=l}^{l + L - 1},
+    2 \pi n \omega_j^{(m)}}\right\}_{n=l}^{l + L - 1},
   \]
   и для любого $m$ среди них найдётся вектор с соответствующим
   набором параметров $\alpha_j^{(m)}$ и $\omega_j^{(m)}$.
@@ -1579,13 +1579,14 @@ HO-ESPRIT и HO-M-ESPRIT}\label{subsec:ho-esprit-r3}
   Пусть элементы одномерного временного ряда $\tX$ длины $N$ имеют вид
   \begin{equation*}
     x_n = \sum_{j=1}^{J} a_j e^{-\alpha_j n} e^{\iu
-    \left(2 \pi n \omega_j + \varphi_j\right)},
+    2 \pi n \omega_j} + \xi_n^{(m)},
   \end{equation*}
   где $a_j \in \bbR \setminus \{0\}$, $\alpha_j \in \bbR$, $\omega_j
-  \in (0, 1/2]$, $\varphi_j \in [0, 2\pi)$,
+  \in (-1/2, 1/2]$, $\xi_n^{(m)}$ "--- шум,
   и пусть $N$, $L$ и $K$ такие, что $\min(I_d, I_{d'}
   I_{d''}) >
-  \operatorname{rank}(\tX)$, где $\{d', d''\} = \{1, 2, 3\}\setminus\{d\}$.
+  \operatorname{rank}(\tX)$, где $\{d', d''\} = \{1, 2, 3\}\setminus\{d\}$,
+  а $I_p$ имеют тот же смысл, что в алгоритме~\ref{alg:ho-esprit}.
   Тогда алгоритм~\ref{alg:ho-esprit} даёт несмещённые оценки
   параметров при любом выборе $R_d$, если  и $R_{d'}, R_{d''} >
   \operatorname{rank}(\tX)$.
@@ -1657,11 +1658,12 @@ HO-ESPRIT и HO-M-ESPRIT}\label{subsec:ho-esprit-r3}
 \end{algorithm}
 \begin{remark}
   По теореме Котельникова~\cite{Kotelnikov2006ru}
+  и по определению оператора $\calD_D$
   алгоритм~\ref{alg:dstack-ho-esprit}
   способен оценить параметры сигнала только если
   выполнено неравенство
   \[
-    \max_{\omega \in \Omega}\omega \leqslant \frac{1}{2D},
+    \max_{\omega \in \Omega}|\omega| \leqslant \frac{1}{2D},
   \]
   где $\Omega$ "--- множество всех частот, представленных в сигнале.
 \end{remark}
@@ -1675,7 +1677,7 @@ HO-ESPRIT и HO-M-ESPRIT}\label{subsec:ho-esprit-r3}
   $R_1 \in \overline{1:L}$, $R_2 \in \overline{1:K}$, $R_3 \in
   \overline{1:M}$, где $K = N-L+1$.
 
-  \Output $\widehat{X}$ "--- оценка сигнала.
+  \Output $\widehat{\tX}$ "--- оценка сигнала.
   \begin{algorithmic}[1]
     \State Построение траекторного тензора $\calX =
     \left(\calT_{\textrm{T-MSSA}}^{(L)} \circ \calD_D\right) (\tX)$.
@@ -1683,12 +1685,10 @@ HO-ESPRIT и HO-M-ESPRIT}\label{subsec:ho-esprit-r3}
     алгоритма~\ref{alg:ho-mssa-components}.
     \State Совпадает с шагом~\ref{algstep:ho-mssa-signal-reverse}
     алгоритма~\ref{alg:ho-mssa-signal}.
-    \State Применение к полученной оценке $D$-мерного временного ряда
-    $\widehat{\tX}_D$ обратных операторов
+    \State Преобразование полученной оценки $D$-мерного временного ряда
+    $\widehat{\tX}_D$ в одномерный ряд
     \[
-      \widehat{\tX} = \left(\calD_D^{-1}
-        \circ\left(\calT_{\textrm{T-MSSA}}^{(L)}\right)^{-1}
-      \right)(\widehat{\tX}_D).
+      \widehat{\tX} = \calD_D^{-1}(\widehat{\tX}_D).
     \]
   \end{algorithmic}
 \end{algorithm}
@@ -1732,7 +1732,7 @@ HO-ESPRIT и HO-M-ESPRIT}\label{subsec:ho-esprit-r3}
 $\widehat{\gamma}=0$ соответствует значение $\text{RRMSE}=100\%$.
 
 \subsection{Одномерный случай}\label{subsec:esprit-comparison}
-Пусть $P=1$ и $R=2$, то есть одномерный временной ряд $\tX =
+Пусть $M=1$ и $R=2$, то есть одномерный временной ряд $\tX =
 \left(x_0, x_1, \ldots, x_{24}\right)$
 состоит из элементов вида
 \begin{equation}\label{eq:esprit-1d-series}
@@ -1930,24 +1930,24 @@ HO-ESPRIT оказываются точнее
 траекторного тензора, давал наиболее точные результаты.
 
 \subsection{Многомерный случай}\label{subsec:mv-esprit-comparison}
-Пусть $P=12$ и $R=2$, то есть многомерный временной ряд
+Пусть $M=12$ и $R=2$, то есть многомерный временной ряд
 \begin{gather*}
   \tX = \left(\tX^{(1)}, \tX^{(2)}, \ldots, \tX^{(12)}\right),\\
-  \tX^{(p)} = \left(x_0^{(p)}, x_1^{(p)}, \ldots, x_{24}^{(p)}\right)
+  \tX^{(m)} = \left(x_0^{(m)}, x_1^{(m)}, \ldots, x_{24}^{(m)}\right)
 \end{gather*}
 состоит из элементов вида
 \[
-  x_n^{(p)} = a_1^{(p)} e^{ \alpha_1 n }
+  x_n^{(m)} = a_1^{(m)} e^{ \alpha_1 n }
   e^{2 \pi \iu \omega_1 n} +
-  a_2^{(p)} e^{ \alpha_2 n }
-  e^{2 \pi \iu \omega_2 n} + \zeta_n^{(p)},
+  a_2^{(m)} e^{ \alpha_2 n }
+  e^{2 \pi \iu \omega_2 n} + \zeta_n^{(m)},
 \]
-где $n \in \overline{0:24}$, а $\zeta_n^{(p)}$ "--- независимые
+где $n \in \overline{0:24}$, а $\zeta_n^{(m)}$ "--- независимые
 случайные величины из
 распределения $\mathrm{CN}(0,\, \sigma^2)$, $\sigma=0.2$.
 Значения частот и варианты степеней затухания были взяты такими же, как
 в одномерном случае в разделе~\ref{subsec:esprit-comparison}.
-В качестве амплитуд $a_k^{(p)}$ были взяты независимые реализации
+В качестве амплитуд $a_k^{(m)}$ были взяты независимые реализации
 случайных величин из распределения $\mathrm{CN}(0,\, 1)$,
 их приблизительные значения приведены в
 выражении~\eqref{eq:complex-amplitudes}.
