@@ -475,8 +475,9 @@ extreme_rmse <- rmse_df |>  pivot_longer(cols = esprit:tens2,
   group_by(sd, Method) |> summarize(min = min(RMSE), max = max(RMSE))
 
 for (sd_k in sds[sds != 0]) {
-  ext_rmse_oth <- filter(extreme_rmse, sd == sd_k, Method != "esprit")
-  ext_rmse_esprit <- filter(extreme_rmse, sd == sd_k, Method == "esprit")
+  ext_rmse_sd <- filter(extreme_rmse, sd == sd_k)
+  ext_rmse_oth <- filter(ext_rmse_sd, Method != "esprit")
+  ext_rmse_esprit <- filter(ext_rmse_sd, Method == "esprit")
   p1 <- rmse_df |> filter(sd == sd_k) |>
     pivot_longer(cols = esprit:tens2,
                  names_to = "Method",
@@ -489,14 +490,17 @@ for (sd_k in sds[sds != 0]) {
       linetype = 2,
       color = "gray20"
     ) +
+    scale_y_continuous(limits = c(min(ext_rmse_sd$min), max(ext_rmse_sd$max))) +
     annotate(
       "label",
-      x = (Ls_esprit[Ls_len] + Ls_esprit[1]) * 0.38,
-      y = min(ext_rmse_oth$min) * (1.01 + (sd_k == 0.6) * 4),
-      label = paste0("Minimum for other methods\n(achieved on ", methods_names[[ext_rmse_oth$Method[which.min(ext_rmse_oth$min)]]], ")")
+      x = (Ls_esprit[Ls_len] + Ls_esprit[1]) * 0.40,
+      y = min(ext_rmse_oth$min) * (1.035 + (sd_k == 0.6) * 4.6),
+      label = paste0("Minimum for other methods\n(achieved on ", methods_names[[ext_rmse_oth$Method[which.min(ext_rmse_oth$min)]]], ")"),
+      size = 6
     ) +
     ggtitle(paste0("ESPRIT, sd = ", sd_k)) +
     theme_minimal() +
+    theme(text = element_text(size = 20)) +
     xlab("L")
   
   p2 <- rmse_df |> filter(sd == sd_k) |>
@@ -511,16 +515,19 @@ for (sd_k in sds[sds != 0]) {
       linetype = 2,
       color = "gray20"
     ) +
+    scale_y_continuous(limits = c(min(ext_rmse_sd$min), max(ext_rmse_sd$max))) +
     annotate(
       "label",
-      x = (Ls_dstack[Ls_len] + Ls_dstack[1]) * 0.38,
-      y = min(ext_rmse_esprit$min) * 1.015,
-      label = paste0("Minimum for ESPRIT")
+      x = (Ls_dstack[Ls_len] + Ls_dstack[1]) * 0.41,
+      y = min(ext_rmse_esprit$min) * 1.02,
+      label = paste0("Minimum for ESPRIT"),
+      size = 6
     ) +
     scale_linetype_discrete(labels = c("Dstack ESPRIT", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
     scale_color_discrete(labels = c("Dstack ESPRIT", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
     ggtitle(paste0("Dstack methods, sd = ", sd_k)) +
     theme_minimal() +
+    theme(text = element_text(size = 20)) +
     xlab("L")
   pdf(paste0("./img/htlsd_byL_", plot_name, "_esprit_", which(sds == sd_k), ".pdf"),
       width = 9,
@@ -800,8 +807,9 @@ extreme_rmse <- rmse_df |>  pivot_longer(cols = ssa:tens1,
   group_by(sd, Method) |> summarize(min = min(RMSE), max = max(RMSE))
 
 for (sd_k in sds[sds != 0]) {
-  ext_rmse_oth <- filter(extreme_rmse, sd == sd_k, Method != "ssa")
-  ext_rmse_esprit <- filter(extreme_rmse, sd == sd_k, Method == "ssa")
+  ext_rmse_sd <- filter(extreme_rmse, sd == sd_k)
+  ext_rmse_oth <- filter(ext_rmse_sd, Method != "ssa")
+  ext_rmse_esprit <- filter(ext_rmse_sd, Method == "ssa")
   p1 <- rmse_df |> filter(sd == sd_k) |>
     pivot_longer(cols = ssa:tens1,
                  names_to = "Method",
@@ -814,14 +822,17 @@ for (sd_k in sds[sds != 0]) {
       linetype = 2,
       color = "gray20"
     ) +
+    scale_y_continuous(limits = c(min(ext_rmse_sd$min), max(ext_rmse_sd$max))) +
     annotate(
       "label",
-      x = (Ls_ssa[Ls_len] + Ls_ssa[1]) * 0.38,
-      y = min(ext_rmse_oth$min) * 0.95,
-      label = paste0("Minimum for other methods\n(achieved on ", methods_names[[ext_rmse_oth$Method[which.min(ext_rmse_oth$min)]]], ")")
+      x = (Ls_ssa[Ls_len] + Ls_ssa[1]) * 0.4,
+      y = min(ext_rmse_oth$min) * 0.94,
+      label = paste0("Minimum for other methods\n(achieved on ", methods_names[[ext_rmse_oth$Method[which.min(ext_rmse_oth$min)]]], ")"),
+      size = 6
     ) +
     ggtitle(paste0("SSA, sd = ", sd_k)) +
     theme_minimal() +
+    theme(text = element_text(size = 20)) +
     xlab("L")
   
   p2 <- rmse_df |> filter(sd == sd_k) |>
@@ -836,16 +847,19 @@ for (sd_k in sds[sds != 0]) {
       linetype = 2,
       color = "gray20"
     ) +
+    scale_y_continuous(limits = c(min(ext_rmse_sd$min), max(ext_rmse_sd$max))) +
     annotate(
       "label",
-      x = (Ls_dstack[Ls_len] + Ls_dstack[1]) * 0.38,
-      y = min(ext_rmse_esprit$min) * 1.01,
-      label = paste0("Minimum for SSA")
+      x = (Ls_dstack[Ls_len] + Ls_dstack[1]) * 0.4,
+      y = min(ext_rmse_esprit$min) * 1.08,
+      label = paste0("Minimum for SSA"),
+      size = 6
     ) +
     scale_linetype_discrete(labels = c("Dstack SSA", "Tensor, r3 = 4")) +
     scale_color_discrete(labels = c("Dstack SSA", "Tensor, r3 = 4")) +
     ggtitle(paste0("Dstack methods, sd = ", sd_k)) +
     theme_minimal() +
+    theme(text = element_text(size = 20)) +
     xlab("L")
   pdf(paste0("./img/htlsd_byL_", plot_name, "_ssa_", which(sds == sd_k), ".pdf"),
       width = 9,
@@ -932,7 +946,7 @@ p1 <- rmse_df |> filter(sd <= sd_bound) |> pivot_longer(cols = -sd,
   ggplot(aes(x = sd, y = RMSE)) +
   geom_line(aes(col = Method, lty = Method)) +
   scale_linetype_discrete(labels = c("SSA", "SSADstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) +
-  scale_color_discrete(labels = c("SSA", "SSADstack", "Tensor, r3 = 4", "Tesnor, r3 = 1")) 
+  scale_color_discrete(labels = c("SSA", "SSADstack", "Tensor, r3 = 4", "Tesnor, r3 = 1"))
 
 p2 <- rmse_df |> filter(sd >= sd_bound) |> pivot_longer(cols = -sd,
                                                     names_to = "Method",
