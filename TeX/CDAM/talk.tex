@@ -1,4 +1,4 @@
-\documentclass[ucs, notheorems]{beamer}
+\documentclass[pdf, unicode, ucs, notheorems]{beamer}
 
 \usetheme{Madrid}
 \usefonttheme[onlymath]{serif}
@@ -10,7 +10,6 @@
 \usepackage[english]{babel}
 \usepackage{amsmath}
 \usepackage{amsfonts}
-\usepackage{tikz}
 \usepackage{ragged2e}
 \usepackage{wrapfig}
 \usepackage{t-angles}
@@ -19,6 +18,8 @@
 \usepackage{multirow}
 \usepackage{graphics}
 \usepackage{color}
+\usepackage{tikz}
+\usetikzlibrary{tikzmark, calc, fit}
 \include{letters_series_mathbb}
 
 \setbeamercolor{bluetext_color}{fg=blue}
@@ -26,6 +27,9 @@
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{statement}{Statement}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
 
 \title[Tensor SSA]{Tensors for signal and frequency estimation in
 subspace-based methods: when they are useful?}
@@ -49,8 +53,236 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \titlepage
 \end{frame}
 
-\begin{frame}{Frame}
+\begin{frame}{Introduction to Singular Spectrum Analysis (SSA)}
+  Problems that can be solved by SSA-related methods:
+  \begin{itemize}
+      \bluetext{
+      \item Signal extraction
+      \item Frequency estimation
+      }
+    \item Smoothing and Noise reduction
+    \item Signal decomposition (Trend and Periodicity extraction)
+    \item Forecasting
+    \item Missing data imputation
+    \item Change in structure detection
+    \item Many others\dots
+  \end{itemize}
 
 \end{frame}
 
+\begin{frame}{SSA Materials}
+  Books:
+  \begin{itemize}
+    \item J.Elsner and A.Tsonis. Singular Spectrum Analysis: A New Tool in
+      Time Series Analysis, Plenum, 1996.
+    \item N.Golyandina, V.Nekrutrin and A.Zhigljavsky. Analysis of Time
+      Series Structure: SSA and Related Techniques, CRC Press, 2001.
+    \item S.Sanei and H.Hassani. Singular Spectrum Analysis for Biomedical
+      Signals, CRC Press, 2016.
+    \item N.Golyandina, A.Korobeynikov and A.Zhigljavsky. Singular spectrum
+      analysis with R, Springer, 2018.
+    \item N.Golyandina and A.Zhigljavsky. Singular Spectrum Analysis for
+      Time Series, Springer, 2013, 2020 (2nd Edition).
+  \end{itemize}
+
+  \bigskip
+
+  Implementations:
+  \begin{itemize}
+    \item R Package: Rssa \\
+      \hspace{2ex} https://CRAN.R-project.org/package=Rssa
+    \item Python Package: py-ssa-lib (less features) \\
+      \hspace{2ex} https://pypi.org/project/py-ssa-lib
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{SSA Decomposition example}
+  Decomposition of time series:
+  \begin{itemize}
+    \item Low-frequency component + high-frequency component
+    \item \bluetext{Signal + noise}
+    \item Trend + Seasonality + Noise
+  \end{itemize}
+
+  \begin{figure}[!ht]
+    \center
+    \includegraphics[draft, width=0.8\textwidth,
+    height=0.5\textheight]{example-image}\\
+    *Some data*: demonstration of series decomposition with SSA
+  \end{figure}
+\end{frame}
+
+\begin{frame}{ESPRIT Frequency estimation example}
+  ESPRIT --- SSA-related method for parameters estimation
+
+  \begin{figure}[!ht]
+    \centering
+    \includegraphics[draft, width=0.8\textwidth,
+    height=0.5\textheight]{example-image}\\
+    *Pole motion data probably*
+  \end{figure}
+
+  \begin{enumerate}
+    \item Estimate --- interpretation
+    \item Estimate --- interpretation
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Complex Time Series}
+  Common origins of complex-valued time series:
+  \begin{itemize}
+    \item Can be constructed from two related features
+    \item Arise as a result of applying the Fourier transform to real data
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{SSA Algorithm: Embedding}
+  \textbf{Input:} time series $\tX = (x_1,\, x_2,\, \ldots, x_N)$,
+  window length $L$, signal rank $r$.
+  \vspace{0.4cm}\\
+  \begin{enumerate}
+    \item \textbf{Embedding}.
+      Constructing the $L$-\emph{Trajectory} Hankel matrix $\bfX\in
+      \bbC^{L \times K}$ from the series $\tX$, where $K = N - L + 1$:\\
+      \[
+        \bfX = \calT_{L}(\tX) =
+        \begin{pmatrix}
+          x_1                     & \tikzmarknode{A12}{x_2} &
+          \tikzmarknode{A13}{x_3} & \ldots & x_K     \\
+          \tikzmarknode{A21}{x_2} & x_3                     & x_4
+          & \ldots & x_{K+1} \\
+          \tikzmarknode{A31}{x_3} & x_4                     & x_5
+          & \ldots & x_{K+2} \\
+          \vdots                  & \vdots                  & \vdots
+          & \ddots & \vdots  \\
+          x_L                     & x_{L+1}                 & x_{L+2}
+          & \ldots & x_N
+        \end{pmatrix}
+      \]
+      \begin{tikzpicture}[remember picture,overlay]
+        \draw[red] let \p1=($(A12)-(A21)$),\n1={atan2(\y1,\x1)} in
+        node[rotate fit=\n1,fit=(A12) (A21),draw,rounded
+        corners,inner sep=2pt]{};
+        \draw[blue] let \p1=($(A13)-(A31)$),\n1={atan2(\y1,\x1)+2} in
+        node[rotate fit=\n1,fit=(A13) (A31),draw,rounded
+        corners,inner sep=2pt]{};
+      \end{tikzpicture}
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{SSA Algorithm: Decomposition, Grouping, Reconstruction}
+  \begin{enumerate}
+      \setcounter{enumi}{1}
+    \item \textbf{Decomposition}.
+      Constructing the singular value decomposition (SVD) of matrix $\bfX$:
+      $\displaystyle \bfX = \sum_{j=1}^{\operatorname{rank}\bfX}
+      \sqrt{\lambda_j} U_j V_j^{\rmH} =
+      \sum_{j=1}^{\operatorname{rank}\bfX} \widehat{\bfX}_j$
+      where $\rmH$ denotes Hermitian
+      conjugation, $U_j$ and $V_j$ are left and right singular vectors
+      of $\bfX$, $\sqrt{\lambda_j}$ --- its singular values in
+      descending order.
+      \vspace{0.2cm}\\
+    \item \textbf{Grouping}. Grouping the terms $\widehat{\bfX}_j$
+      from the decomposition related to the signal:
+      $\displaystyle \bfS = \sum_{j=1}^{r}\widehat{\bfX}_j = \Pi_r \bfX$,
+      where $\Pi_r$ is the projector onto the space of matrices with
+      rank not greater than $r$.
+      \vspace{0.2cm}
+    \item \textbf{Reconstruction}. Applying projection onto the
+      space of Hankel
+      matrices: $\widetilde{\bfS}= \Pi_{\calH}\widehat{\bfS}$,
+      and return to the series form: $\widetilde{\tS}= \calT_{L}^{-1}
+      \widetilde{\bfS}$
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Series rank}
+  \begin{definition}
+    Series $\tX$ has rank $d < N/2$, if the rank of its $L$-trajectory
+    matrix equals $d$ for any $L$ such that $d \leqslant \min(L,
+    N - L + 1)$.\\
+    If such $d$ exists, then $\tX$ is called a series of finite rank.
+  \end{definition}
+  \vspace{0.5cm}
+  If the signal $\tS$ is a series of finite rank, then it is
+  generally recommended to use $\operatorname{rank}(\tS)$ as
+  parameter $r$ in the SSA method
+  \vspace{0.4cm}\\
+  Series rank examples
+  \begin{itemize}
+    \item rank of $\tS$ with $s_n = A\sin(2\pi \omega n + \varphi)$,
+      $0 < \omega < 1/2$, equals 2
+    \item rank of $\tS$ with $s_n = A \exp(\alpha n)$, $\alpha
+      \in\bbC$, equals 1
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Signal Model}
+  What we consider a signal $\tS = (s_1,\, s_2,\, \ldots, s_N)$:\smallskip
+  \begin{itemize}
+    \item The trajectory matrix $\bfS = \calT_L(\tS)$ is rank-deficient \\
+      ($\implies$ the time series is of some finite rank:
+      $\operatorname{rank}(\tS)=r$)
+      \medskip
+    \item Any signal $\tS$ can be represented in the form of a finite sum:
+      \[
+        s_n = \sum_{j} p_j(n) \exp(\alpha_j n + \mathrm{i}(2\pi
+        \omega_j n + \varphi_j)),
+      \]
+      where $p_j(n)$ is a polynomial in $n$
+      \medskip
+    \item Real case:
+      \[
+        s_n = \sum_{j} p_j(n) \exp(\alpha_j n)\sin(2\pi
+        \omega_j n + \varphi_j),
+      \]
+  \end{itemize}
+  \bigskip
+  ESPRIT method estimates damping factors $\alpha_j$ and
+  frequencies $\omega_j$
+\end{frame}
+
+\begin{frame}{ESPRIT Algorithm: General Idea}
+  \[
+    s_n = \sum_{j=1}^{2} \exp(\alpha_j n + \mathrm{i}(2\pi
+    \omega_j n + \varphi_j)) = A_1 z_1^n + A_2 z_2^n
+  \]
+  where $A_j = \exp(\mathrm{i} \varphi_j)$, $z_j = \exp(\alpha_j +
+  \mathrm{i}2\pi\omega_j)$ \vspace{0.4cm}\\
+  Signal subspace basis is given by
+  \[
+    \bfM =
+    \begin{pmatrix}
+      z_1 & z_2 \\
+      z_1^2 & z_2^2\\
+      \vdots & \vdots \\
+      z_1^L & z_2^L
+    \end{pmatrix} \Rightarrow \overline{\bfM} = \underline{\bfM}
+    \begin{pmatrix}
+      z_1 & \\ & z_2
+    \end{pmatrix}\Rightarrow  \underline{\bfM}^{-}\overline{\bfM} =
+    \begin{pmatrix}
+      z_1 & \\ & z_2
+    \end{pmatrix}
+  \]
+  where $\overline{\bfM}$ denotes $\bfM$ without the first row,
+  $\underline{\bfM}$ --- without the last\\
+  $\underline{\bfM}^{-}$ denotes the pseudoinverse of $\underline{\bfM}$
+\end{frame}
+
+\begin{frame}{ESPRIT Algorithm}
+  \textbf{Input}: same as in SSA: $\tX$, $L$, $r$
+  \begin{enumerate}
+    \item \textbf{Embedding}. $\bfX = \calT_L(\tX)$
+    \item \textbf{Decomposition}.
+      $\displaystyle\bfX = \sum_{j=1}^{\operatorname{rank}\bfX}
+      \sqrt{\lambda_j} U_j V_j^{\rmH}$,
+      $\bfU_r = \left[U_1: U_2: \ldots: U_r\right]$
+    \item Finding eigenvalues $z_j$ of matrix
+      $\underline{\bfU}_r^{-}\overline{\bfU}_r$
+    \item Using $z_j = \exp(\alpha_j + \mathrm{i}2\pi\omega_j)$
+      parameters $\alpha_j$ and $\omega_j$ can be found
+  \end{enumerate}
+\end{frame}
 \end{document}
