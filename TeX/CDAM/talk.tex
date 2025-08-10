@@ -24,6 +24,9 @@
 
 \setbeamercolor{bluetext_color}{fg=blue}
 \newcommand{\bluetext}[1]{{\usebeamercolor[fg]{bluetext_color}#1}}
+\newcommand{\mathclap}[1]{\text{\smash{\clap{$#1$}}}}
+
+\graphicspath{{./img}}
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{statement}{Statement}
@@ -145,7 +148,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
       Constructing the $L$-\emph{Trajectory} Hankel matrix $\bfX\in
       \bbC^{L \times K}$ from the series $\tX$, where $K = N - L + 1$:\\
       \[
-        \bfX = \calT_{L}(\tX) =
+        \bfX = \calT^{(L)}(\tX) =
         \begin{pmatrix}
           x_1                     & \tikzmarknode{A12}{x_2} &
           \tikzmarknode{A13}{x_3} & \ldots & x_K     \\
@@ -192,8 +195,8 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
     \item \textbf{Reconstruction}. Applying projection onto the
       space of Hankel
       matrices: $\widetilde{\bfS}= \Pi_{\calH}\widehat{\bfS}$,
-      and return to the series form: $\widetilde{\tS}= \calT_{L}^{-1}
-      \widetilde{\bfS}$
+      and return to the series form: $\widetilde{\tS}=
+      \left(\calT^{(L)}\right)^{-1}(\widetilde{\bfS})$
   \end{enumerate}
 \end{frame}
 
@@ -221,7 +224,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 \begin{frame}{Signal Model}
   What we consider a signal $\tS = (s_1,\, s_2,\, \ldots, s_N)$:\smallskip
   \begin{itemize}
-    \item The trajectory matrix $\bfS = \calT_L(\tS)$ is rank-deficient \\
+    \item The trajectory matrix $\bfS = \calT^{(L)}(\tS)$ is rank-deficient \\
       ($\implies$ the time series is of some finite rank:
       $\operatorname{rank}(\tS)=r$)
       \medskip
@@ -274,15 +277,71 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 \begin{frame}{ESPRIT Algorithm}
   \textbf{Input}: same as in SSA: $\tX$, $L$, $r$
   \begin{enumerate}
-    \item \textbf{Embedding}. $\bfX = \calT_L(\tX)$
+    \item \textbf{Embedding}. $\bfX = \calT^{(L)}(\tX)$
     \item \textbf{Decomposition}.
       $\displaystyle\bfX = \sum_{j=1}^{\operatorname{rank}\bfX}
       \sqrt{\lambda_j} U_j V_j^{\rmH}$,
       $\bfU_r = \left[U_1: U_2: \ldots: U_r\right]$
-    \item Finding eigenvalues $z_j$ of matrix
-      $\underline{\bfU}_r^{-}\overline{\bfU}_r$
-    \item Using $z_j = \exp(\alpha_j + \mathrm{i}2\pi\omega_j)$
+    \item \textbf{Estimation}. Finding eigenvalues $z_j$ of matrix
+      $\underline{\bfU}_r^{-}\overline{\bfU}_r$ \\ \smallskip
+      Using $z_j = \exp(\alpha_j + \mathrm{i}2\pi\omega_j)$
       parameters $\alpha_j$ and $\omega_j$ can be found
   \end{enumerate}
+\end{frame}
+
+\begin{frame}{Multi-Channel Time Series, MSSA}
+  $\tX = \left(\tX^{(1)},\, \tX^{(2)}, \, \ldots,\,
+  \tX^{(P)}\right), \qquad\tX^{(p)} = \left(x_1^{(p)}, \, x_2^{(p)},\,
+  \ldots,\,  x_N^{(p)}\right)$ -- channels
+  \vspace{0.4cm}
+
+  The only change in the algorithms --- Embedding step:
+  \[
+    \bfX = \calT_{\textrm{MSSA}}^{(L)}(\tX) = \left[\bfX^{(1)} :
+    \bfX^{(2)}: \ldots : \bfX^{(P)}\right],
+  \]
+  \[
+    \bfX^{(p)} = \calT^{(L)}(\tX^{(p)})
+  \]
+  \vspace{0.4cm}
+
+  When to chose MSSA over SSA for each channel:
+  \begin{itemize}
+    \item All channels have ''similar'' structure
+    \item ''Supporting'' channels with lower noise level
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Intoduction of Tensors}
+  \begin{table}
+    \hspace*{-0.9cm}
+    \begin{tabular}{rlllll}
+      \bluetext{Basic SSA:} & Time series $\tX$ & $\mapsto$ & Matrix
+      $\mathbf{X}$ & $\mapsto$ & $\operatorname{SVD}(\mathbf{X})$ \\
+      \bluetext{Tensor SSA:} & Time series $\tX$ & $\mapsto$ & Tensor
+      $\calX $ & $\mapsto$ & \hspace*{-0.18cm}
+      $\underbrace{\operatorname{TD}}_{\mathclap{\text{~~~Some Tensor
+      Decomposition}}}(\calX)$
+    \end{tabular}
+  \end{table}
+  \vspace{0.4cm}
+
+  Tensor SVD Extensions:
+  \begin{itemize}
+    \item \bluetext{Higher-Order SVD (HOSVD)}
+    \item Canonical Polyadic Decomposition (CPD)
+    \item T-SVD
+    \item $(L_r, L_r, 1)$-Decomposition
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Mapping Time Series to Tensor}
+  \hfill{} $\tX = (x_1,\, x_2,\, \ldots,\, x_N)$ \hfill{} \hfill{}
+  $\tX = \left(\tX^{(1)},\, \tX^{(2)},\, \ldots,\, \tX^{(P)}\right)$ \hfill{}
+  \begin{figure}[!ht]
+    \includegraphics[width=0.49\textwidth]{tens-injection-wide.pdf}
+    \hfill
+    \includegraphics[width=0.49\textwidth]{mssa_injection_new.pdf}
+  \end{figure}
 \end{frame}
 \end{document}
