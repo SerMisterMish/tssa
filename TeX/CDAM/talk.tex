@@ -284,7 +284,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
       $\bfU_r = \left[U_1: U_2: \ldots: U_r\right]$
     \item \textbf{Estimation}. Finding eigenvalues $z_j$ of matrix
       $\underline{\bfU}_r^{-}\overline{\bfU}_r$ \\ \smallskip
-      Using $z_j = \exp(\alpha_j + \mathrm{i}2\pi\omega_j)$
+      From $z_j = \exp(\alpha_j + \mathrm{i}2\pi\omega_j)$
       parameters $\alpha_j$ and $\omega_j$ can be found
   \end{enumerate}
 \end{frame}
@@ -336,12 +336,122 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 \end{frame}
 
 \begin{frame}{Mapping Time Series to Tensor}
-  \hfill{} $\tX = (x_1,\, x_2,\, \ldots,\, x_N)$ \hfill{} \hfill{}
-  $\tX = \left(\tX^{(1)},\, \tX^{(2)},\, \ldots,\, \tX^{(P)}\right)$ \hfill{}
-  \begin{figure}[!ht]
-    \includegraphics[width=0.49\textwidth]{tens-injection-wide.pdf}
-    \hfill
-    \includegraphics[width=0.49\textwidth]{mssa_injection_new.pdf}
-  \end{figure}
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[right=3.8cm, below=0.6cm] at (current page.north west)
+    {
+      \includegraphics[width=0.7\textwidth]{tens-injection-wide.pdf}
+    };
+  \end{tikzpicture}
+  \begin{columns}
+    \begin{column}{0.65\textwidth}
+
+    \end{column}
+    \begin{column}{0.3\textwidth}
+      $\tX = (x_1,\, x_2,\, \ldots,\, x_N)$\\\medskip
+      $\tX \mapsto \calT_{\mathrm{T-SSA}}^{(I, L)}(\tX) = \calX$\\\medskip
+      $\calX \in \bbC^{I\times L \times K}$\\\smallskip $K = N - I - L + 2$
+    \end{column}
+    \begin{column}{0.05\textwidth}
+
+    \end{column}
+  \end{columns}
+  \vspace{2.5cm}
+
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[left=4.5cm, above=0.3cm] at (current page.south east)
+    {
+      \includegraphics[width=0.7\textwidth]{mssa_injection_new.pdf}
+    };
+  \end{tikzpicture}
+  \begin{columns}
+    \begin{column}{0.01\textwidth}
+
+    \end{column}
+    \begin{column}{0.4\textwidth}
+      $\tX = \left(\tX^{(1)},\, \tX^{(2)},\, \ldots,\,
+      \tX^{(P)}\right)$\\\medskip
+      $\tX \mapsto \calT_{\mathrm{T-MSSA}}^{(L)}(\tX) = \calX$\\\medskip
+      $\calX \in \bbC^{P\times L \times K}$\\\smallskip $K = N - L + 1$
+    \end{column}
+    \begin{column}{0.59\textwidth}
+
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Higher-Order SVD. Higher-Order Orthogonal Iterations}
+  \vspace*{-0.7cm}
+  \begin{align*}
+    \operatorname{SVD}(\bfX) &= \sum_{j=1}^{\operatorname{rank}(\bfX)}
+    \sqrt{\lambda_j} U_j V_j^{\rmH}\\
+    \operatorname{HOSVD}(\calX) &=
+    \sum_{i=1}^{\operatorname{rank}_{\color{red}1}(\calX)}\,
+    \sum_{l=1}^{\operatorname{rank}_{\color{red}2}(\calX)}\,
+    \sum_{k=1}^{\operatorname{rank}_{\color{red}3}(\calX)}\,
+    \calZ_{ilk} U_i^{(1)} \circ U_l^{(2)} \circ U_k^{(3)}
+  \end{align*}
+
+  \begin{itemize}
+    \item $\displaystyle \widetilde{\bfX} =
+      \sum_{j=1}^{R}\ldots \Rightarrow
+      \left\| \bfX - \widetilde{\bfX} \right\|_{F} =
+      \min_{\operatorname{rank}(\widehat{\bfX}) \leqslant R}\left\|
+      \bfX - \widehat{\bfX}\right\|_F$
+    \item $\displaystyle \widetilde{\calX}=
+      \sum_{i=1}^{R_1}\,
+      \sum_{l=1}^{R_2}\,
+      \sum_{k=1}^{R_3}\,
+      \ldots \Rightarrow
+      \left\| \calX - \widetilde{\calX} \right\|_{F} \geqslant
+      \min_{\operatorname{rank}_{m}(\widehat{\calX}) \leqslant R_m}\left\|
+      \calX - \widehat{\calX}\right\|_F$
+  \end{itemize}
+  \vspace{0.6cm}
+
+  \bluetext{Truncation of SVD is optimal, but truncation of HOSVD is
+  not}\vspace{0.1cm}
+
+  Iterative algorithm for finding optimal approximation -- \bluetext{HOOI}
+\end{frame}
+
+\begin{frame}{Higher-Order SSA, MSSA, ESPRIT}
+  \textbf{Input:} time series $\tX$,
+  window length: $(I, L)$ for single-channel or $L$ for multi-channel,
+  signal ranks $(r_1,\, r_2,\, r_3)$, $d$ --- estimation dimension
+  for HO-ESPRIT.
+  \vspace{0.4cm}\\
+  \begin{enumerate}
+    \item \textbf{Embedding}.
+      \begin{tabular}{r|l}
+        Single-channel & $\tX \mapsto\calT_{\mathrm{T-SSA}}^{(I,
+        L)}(\tX) = \calX$ \\ \hline
+        Multi-channel &
+        $\tX \mapsto \calT_{\mathrm{T-MSSA}}^{(L)}(\tX) = \calX$
+      \end{tabular}
+      \vspace{0.2cm}
+
+    \item \textbf{Decomposition \& Approximation}. Using $(r_1,\,
+      r_2,\, r_3)$\\\smallskip
+      $\calX \mapsto
+      \operatorname{Trunc}(\operatorname{HOSVD}(\calX)) = \widetilde{\calS}$ or
+      $\calX \mapsto \operatorname{HOOI}(\calX) = \widetilde{\calS}$
+      \vspace{0.2cm}
+
+    \item \textbf{Reconstruction or Estimation}. \\
+      \begin{itemize}
+        \item \textbf{Reconstruction}.
+          $\tS = \left(\calT\right)^{-1}
+          \left(\Pi_{\calH_{\mathrm{T}}} (\widetilde{\calS})\right)$,
+          $\Pi_{\calH_{\mathrm{T}}}$ --- projector onto the space of
+          Hankel tensors
+        \item \textbf{Estimation}. Finding eigenvalues $z_j$ of
+          matrix $\underline{\bfU}^{-}\overline{\bfU}$, where
+          $\bfU = \left[U_1^{(d)}:U_2^{(d)}:\ldots :U_{r_d}^{(d)}\right]$.
+          From $z_j = \exp(\alpha_j + \mathrm{i}2\pi\omega_j)$
+          damping factors $\alpha_j$ and frequencies $\omega_j$ of
+          the signal can be found
+      \end{itemize}
+
+  \end{enumerate}
 \end{frame}
 \end{document}
