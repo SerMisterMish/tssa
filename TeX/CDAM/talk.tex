@@ -19,6 +19,8 @@
 \usepackage{graphics}
 \usepackage{color}
 \usepackage{tikz}
+\usepackage{nicematrix}
+\usepackage{subfigure}
 \usetikzlibrary{tikzmark, calc, fit}
 \include{letters_series_mathbb}
 
@@ -99,7 +101,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \end{itemize}
 \end{frame}
 
-\begin{frame}{SSA Decomposition example}
+\begin{frame}{SSA Decomposition Example}
   Decomposition of time series:
   \begin{itemize}
     \item Low-frequency component + high-frequency component
@@ -115,7 +117,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \end{figure}
 \end{frame}
 
-\begin{frame}{ESPRIT Frequency estimation example}
+\begin{frame}{ESPRIT Frequency Estimation Example}
   ESPRIT --- SSA-related method for parameters estimation
 
   \begin{figure}[!ht]
@@ -200,7 +202,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \end{enumerate}
 \end{frame}
 
-\begin{frame}{Series rank}
+\begin{frame}{Series Rank}
   \begin{definition}
     Series $\tX$ has rank $d < N/2$, if the rank of its $L$-trajectory
     matrix equals $d$ for any $L$ such that $d \leqslant \min(L,
@@ -451,7 +453,64 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
           damping factors $\alpha_j$ and frequencies $\omega_j$ of
           the signal can be found
       \end{itemize}
-
   \end{enumerate}
+\end{frame}
+
+\begin{frame}{Dtack Modifications}
+  $\tX = (x_1,\, x_2,\, \ldots,\, x_N)$, $M = \lfloor N / D\rfloor$
+  \[
+    \operatorname{Dstack}_D(\tX) = \calD_D(\tX) =
+    \left[
+      \begin{NiceArray}{c|c|c|c}
+        x_1 & x_2 & \ldots & x_{D} \\
+        x_{D+1} & x_{D+2}  &\ldots &  x_{2D} \\
+        x_{2D+1} & x_{2D+2} &\ldots & x_{3D} \\
+        \vdots & \vdots & \ \cdots \  & \vdots \\
+        x_{(M - 1)D+1} & x_{(M - 1)D+2}
+        &\ldots & x_{MD} \\
+        % \multicolumn{1}{c}{\underbrace{\hphantom{x_{(M -
+        % 1)D+1}}}_{\tX_D^{(1)}}}
+        \CodeAfter
+        \UnderBrace[shorten,yshift=1.5mm]{last-1}{last-1}{\tX_D^{(1)}}
+        \UnderBrace[shorten,yshift=1.5mm]{last-2}{last-2}{\tX_D^{(2)}}
+        \UnderBrace[shorten,yshift=1.5mm]{last-4}{last-4}{\tX_D^{(D)}}
+      \end{NiceArray}
+    \right]
+  \]
+  \vspace{0.4cm}
+
+  \begin{table}
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{r|l}
+      Dstack-SSA & $\displaystyle\tX \mapsto \bfX=
+      \calT_{\textrm{MSSA}}^{(L)} \left( \calD_D (\tX)\right)$\\\hline
+      Dstack-T-SSA & $\displaystyle\tX \mapsto \calX=
+      \calT_{\textrm{T-MSSA}}^{(L)} \left( \calD_D (\tX)\right)$
+    \end{tabular}
+
+  \end{table}
+
+  \bluetext{Undersampling}: $\displaystyle\omega \mapsto \hat\omega=
+  D \omega \implies
+  \max|\omega| \leqslant \frac{1}{2D}$
+\end{frame}
+
+\begin{frame}{Parameters Estimation Comparisons, Single-Channel Case}
+  \vspace*{-0.3cm}
+  \[
+    x_{n} = e^{ \alpha_1 n } e^{2 \pi\mathrm{i} \omega_1 n} +
+    e^{ \alpha_2 n } e^{ 2 \pi  \mathrm{i}\omega_2 n} + \zeta_n
+  \]
+  $\zeta_n$ --- Complex white gaussian noise, $\omega_1 = 0.2,\,
+  \omega_2 = 0.22$, $\alpha_1=\alpha_2=0$ (same results for
+  $\alpha_1=\alpha_2 < 0$ and $\alpha_1 \leqslant \alpha_2 \leqslant 0$).
+
+  \begin{figure}
+    \centering
+    \includegraphics[width=0.89\textwidth]{img/freq1_dims_no_rates.pdf}
+    \caption{RRMSE of estimates for $\omega_1$ vs window lengths
+    ($I\times L \times K$)}
+  \end{figure}
 \end{frame}
 \end{document}

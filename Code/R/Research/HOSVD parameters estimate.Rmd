@@ -1239,7 +1239,7 @@ save(
 ## Графики RRMSE
 ```{r}
 pltnms <- c("_no_rates", "_small_eq_rates", "_large_eq_rates", "")
-pn <- 4
+pn <- 1
 
 load(file = paste0("./Research/comp_results/dim_rrmse", pltnms[pn], "_tens.RData"))
 load(file = paste0("./Research/comp_results/dim_rrmse", pltnms[pn], "_ssa.RData"))
@@ -1359,19 +1359,29 @@ if (pltnms[pn] != "_no_rates")
 ```
 
 ```{r}
-freq1.df <- freq1.rrmse |> as.data.frame() |> 
-   mutate(dims = factor(x = apply(tens.dims, 1, paste, collapse = "x"),
-                       levels = apply(tens.dims, 1, paste, collapse = "x"))) |>
-  pivot_longer(!dims, names_to = "estim dim", names_prefix = "V", values_to = "RRMSE")
+freq1.df <- freq1.rrmse |> as.data.frame() |>
+  mutate(dims = factor(
+    x = apply(tens.dims, 1, paste, collapse = "x"),
+    levels = apply(tens.dims, 1, paste, collapse = "x")
+  )) |>
+  pivot_longer(
+    !dims,
+    names_to = "Estimation\nDimension",
+    names_prefix = "V",
+    values_to = "RRMSE"
+  )
 
-freq1.plot <- freq1.df |> ggplot() +
-  geom_line(aes(
-    x = dims,
-    y = RRMSE,
-    group = `estim dim`,
-    colour = `estim dim`,
-    linetype = `estim dim`
-  ), lwd = 1.2) + 
+freq1.plot <- freq1.df[-(1:(2 * 3)), ] |> ggplot() +
+  geom_line(
+    aes(
+      x = dims,
+      y = RRMSE,
+      group = `Estimation\nDimension`,
+      colour = `Estimation\nDimension`,
+      linetype = `Estimation\nDimension`
+    ),
+    lwd = 1.2
+  ) +
   geom_abline(
     slope = 0,
     intercept = min.ssa.rrmse$freq1[1],
@@ -1384,32 +1394,43 @@ freq1.plot <- freq1.df |> ggplot() +
     y = min.ssa.rrmse$freq1[1] * 0.95,
     label = paste0("ESPRIT min RRMSE, L=", min.ssa.rrmse$freq1[2])
   ) +
+  theme_minimal() +
   theme(axis.text.x = element_text(angle = 90))
 
 plot.save(
   freq1.plot,
   paste0("./img/freq1_dims", pltnms[pn], ".pdf"),
   pdf,
-  width = 9,
-  height = 6,
+  width = 11,
+  height = 5,
   save = save
 )
 ```
 
 ```{r}
-freq2.df <- freq2.rrmse |> as.data.frame() |> 
-   mutate(dims = factor(x = apply(tens.dims, 1, paste, collapse = "x"),
-                       levels = apply(tens.dims, 1, paste, collapse = "x"))) |>
-  pivot_longer(!dims, names_to = "estim dim", names_prefix = "V", values_to = "RRMSE")
+freq2.df <- freq2.rrmse |> as.data.frame() |>
+  mutate(dims = factor(
+    x = apply(tens.dims, 1, paste, collapse = "x"),
+    levels = apply(tens.dims, 1, paste, collapse = "x")
+  )) |>
+  pivot_longer(
+    !dims,
+    names_to = "estim dim",
+    names_prefix = "V",
+    values_to = "RRMSE"
+  )
 
-freq2.plot <- freq2.df |> ggplot() +
-  geom_line(aes(
-    x = dims,
-    y = RRMSE,
-    group = `estim dim`,
-    colour = `estim dim`,
-    linetype = `estim dim`
-  ), lwd = 1.2) + 
+freq2.plot <- freq2.df[-(1:(2*3)), ]  |> ggplot() +
+  geom_line(
+    aes(
+      x = dims,
+      y = RRMSE,
+      group = `estim dim`,
+      colour = `estim dim`,
+      linetype = `estim dim`
+    ),
+    lwd = 1.2
+  ) +
   geom_abline(
     slope = 0,
     intercept = min.ssa.rrmse$freq2[1],
@@ -1422,14 +1443,15 @@ freq2.plot <- freq2.df |> ggplot() +
     y = min.ssa.rrmse$freq2[1] * 0.95,
     label = paste0("ESPRIT min RRMSE, L=", min.ssa.rrmse$freq2[2])
   ) +
+  theme_minimal() +
   theme(axis.text.x = element_text(angle = 90))
 
 plot.save(
   freq2.plot,
   paste0("./img/freq2_dims", pltnms[pn], ".pdf"),
   pdf,
-  width = 9,
-  height = 6,
+  width = 11,
+  height = 5,
   save = save
 )
 ```
