@@ -504,13 +504,129 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \]
   $\zeta_n$ --- Complex white gaussian noise, $\omega_1 = 0.2,\,
   \omega_2 = 0.22$, $\alpha_1=\alpha_2=0$ (same results for
-  $\alpha_1=\alpha_2 < 0$ and $\alpha_1 \leqslant \alpha_2 \leqslant 0$).
+  $\alpha_1=\alpha_2 < 0$ and $\alpha_1 < \alpha_2 < 0$).
 
   \begin{figure}
     \centering
     \includegraphics[width=0.89\textwidth]{img/freq1_dims_no_rates.pdf}
-    \caption{RRMSE of estimates for $\omega_1$ vs window lengths
+    \caption{RMSE of estimates for $\omega_1$ vs window lengths
     ($I\times L \times K$)}
   \end{figure}
 \end{frame}
+
+\begin{frame}{Parameters Estimation Comparisons, Dstack}
+  \vspace*{-0.3cm}
+  \[
+    x_{n} = \cos(2 \pi \omega_1 n) +
+    \cos(2 \pi \omega_2 n) + \xi_n
+  \]
+  \[\omega_1 = 0.02,\, \omega_2 = 0.0205,\, \xi_n \sim \rmN(0, 0.2)\]
+
+  \begin{figure}[!ht]
+    \begin{minipage}{0.48\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{img/htlsd_byL_real_param_rmse_esprit_2.pdf}
+    \end{minipage}
+    \begin{minipage}{0.48\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{img/htlsd_byL_real_param_rmse_dstack_2.pdf}
+    \end{minipage}
+    \caption{RMSE of estimates for frequencies by default ESPRIT
+    (left) and Dstack variant (right). Low noise level case.}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Parameters Estimation Comparisons, Dstack}
+  \vspace*{-0.3cm}
+  \[
+    x_{n} = \cos(2 \pi \omega_1 n) +
+    \cos(2 \pi \omega_2 n) + \xi_n
+  \]
+  \[\omega_1 = 0.02,\, \omega_2 = 0.0205,\, \xi_n \sim \rmN(0, 0.6)\]
+  \begin{figure}
+    \begin{minipage}{0.48\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{img/htlsd_byL_real_param_rmse_esprit_3.pdf}
+    \end{minipage}
+    \begin{minipage}{0.48\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{img/htlsd_byL_real_param_rmse_dstack_3.pdf}
+    \end{minipage}
+    \caption{RMSE of estimates for frequencies by default ESPRIT
+    (left) and Dstack variant (right). High noise level case.}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Parameters Estimation Comparisons, Multi-Channel Case}
+  \[
+    x_{n}^{(m)} = a_1^{(m)}
+    e^{2 \pi \mathrm{i} \omega_1 n} +
+    a_2^{(m)}
+    e^{2 \pi \mathrm{i} \omega_2 n} + \zeta_n^{(m)},
+  \]
+  $\zeta_n^{(m)}$ --- Complex white gaussian noise, $\omega_1 = 0.2,\,
+  \omega_2 = 0.22$
+  \begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{img/freq1_L_no_rates.pdf}
+    \caption{RMSE of estimates for $\omega_1$. vs window length L.}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Signal Extraction Comparisons, Single-Channel Case}
+  \vspace*{-0.3cm}
+  \[
+    x_{n} = e^{ \alpha_1 n } e^{2 \pi\mathrm{i} \omega_1 n} +
+    e^{ \alpha_2 n } e^{ 2 \pi  \mathrm{i}\omega_2 n} + \zeta_n
+  \]
+  $\zeta_n$ --- Complex white gaussian noise, $\omega_1 = 0.2,\,
+  \omega_2 = 0.22$, $\alpha_1=\alpha_2=0$ (same results for
+  $\alpha_1=\alpha_2 < 0$ and $\alpha_1 < \alpha_2 < 0$).
+
+  \begin{figure}
+    \centering
+    \includegraphics[width=0.89\textwidth]{img/rec_dim_rmse_no_rates.pdf}
+    \caption{RMSE of signal estimation vs window lengths
+    ($I\times L \times K$)}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Signal Extraction Comparisons, Dstack}
+  \vspace*{-0.3cm}
+  \[
+    x_{n} = \cos(2 \pi \omega_1 n) +
+    \cos(2 \pi \omega_2 n) + \xi_n
+  \]
+  \[\omega_1 = 0.02,\, \omega_2 = 0.0205,\, \xi_n \sim \rmN(0, 0.2)\]
+
+  \begin{figure}[!ht]
+    \begin{minipage}{0.48\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{htlsd_byL_real_rec_rmse_ssa_2.pdf}
+    \end{minipage}
+    \begin{minipage}{0.48\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{htlsd_byL_real_rec_rmse_dstack_2.pdf}
+    \end{minipage}
+    \caption{RMSE of signal estimate by default SSA
+    (left) and Dstack variant (right).}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Signal Extraction Comparisons, Multi-Channel Case}
+  \[
+    x_{n}^{(m)} = a_1^{(m)}
+    e^{2 \pi \mathrm{i} \omega_1 n} +
+    a_2^{(m)}
+    e^{2 \pi \mathrm{i} \omega_2 n} + \zeta_n^{(m)},
+  \]
+  $\zeta_n^{(m)}$ --- Complex white gaussian noise, $\omega_1 = 0.2,\,
+  \omega_2 = 0.22$
+  \begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{img/rec_L_rmse_no_rates.pdf}
+    \caption{RMSE of estimates for $\omega_1$. vs window length L.}
+  \end{figure}
+\end{frame}
+
 \end{document}

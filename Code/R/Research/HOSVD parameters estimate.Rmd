@@ -856,8 +856,8 @@ set.seed(10)
 n <- 25
 
 # no rates
-# rates.true <- c(0, 0)
-# plot.name <- "_no_rates"
+rates.true <- c(0, 0)
+plot.name <- "_no_rates"
 # both rates -0.01
 # rates.true <- c(-0.01, -0.01)
 # plot.name <- "_small_eq_rates"
@@ -865,8 +865,8 @@ n <- 25
 # rates.true <- c(-0.02, -0.02)
 # plot.name <- "_large_eq_rates"
 # rates from paper
-rates.true <- c(-0.01, -0.02)
-plot.name <- ""
+# rates.true <- c(-0.01, -0.02)
+# plot.name <- ""
 
 freqs.true <- c(0.2, 0.22)
 signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
@@ -942,8 +942,8 @@ set.seed(10)
 n <- 25
 
 # no rates
-# rates.true <- c(0, 0)
-# plot.name <- "_no_rates"
+rates.true <- c(0, 0)
+plot.name <- "_no_rates"
 # both rates -0.01
 # rates.true <- c(-0.01, -0.01)
 # plot.name <- "_small_eq_rates"
@@ -951,8 +951,8 @@ n <- 25
 # rates.true <- c(-0.02, -0.02)
 # plot.name <- "_large_eq_rates"
 # rates from paper
-rates.true <- c(-0.01, -0.02)
-plot.name <- ""
+# rates.true <- c(-0.01, -0.02)
+# plot.name <- ""
 
 freqs.true <- c(0.2, 0.22)
 signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
@@ -996,10 +996,11 @@ min.ssa.rmse <- c(min(rec.ssa.rmse), Ls[which.min(rec.ssa.rmse)])
 ## Графики RMSE
 ```{r}
 pltnms <- c("_no_rates", "_small_eq_rates", "_large_eq_rates", "")
-pn <- 4
+pn <- 1
 
 load(file = paste0("./Research/comp_results/signal", pltnms[pn], "_hossa.RData"))
 load(file = paste0("./Research/comp_results/signal", pltnms[pn], "_ssa.RData"))
+min.ssa.rmse <- c(min(rec.ssa.rmse), Ls[which.min(rec.ssa.rmse)])
 ```
 
 
@@ -1008,15 +1009,17 @@ rec.df <- rec.rmse |> as.data.frame() |>
   mutate(dims = factor(x = apply(tens.dims, 1, paste, collapse = "x"),
                        levels = apply(tens.dims, 1, paste, collapse = "x"))) |>
   pivot_longer(!dims, names_to = "trunc dims", names_prefix = "V", values_to = "RMSE") |>
-  mutate(`trunc dims` = as.factor(paste(trunc_dims[as.integer(`trunc dims`)])))
+  mutate(`trunc dims` = as.factor(paste(trunc_dims[as.integer(`trunc dims`)]))) |> 
+  filter(`trunc dims` == "1")
 
 rec.plot <- rec.df |> ggplot() +
   geom_line(aes(
     x = dims,
     y = RMSE,
     group = `trunc dims`,
-    colour = `trunc dims`,
-    linetype = `trunc dims`
+    # group = `trunc dims`,
+    # colour = `trunc dims`,
+    # linetype = `trunc dims`
   ), lwd = 1.2) + 
   geom_abline(
     slope = 0,
@@ -1030,15 +1033,15 @@ rec.plot <- rec.df |> ggplot() +
     x = 5,
     y = min.ssa.rmse[1] * 0.99,
     label = paste0("SSA min RMSE, L=", min.ssa.rmse[2])
-  ) +
+  ) + theme_minimal() +
   theme(axis.text.x = element_text(angle = 90))
 
 plot.save(
   rec.plot,
   paste0("./img/rec_dim_rmse", pltnms[pn], ".pdf"),
   pdf,
-  width = 9,
-  height = 6,
+  width = 11,
+  height = 5,
   save = save
 )
 ```
@@ -1051,8 +1054,8 @@ set.seed(10)
 n <- 25
 
 # no rates
-# rates.true <- c(0, 0)
-# plot.name <- "_no_rates"
+rates.true <- c(0, 0)
+plot.name <- "_no_rates"
 # both rates -0.01
 # rates.true <- c(-0.01, -0.01)
 # plot.name <- "_small_eq_rates"
@@ -1060,8 +1063,8 @@ n <- 25
 # rates.true <- c(-0.02, -0.02)
 # plot.name <- "_large_eq_rates"
 # rates from paper
-rates.true <- c(-0.01, -0.02)
-plot.name <- ""
+# rates.true <- c(-0.01, -0.02)
+# plot.name <- ""
 
 freqs.true <- c(0.2, 0.22)
 signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
@@ -1160,8 +1163,8 @@ set.seed(10)
 n <- 25
 
 # no rates
-# rates.true <- c(0, 0)
-# plot.name <- "_no_rates"
+rates.true <- c(0, 0)
+plot.name <- "_no_rates"
 # both rates -0.01
 # rates.true <- c(-0.01, -0.01)
 # plot.name <- "_small_eq_rates"
@@ -1169,8 +1172,8 @@ n <- 25
 # rates.true <- c(-0.02, -0.02)
 # plot.name <- "_large_eq_rates"
 # rates from paper
-rates.true <- c(-0.01, -0.02)
-plot.name <- ""
+# rates.true <- c(-0.01, -0.02)
+# plot.name <- ""
 
 freqs.true <- c(0.2, 0.22)
 signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
@@ -1369,13 +1372,13 @@ freq1.df <- freq1.rrmse |> as.data.frame() |>
     names_to = "Estimation\nDimension",
     names_prefix = "V",
     values_to = "RRMSE"
-  )
+  ) |> mutate(RMSE = RRMSE * freqs.true[1] / 100)
 
 freq1.plot <- freq1.df[-(1:(2 * 3)), ] |> ggplot() +
   geom_line(
     aes(
       x = dims,
-      y = RRMSE,
+      y = RMSE,
       group = `Estimation\nDimension`,
       colour = `Estimation\nDimension`,
       linetype = `Estimation\nDimension`
@@ -1384,15 +1387,15 @@ freq1.plot <- freq1.df[-(1:(2 * 3)), ] |> ggplot() +
   ) +
   geom_abline(
     slope = 0,
-    intercept = min.ssa.rrmse$freq1[1],
+    intercept = min.ssa.rrmse$freq1[1] * freqs.true[1] / 100,
     col = "gray10",
     lty = 3
   ) +
   annotate(
     geom = "text",
     x = 7,
-    y = min.ssa.rrmse$freq1[1] * 0.95,
-    label = paste0("ESPRIT min RRMSE, L=", min.ssa.rrmse$freq1[2])
+    y = min.ssa.rrmse$freq1[1] * 0.95 * freqs.true[1] / 100,
+    label = paste0("ESPRIT min RMSE, L=", min.ssa.rrmse$freq1[2])
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90))
@@ -1689,14 +1692,14 @@ n <- 25
 Q <- 12
 
 # no rates
-# rates.true <- c(0, 0)
-# plot.name <- "_no_rates"
+rates.true <- c(0, 0)
+plot.name <- "_no_rates"
 # both rates -0.01
 # rates.true <- c(-0.01, -0.01)
 # plot.name <- "_small_eq_rates"
 # both rates -0.02
-rates.true <- c(-0.02, -0.02)
-plot.name <- "_large_eq_rates"
+# rates.true <- c(-0.02, -0.02)
+# plot.name <- "_large_eq_rates"
 # rates from paper
 # rates.true <- c(-0.01, -0.02)
 # plot.name <- ""
@@ -1791,7 +1794,7 @@ save(
 ## Графики RRMSE оценок параметров каждым из методов
 ```{r}
 pltnms <- c("_no_rates", "_small_eq_rates", "_large_eq_rates", "")
-pn <- 4
+pn <- 1
 
 load(file = paste0("./Research/comp_results/mv_L_rrmse", pltnms[pn], ".RData"))
 ```
@@ -1849,20 +1852,21 @@ if (pltnms[pn] != "_no_rates")
 ```{r}
 freq1.df <- freq1.mult.rrmse |> as.data.frame() |> mutate(L = Ls) |>
   pivot_longer(!L, names_to = "Method", values_to = "RRMSE") |>
-    mutate(Method = ifelse(Method == "HO.MSSA", "HO-M-ESPRIT", "M-ESPRIT"))
+    mutate(Method = ifelse(Method == "HO.MSSA", "HO-M-ESPRIT", "M-ESPRIT"), 
+           RMSE = RRMSE * abs(freqs.true[1]) / 100)
 freq1.plot <- freq1.df |> ggplot() + geom_line(aes(
   x = L,
-  y = RRMSE,
+  y = RMSE,
   colour = Method,
   linetype = Method
-), lwd = 1.2)
+), lwd = 1.2) + theme_minimal()
 
 plot.save(
   freq1.plot,
   paste0("./img/freq1_L", pltnms[pn], ".pdf"),
   pdf,
-  width = 9,
-  height = 6,
+  width = 11,
+  height = 5,
   save = save
 )
 ```
@@ -1870,20 +1874,21 @@ plot.save(
 ```{r}
 freq2.df <- freq2.mult.rrmse |> as.data.frame() |> mutate(L = Ls) |>
   pivot_longer(!L, names_to = "Method", values_to = "RRMSE") |>
-    mutate(Method = ifelse(Method == "HO.MSSA", "HO-M-ESPRIT", "M-ESPRIT"))
+    mutate(Method = ifelse(Method == "HO.MSSA", "HO-M-ESPRIT", "M-ESPRIT"),
+           RMSE = RRMSE * abs(freqs.true[2]))
 freq2.plot <- freq2.df |> ggplot() + geom_line(aes(
   x = L,
-  y = RRMSE,
+  y = RMSE,
   colour = Method,
   linetype = Method
-), lwd = 1.2)
+), lwd = 1.2) + theme_minimal()
 
 plot.save(
   freq2.plot,
   paste0("./img/freq2_L", pltnms[pn], ".pdf"),
   pdf,
-  width = 9,
-  height = 6,
+  width = 11,
+  height = 5,
   save = save
 )
 ```
@@ -1896,14 +1901,14 @@ n <- 25
 Q <- 12
 
 # no rates
-# rates.true <- c(0, 0)
-# plot.name <- "_no_rates"
+rates.true <- c(0, 0)
+plot.name <- "_no_rates"
 # both rates -0.01
 # rates.true <- c(-0.01, -0.01)
 # plot.name <- "_small_eq_rates"
 # both rates -0.02
-rates.true <- c(-0.02, -0.02)
-plot.name <- "_large_eq_rates"
+# rates.true <- c(-0.02, -0.02)
+# plot.name <- "_large_eq_rates"
 # rates from paper
 # rates.true <- c(-0.01, -0.02)
 # plot.name <- ""
@@ -1992,7 +1997,7 @@ save(
 ## Графики RMSE
 ```{r}
 pltnms <- c("_no_rates", "_small_eq_rates", "_large_eq_rates", "")
-pn <- 4
+pn <- 1
 
 load(file = paste0("./Research/comp_results/mv_L_rmse", pltnms[pn], ".RData"))
 ```
@@ -2010,14 +2015,14 @@ rec.plot <- rec.df |> ggplot() +
     group = Method,
     colour = Method,
     linetype = Method
-  ), lwd = 1.2)
+  ), lwd = 1.2) + theme_minimal()
 
 plot.save(
   rec.plot,
   paste0("./img/rec_L_rmse", pltnms[pn], ".pdf"),
   pdf,
-  width = 9,
-  height = 6,
+  width = 11,
+  height = 5,
   save = save
 )
 ```
