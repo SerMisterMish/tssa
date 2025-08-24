@@ -496,15 +496,15 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \max|\omega| \leqslant \frac{1}{2D}$
 \end{frame}
 
-\begin{frame}{Parameters Estimation Comparisons, Single-Channel Case}
+\begin{frame}{Single-Channel Case Comparison, Parameters Estimation}
   \vspace*{-0.3cm}
   \[
     x_{n} = e^{ \alpha_1 n } e^{2 \pi\mathrm{i} \omega_1 n} +
     e^{ \alpha_2 n } e^{ 2 \pi  \mathrm{i}\omega_2 n} + \zeta_n
   \]
-  $\zeta_n$ --- Complex white gaussian noise, $\omega_1 = 0.2,\,
-  \omega_2 = 0.22$, $\alpha_1=\alpha_2=0$ (same results for
-  $\alpha_1=\alpha_2 < 0$ and $\alpha_1 < \alpha_2 < 0$).
+  $\zeta_n$ --- Complex white gaussian noise, $\mathrm{D}(\zeta_n) =
+  0.04^2$, $\omega_1 = 0.2,\, \omega_2 = 0.22$, $\alpha_1=\alpha_2=0$
+  (same results for $\alpha_1=\alpha_2 < 0$ and $\alpha_1 < \alpha_2 < 0$).
 
   \begin{figure}
     \centering
@@ -514,13 +514,33 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \end{figure}
 \end{frame}
 
-\begin{frame}{Parameters Estimation Comparisons, Dstack}
+\begin{frame}{Single-Channel Case Comparison, Signal Extraction}
+  \vspace*{-0.3cm}
+  \[
+    x_{n} = e^{ \alpha_1 n } e^{2 \pi\mathrm{i} \omega_1 n} +
+    e^{ \alpha_2 n } e^{ 2 \pi  \mathrm{i}\omega_2 n} + \zeta_n
+  \]
+  $\zeta_n$ --- Complex white gaussian noise,
+  $\mathrm{D}(\zeta_n) = 0.04^2$, $\omega_1 = 0.2,\,
+  \omega_2 = 0.22$, $\alpha_1=\alpha_2=0$ (same results for
+  $\alpha_1=\alpha_2 < 0$ and $\alpha_1 < \alpha_2 < 0$).
+
+  \begin{figure}
+    \centering
+    \includegraphics[width=0.89\textwidth]{img/rec_dim_rmse_no_rates.pdf}
+    \caption{RMSE of signal estimation vs window lengths
+    ($I\times L \times K$)}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Single-Channel Case, Dstack Parameters Estimation}
   \vspace*{-0.3cm}
   \[
     x_{n} = \cos(2 \pi \omega_1 n) +
     \cos(2 \pi \omega_2 n) + \xi_n
   \]
-  \[\omega_1 = 0.02,\, \omega_2 = 0.0205,\, \xi_n \sim \rmN(0, 0.2)\]
+  $\omega_1 = 0.02,\, \omega_2 = 0.0205$, $\xi_n$ --- white gaussian
+  noise, $\mathrm{D}(\xi_n) = 0.2^2$
 
   \begin{figure}[!ht]
     \begin{minipage}{0.48\textwidth}
@@ -536,13 +556,14 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \end{figure}
 \end{frame}
 
-\begin{frame}{Parameters Estimation Comparisons, Dstack}
+\begin{frame}{Single-Channel Case, Dstack Parameters Estimation}
   \vspace*{-0.3cm}
   \[
     x_{n} = \cos(2 \pi \omega_1 n) +
     \cos(2 \pi \omega_2 n) + \xi_n
   \]
-  \[\omega_1 = 0.02,\, \omega_2 = 0.0205,\, \xi_n \sim \rmN(0, 0.6)\]
+  $\omega_1 = 0.02,\, \omega_2 = 0.0205$, $\xi_n$ --- white gaussian
+  noise, $\mathrm{D}(\xi_n) = 0.6^2$
   \begin{figure}
     \begin{minipage}{0.48\textwidth}
       \centering
@@ -557,47 +578,14 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \end{figure}
 \end{frame}
 
-\begin{frame}{Parameters Estimation Comparisons, Multi-Channel Case}
-  \[
-    x_{n}^{(m)} = a_1^{(m)}
-    e^{2 \pi \mathrm{i} \omega_1 n} +
-    a_2^{(m)}
-    e^{2 \pi \mathrm{i} \omega_2 n} + \zeta_n^{(m)},
-  \]
-  $\zeta_n^{(m)}$ --- Complex white gaussian noise, $\omega_1 = 0.2,\,
-  \omega_2 = 0.22$
-  \begin{figure}[!ht]
-    \centering
-    \includegraphics[width=0.9\textwidth]{img/freq1_L_no_rates.pdf}
-    \caption{RMSE of estimates for $\omega_1$. vs window length L.}
-  \end{figure}
-\end{frame}
-
-\begin{frame}{Signal Extraction Comparisons, Single-Channel Case}
-  \vspace*{-0.3cm}
-  \[
-    x_{n} = e^{ \alpha_1 n } e^{2 \pi\mathrm{i} \omega_1 n} +
-    e^{ \alpha_2 n } e^{ 2 \pi  \mathrm{i}\omega_2 n} + \zeta_n
-  \]
-  $\zeta_n$ --- Complex white gaussian noise, $\omega_1 = 0.2,\,
-  \omega_2 = 0.22$, $\alpha_1=\alpha_2=0$ (same results for
-  $\alpha_1=\alpha_2 < 0$ and $\alpha_1 < \alpha_2 < 0$).
-
-  \begin{figure}
-    \centering
-    \includegraphics[width=0.89\textwidth]{img/rec_dim_rmse_no_rates.pdf}
-    \caption{RMSE of signal estimation vs window lengths
-    ($I\times L \times K$)}
-  \end{figure}
-\end{frame}
-
-\begin{frame}{Signal Extraction Comparisons, Dstack}
+\begin{frame}{ Single-Channel Case, Dstack Signal Extraction}
   \vspace*{-0.3cm}
   \[
     x_{n} = \cos(2 \pi \omega_1 n) +
     \cos(2 \pi \omega_2 n) + \xi_n
   \]
-  \[\omega_1 = 0.02,\, \omega_2 = 0.0205,\, \xi_n \sim \rmN(0, 0.2)\]
+  $\omega_1 = 0.02,\, \omega_2 = 0.0205$, $\xi_n$ --- white gaussian
+  noise, $\mathrm{D}(\xi_n) = 0.2^2$
 
   \begin{figure}[!ht]
     \begin{minipage}{0.48\textwidth}
@@ -613,20 +601,88 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \end{figure}
 \end{frame}
 
-\begin{frame}{Signal Extraction Comparisons, Multi-Channel Case}
+\begin{frame}{Multi-Channel Case, Parameters Estimation}
+  \vspace*{-0.3cm}
   \[
     x_{n}^{(m)} = a_1^{(m)}
     e^{2 \pi \mathrm{i} \omega_1 n} +
     a_2^{(m)}
     e^{2 \pi \mathrm{i} \omega_2 n} + \zeta_n^{(m)},
   \]
-  $\zeta_n^{(m)}$ --- Complex white gaussian noise, $\omega_1 = 0.2,\,
+  $\zeta_n^{(m)}$ --- Complex white gaussian noise,
+  $\mathrm{D}\left(\zeta_n^{(m)}\right) = 0.2^2$, $\omega_1 = 0.2,\,
   \omega_2 = 0.22$
   \begin{figure}[!ht]
     \centering
-    \includegraphics[width=0.9\textwidth]{img/rec_L_rmse_no_rates.pdf}
+    \includegraphics[width=0.87\textwidth]{img/freq1_L_no_rates.pdf}
     \caption{RMSE of estimates for $\omega_1$. vs window length L.}
   \end{figure}
+\end{frame}
+
+\begin{frame}{Multi-Channel Case, Signal Extraction}
+  \vspace*{-0.3cm}
+  \[
+    x_{n}^{(m)} = a_1^{(m)}
+    e^{2 \pi \mathrm{i} \omega_1 n} +
+    a_2^{(m)}
+    e^{2 \pi \mathrm{i} \omega_2 n} + \zeta_n^{(m)},
+  \]
+  $\zeta_n^{(m)}$ --- Complex white gaussian noise,
+  $\mathrm{D}\left(\zeta_n^{(m)}\right) = 0.2^2$, $\omega_1 = 0.2,\,
+  \omega_2 = 0.22$
+  \begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.87\textwidth]{img/rec_L_rmse_no_rates.pdf}
+    \caption{RMSE of estimates for $\omega_1$. vs window length L.}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Results and Fututre Work}
+  \bluetext{Results:}
+  \begin{itemize}
+    \item Majority of tensor-based methods have lower precision than their
+      matrix-based counterparts for single-channel problems
+    \item Exception is estimation of parameters for components with
+      close frequencies in presence of high-level noise using Dstack
+    \item For multi-channel problems tensor-based methods have
+      generally higher precision
+      but the difference between minimal errors is low
+  \end{itemize}
+  \vspace{0.3cm}
+
+  \bluetext{Future Work:}
+  \begin{itemize}
+    \item Trying other tensor decompositions
+    \item Implementation of tensor modifications for other SSA-based methods
+    \item \dots
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[noframenumbering]{Algorithms Complexities}
+  $\calX \in \bbC^{I\times L \times K}$, $\bfX \in \bbC^{\hat{L}
+  \times \hat{K}}$, $I < L < K$, $\hat{L} < \hat{K}$,\\
+  $I + L + K = N + 2$, $\hat{L} + \hat{K} = N + 1$
+  \medskip
+  \begin{itemize}
+    \item \bluetext{SVD}$(\bfX)$: $O(\hat{L}^2 \hat{K})$, or
+      $O(r\hat{L}\hat{K})$ if only
+      need $r$-rank approximation, or $O(r N \log (N))$ if $\bfX$ is Hankel
+      \medskip
+    \item \bluetext{HOSVD}$(\calX)$: $O(ILKN)$, or
+      $O(ILK(r_1 + r_2 + r_3))$ if only need $(r_1, r_2, r_3)$-rank
+      approximation, or $O((r_1 + r_2 + r_3)I(L + K)\log(L + K))$ if
+      $\calX$ is Hankel
+      \medskip
+    \item \bluetext{HOOI-SSA:}
+      \[
+        O(r_1 r_2 r_3 (I + L + J)),
+      \]
+      with linear convergence. For precision level of $\varepsilon$:
+      \[
+        O\left(ILJ(r_1 + r_2 + r_3) + \frac{1}{\varepsilon}r_1 r_2
+        r_3 (I + L + J)\right)
+      \]
+  \end{itemize}
 \end{frame}
 
 \end{document}
