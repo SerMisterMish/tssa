@@ -118,19 +118,63 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 \end{frame}
 
 \begin{frame}{ESPRIT Frequency Estimation Example}
+  \vspace*{0.4cm}
   ESPRIT --- SSA-related method for parameters estimation
+  \vspace{3cm}
 
-  \begin{figure}[!ht]
-    \centering
-    \includegraphics[draft, width=0.8\textwidth,
-    height=0.5\textheight]{example-image}\\
-    *Pole motion data probably*
-  \end{figure}
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[right=3.2cm, below=2.6cm] at (current page.north west)
+    {
+      \includegraphics[width=0.48\textwidth]{Earth_x.pdf}
+    };
+  \end{tikzpicture}
 
-  \begin{enumerate}
-    \item Estimate --- interpretation
-    \item Estimate --- interpretation
-  \end{enumerate}
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[right=3.2cm, above=1.5cm] at (current page.south west)
+    {
+      \includegraphics[width=0.48\textwidth]{Earth_y.pdf}
+    };
+  \end{tikzpicture}
+
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[left=3.4cm, above=-1.2cm] at (current page.east)
+    {
+      \includegraphics[width=0.52\textwidth]{Earth_complex.pdf}
+    };
+  \end{tikzpicture}
+
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      Estimates:
+      \begin{table}
+        \centering
+        \begin{tabular}{c|c}
+          Period (Days) & Damping rate \\ \hline
+          $365.41$ & $-5.5 \cdot 10^{-6}$ \\ \hline
+          $433.10$ & $-2.2 \cdot 10^{-5}$ \\ \hline
+          $\to \infty$ & $\phantom{-}2.7 \cdot 10^{-5}$
+        \end{tabular}
+      \end{table}
+    \end{column}
+    \begin{column}{0.01\textwidth}
+
+    \end{column}
+  \end{columns}
+
+  % \begin{figure}[!ht]
+  %   \centering
+  %   \includegraphics[draft, width=0.8\textwidth,
+  %   height=0.5\textheight]{example-image}\\
+  %   *Pole motion data probably*
+  % \end{figure}
+
+  % \begin{enumerate}
+  %   \item Estimate --- interpretation
+  %   \item Estimate --- interpretation
+  % \end{enumerate}
 \end{frame}
 
 \begin{frame}{Complex Time Series}
