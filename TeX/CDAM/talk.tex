@@ -425,6 +425,56 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \end{columns}
 \end{frame}
 
+\begin{frame}{Some tensor decompositions}
+  \begin{itemize}
+    \item \bluetext{CPD}: sum of rank-1
+      tensors ($\calA$ is rank-1 if $\calA=B \circ C \circ D$ for
+      some vectors $B$, $C$, $D$, where $\circ$ denotes an outer product).
+      \begin{itemize}
+        \item Considered for signal extraction in [Kouchaki, Sanei (2013)]
+        \item Requires to know number of components in advance
+        \item Does not provide any form of orthogonality of components
+        \item No connection between signal rank and number of components
+      \end{itemize}
+      \medskip
+    \item \bluetext{T-SVD}: $\calA = \calU * \calS * \calV^\rmH$,
+      where $\calD = \calB * \calC \Leftrightarrow d_{ilk} = \sum_{j}
+      b_{ijk} c_{jlk}$, subindex $\rmH$ denotes complex conjugation of
+      all frontal slices, $\calU = \calU^{\rmH}$, $\calV = \calV^{\rmH}$,
+      all frontal slices of $\calS$ are diagonal matrices (tubal form)
+      \begin{itemize}
+        \item Considered for signal extraction and decomposition in
+          [Trung~et~al.~(2024)]
+        \item Provides some orthogonality
+        \item Numerical experiments show less precision than
+          matrix-based methods
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Some tensor decompositions}
+  \begin{itemize}
+    \item \bluetext{$(L_r, L_r, 1)$}: sum of tensors with elements of
+      form $a_{ilk}^{(r)} = b_{il}^{(r)} d_k^{(r)}$, for some vector
+      $D^{(r)}$ and matrix $B^{(r)}$ of rank $L_r$
+      \begin{itemize}
+        \item Considered for signal extraction and decomposition in
+          [De~Lathauwer~(2011)]
+        \item Sparse theory and no open-source implementation
+      \end{itemize}
+      \medskip
+    \item \bluetext{HOSVD}: $\calX = \sum_{i=1}^{I}\,
+      \sum_{l=1}^{L}\, \sum_{k=1}^{K}\, \calZ_{ilk} U_i^{(1)} \circ
+      U_l^{(2)} \circ U_k^{(3)}$
+      \begin{itemize}
+        \item Considered for signal parameter estimation in [Papy et
+          al. (2005)], [Papy et al. (2009)]
+        \item Provides orthogonality of components
+        \item Has proven connection between number of components and signal rank
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
 \begin{frame}{Higher-Order SVD. Higher-Order Orthogonal Iterations}
   \vspace*{-0.7cm}
   \begin{align*}
@@ -479,7 +529,8 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
     \item \textbf{Decomposition \& Approximation}. Using $(r_1,\,
       r_2,\, r_3)$\\\smallskip
       $\calX \mapsto
-      \operatorname{Trunc}(\operatorname{HOSVD}(\calX)) = \widetilde{\calS}$ or
+      \operatorname{Trunc}(\operatorname{HOSVD}(\calX)) =
+      \widetilde{\calS}$ or
       $\calX \mapsto \operatorname{HOOI}(\calX) = \widetilde{\calS}$
       \vspace{0.2cm}
 
