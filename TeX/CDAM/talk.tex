@@ -75,7 +75,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 
 \end{frame}
 
-\begin{frame}{SSA Materials}
+\begin{frame}{SSA References}
   Books:
   \begin{itemize}
     \item J.Elsner and A.Tsonis. Singular Spectrum Analysis: A New Tool in
@@ -96,12 +96,61 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \begin{itemize}
     \item R Package: Rssa \\
       \hspace{2ex} https://CRAN.R-project.org/package=Rssa
-    \item Python Package: py-ssa-lib (less features) \\
-      \hspace{2ex} https://pypi.org/project/py-ssa-lib
+    \item Python Package: PyRssa (Python wrapper over Rssa) \\
+      \hspace{2ex} https://pypi.org/project/pyrssa/
   \end{itemize}
 \end{frame}
 
-\begin{frame}{SSA Decomposition Example}
+\begin{frame}{Decomposition and Estimation Example}
+  Data: Coordinates of Earth pole motion [IERS EOP 14 C04]\\
+  Plotted each over time and against each other
+
+  % \vspace{0.3cm}
+
+  % Position ($X$/$Y$) vs Date
+
+  % \vspace{2.2cm}
+  \vspace{5.5cm}
+
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[right=3.3cm, below=2.2cm] at (current page.north west)
+    {
+      \includegraphics[width=0.49\textwidth]{Earth_x.pdf}
+    };
+  \end{tikzpicture}
+
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[left=3.3cm, below=2.2cm] at (current page.north east)
+    {
+      \includegraphics[width=0.49\textwidth]{Earth_y.pdf}
+    };
+  \end{tikzpicture}
+
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[above=0.2cm] at (current page.south)
+    {
+      \includegraphics[width=0.58\textwidth]{Earth_complex.pdf}
+    };
+  \end{tikzpicture}
+
+  % \begin{columns}
+  %   \begin{column}{0.1\textwidth}
+
+  %   \end{column}
+  %   \begin{column}{0.41\textwidth}
+  %     \centering
+  %     $Y$ vs $X$
+  %   \end{column}
+  %   \begin{column}{0.58\textwidth}
+
+  %   \end{column}
+  % \end{columns}
+
+  % \vspace{3cm}
+
+\end{frame}
+
+\begin{frame}{Decomposition and Estimation Example}
   Decomposition of time series:
   \begin{itemize}
     \item Low-frequency component + high-frequency component
@@ -109,45 +158,16 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
     \item Trend + Seasonality + Noise
   \end{itemize}
 
-  \begin{figure}[!ht]
-    \center
-    \includegraphics[draft, width=0.8\textwidth,
-    height=0.5\textheight]{example-image}\\
-    *Some data*: demonstration of series decomposition with SSA
-  \end{figure}
-\end{frame}
-
-\begin{frame}{ESPRIT Frequency Estimation Example}
-  \vspace*{0.4cm}
-  ESPRIT --- SSA-related method for parameters estimation
-  \vspace{3cm}
-
-  \begin{tikzpicture}[remember picture, overlay]
-    \node[right=3.2cm, below=2.6cm] at (current page.north west)
-    {
-      \includegraphics[width=0.48\textwidth]{Earth_x.pdf}
-    };
-  \end{tikzpicture}
-
-  \begin{tikzpicture}[remember picture, overlay]
-    \node[right=3.2cm, above=1.5cm] at (current page.south west)
-    {
-      \includegraphics[width=0.48\textwidth]{Earth_y.pdf}
-    };
-  \end{tikzpicture}
-
-  \begin{tikzpicture}[remember picture, overlay]
-    \node[left=3.4cm, above=-1.2cm] at (current page.east)
-    {
-      \includegraphics[width=0.52\textwidth]{Earth_complex.pdf}
-    };
-  \end{tikzpicture}
-
   \begin{columns}
     \begin{column}{0.5\textwidth}
-
+      \begin{figure}[!ht]
+        \center
+        \includegraphics[width=0.99\textwidth]{Earth_complex_signal.pdf}\\
+        Extracted signal
+      \end{figure}
     \end{column}
-    \begin{column}{0.49\textwidth}
+
+    \begin{column}{0.5\textwidth}
       Estimates:
       \begin{table}
         \centering
@@ -159,31 +179,81 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
         \end{tabular}
       \end{table}
     \end{column}
-    \begin{column}{0.01\textwidth}
-
-    \end{column}
   \end{columns}
-
-  % \begin{figure}[!ht]
-  %   \centering
-  %   \includegraphics[draft, width=0.8\textwidth,
-  %   height=0.5\textheight]{example-image}\\
-  %   *Pole motion data probably*
-  % \end{figure}
-
-  % \begin{enumerate}
-  %   \item Estimate --- interpretation
-  %   \item Estimate --- interpretation
-  % \end{enumerate}
 \end{frame}
 
-\begin{frame}{Complex Time Series}
-  Common origins of complex-valued time series:
-  \begin{itemize}
-    \item Can be constructed from two related features
-    \item Arise as a result of applying the Fourier transform to real data
-  \end{itemize}
-\end{frame}
+% \begin{frame}{SSA Decomposition Example}
+%   Decomposition of time series:
+%   \begin{itemize}
+%     \item Low-frequency component + high-frequency component
+%     \item \bluetext{Signal + noise}
+%     \item Trend + Seasonality + Noise
+%   \end{itemize}
+
+%   \begin{figure}[!ht]
+%     \center
+%     \includegraphics[draft, width=0.8\textwidth,
+%     height=0.5\textheight]{example-image}\\
+%     *Some data*: demonstration of series decomposition with SSA
+%   \end{figure}
+% \end{frame}
+
+% \begin{frame}{ESPRIT Frequency Estimation Example}
+%   ESPRIT --- SSA-related method for parameters estimation.\\
+%   Data: Coordinates of Earth pole motion
+%   \vspace{2.7cm}
+
+%   \begin{tikzpicture}[remember picture, overlay]
+%     \node[right=3.2cm, below=2.6cm] at (current page.north west)
+%     {
+%       \includegraphics[width=0.48\textwidth]{Earth_x.pdf}
+%     };
+%   \end{tikzpicture}
+
+%   \begin{tikzpicture}[remember picture, overlay]
+%     \node[right=3.2cm, above=1.5cm] at (current page.south west)
+%     {
+%       \includegraphics[width=0.48\textwidth]{Earth_y.pdf}
+%     };
+%   \end{tikzpicture}
+
+%   \begin{tikzpicture}[remember picture, overlay]
+%     \node[left=3.4cm, above=-1.2cm] at (current page.east)
+%     {
+%       \includegraphics[width=0.52\textwidth]{Earth_complex_signal.pdf}
+%     };
+%   \end{tikzpicture}
+
+%   \begin{columns}
+%     \begin{column}{0.5\textwidth}
+
+%     \end{column}
+%     \begin{column}{0.49\textwidth}
+%       Estimates:
+%       \begin{table}
+%         \centering
+%         \begin{tabular}{c|c}
+%           Period (Days) & Damping rate \\ \hline
+%           $365.41$ & $-5.5 \cdot 10^{-6}$ \\ \hline
+%           $433.10$ & $-2.2 \cdot 10^{-5}$ \\ \hline
+%           $\to \infty$ & $\phantom{-}2.7 \cdot 10^{-5}$
+%         \end{tabular}
+%       \end{table}
+%     \end{column}
+%     \begin{column}{0.01\textwidth}
+
+%     \end{column}
+%   \end{columns}
+
+% \end{frame}
+
+% \begin{frame}{Complex Time Series}
+%   Common origins of complex-valued time series:
+%   \begin{itemize}
+%     \item Can be constructed from two related features
+%     \item Arise as a result of applying the Fourier transform to real data
+%   \end{itemize}
+% \end{frame}
 
 \begin{frame}{SSA Algorithm: Embedding}
   \textbf{Input:} time series $\tX = (x_1,\, x_2,\, \ldots, x_N)$,
@@ -276,8 +346,8 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
       \medskip
     \item Any signal $\tS$ can be represented in the form of a finite sum:
       \[
-        s_n = \sum_{j} p_j(n) \exp(\alpha_j n + \mathrm{i}(2\pi
-        \omega_j n + \varphi_j)),
+        s_n = \sum_{j} p_j(n) \exp(\alpha_j n + \mathrm{i}2\pi
+        \omega_j n),
       \]
       where $p_j(n)$ is a polynomial in $n$
       \medskip
@@ -293,6 +363,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 \end{frame}
 
 \begin{frame}{ESPRIT Algorithm: General Idea}
+  Consider a signal $\tS$ with elements $s_n$:
   \[
     s_n = \sum_{j=1}^{2} \exp(\alpha_j n + \mathrm{i}(2\pi
     \omega_j n + \varphi_j)) = A_1 z_1^n + A_2 z_2^n
@@ -351,14 +422,14 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \]
   \vspace{0.4cm}
 
-  When to chose MSSA over SSA for each channel:
+  When to choose MSSA over SSA for each channel:
   \begin{itemize}
-    \item All channels have ''similar'' structure
-    \item ''Supporting'' channels with lower noise level
+    \item All channels have ``similar'' structure
+    \item ``Supporting'' channels with lower noise level
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Intoduction of Tensors}
+\begin{frame}{Introduction of Tensors}
   \begin{table}
     \hspace*{-0.9cm}
     \begin{tabular}{rlllll}
@@ -456,7 +527,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \begin{itemize}
     \item \bluetext{$(L_r, L_r, 1)$}: sum of tensors with elements of
       form $a_{ilk}^{(r)} = b_{il}^{(r)} d_k^{(r)}$, for some vector
-      $D^{(r)}$ and matrix $B^{(r)}$ of rank $L_r$
+      $D^{(r)}$ and matrix $\bfB^{(r)}$ of rank $L_r$ ($r$ is a sum index)
       \begin{itemize}
         \item Considered for signal extraction and decomposition in
           [De~Lathauwer~(2011)]
@@ -464,7 +535,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
       \end{itemize}
       \medskip
     \item \bluetext{HOSVD}: $\calX = \sum_{i=1}^{I}\,
-      \sum_{l=1}^{L}\, \sum_{k=1}^{K}\, \calZ_{ilk} U_i^{(1)} \circ
+      \sum_{l=1}^{L}\, \sum_{k=1}^{K}\, z_{ilk} U_i^{(1)} \circ
       U_l^{(2)} \circ U_k^{(3)}$
       \begin{itemize}
         \item Considered for signal parameter estimation in [Papy et
@@ -510,7 +581,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   Iterative algorithm for finding optimal approximation -- \bluetext{HOOI}
 \end{frame}
 
-\begin{frame}{Higher-Order SSA, MSSA, ESPRIT}
+\begin{frame}{T-SSA, T-MSSA and T-ESPRIT with HOSVD}
   \textbf{Input:} time series $\tX$,
   window length: $(I, L)$ for single-channel or $L$ for multi-channel,
   signal ranks $(r_1,\, r_2,\, r_3)$, $d$ --- estimation dimension
@@ -537,7 +608,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
     \item \textbf{Reconstruction or Estimation}. \\
       \begin{itemize}
         \item \textbf{Reconstruction}.
-          $\tS = \left(\calT\right)^{-1}
+          $\tS = \calT^{-1}
           \left(\Pi_{\calH_{\mathrm{T}}} (\widetilde{\calS})\right)$,
           $\Pi_{\calH_{\mathrm{T}}}$ --- projector onto the space of
           Hankel tensors
@@ -552,7 +623,12 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 \end{frame}
 
 \begin{frame}{Dtack Modifications}
-  $\tX = (x_1,\, x_2,\, \ldots,\, x_N)$, $M = \lfloor N / D\rfloor$
+  Possible problem for ESPRIT: components with close frequencies can
+  mix into one in presence of noise. Solution: using Dstack mapping.
+  \medskip
+
+  Consider $\tX = (x_1,\, x_2,\, \ldots,\, x_N)$, $M = \lfloor N /
+  D\rfloor$, then
   \[
     \operatorname{Dstack}_D(\tX) = \calD_D(\tX) =
     \left[
@@ -563,8 +639,6 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
         \vdots & \vdots & \ \cdots \  & \vdots \\
         x_{(M - 1)D+1} & x_{(M - 1)D+2}
         &\ldots & x_{MD} \\
-        % \multicolumn{1}{c}{\underbrace{\hphantom{x_{(M -
-        % 1)D+1}}}_{\tX_D^{(1)}}}
         \CodeAfter
         \UnderBrace[shorten,yshift=1.5mm]{last-1}{last-1}{\tX_D^{(1)}}
         \UnderBrace[shorten,yshift=1.5mm]{last-2}{last-2}{\tX_D^{(2)}}
@@ -572,10 +646,9 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
       \end{NiceArray}
     \right]
   \]
-  \vspace{0.4cm}
+  \vspace{0.3cm}
 
   \begin{table}
-    \centering
     \renewcommand{\arraystretch}{1.4}
     \begin{tabular}{r|l}
       Dstack-SSA & $\displaystyle\tX \mapsto \bfX=
@@ -583,7 +656,6 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
       Dstack-T-SSA & $\displaystyle\tX \mapsto \calX=
       \calT_{\textrm{T-MSSA}}^{(L)} \left( \calD_D (\tX)\right)$
     \end{tabular}
-
   \end{table}
 
   \bluetext{Undersampling}: $\displaystyle\omega \mapsto \hat\omega=
@@ -710,7 +782,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \begin{figure}[!ht]
     \centering
     \includegraphics[width=0.87\textwidth]{img/freq1_L_no_rates.pdf}
-    \caption{RMSE of estimates for $\omega_1$. vs window length L.}
+    \caption{RMSE of estimates for $\omega_1$ vs window length L.}
   \end{figure}
 \end{frame}
 
@@ -728,7 +800,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \begin{figure}[!ht]
     \centering
     \includegraphics[width=0.87\textwidth]{img/rec_L_rmse_no_rates.pdf}
-    \caption{RMSE of estimates for $\omega_1$. vs window length L.}
+    \caption{RMSE of signal estimation vs window length L.}
   \end{figure}
 \end{frame}
 
