@@ -15,7 +15,7 @@ library(beepr)
 
 setwd(rprojroot::find_rstudio_root_file())
 knitr::opts_knit$set(root.dir = getwd())
-source(file = "./Research/TSSA.R")
+source(file = "./Source/TSSA.R")
 ```
 
 # Проверка корректности модификаций

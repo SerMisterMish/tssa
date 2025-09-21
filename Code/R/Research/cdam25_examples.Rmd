@@ -1,0 +1,259 @@
+---
+title: "CDAM'25 examples"
+author: "Khromov Nikita"
+output: html_document
+---
+
+```{r, setup, include=FALSE}
+library(Rssa)
+library(scales)
+library(rTensor)
+library(ggplot2)
+library(dplyr)
+
+setwd(rprojroot::find_rstudio_root_file())
+knitr::opts_knit$set(root.dir = getwd())
+source(file = "./Source/TSSA.R")
+source(file = "./Source/cdam25_extra.R")
+```
+
+# Single-channel parameters estimation
+
+Loading data
+```{r}
+load(file = paste0("./Research/comp_results/dim_rrmse_no_rates_tens.RData"))
+load(file = paste0("./Research/comp_results/dim_rrmse_no_rates_ssa.RData"))
+```
+
+Preparation
+```{r}
+sd <- 0.04
+n <- 25
+rates.true <- c(0, 0)
+freqs.true <- c(0.2, 0.22)
+
+signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
+  exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1))
+
+groups <- list(1:2)
+max.r <- max(sapply(groups, max))
+est.dims <- list(1, 2, 3)
+Ls.ssa <- seq(from = max.r + 1, to = (n + 1) %/% 2, by = 1)
+
+# I >= L >= J
+Is <- seq(from = max.r + 1, to = n - max.r - 1, by = 1)
+Ls <- seq(from = max.r + 1, to = n - max.r - 1, by = 1)
+
+correct.dims <- which(outer(Is, Ls, (
+  \(i, l) ifelse((i >= l) &
+                   (n - i - l + 2 > max.r) &
+                   (n - i - l + 2 <= l), TRUE, FALSE)
+)), arr.ind = TRUE)
+
+len.out <- nrow(correct.dims)
+
+tens.dims <- matrix(ncol = 3, nrow = len.out)
+colnames(tens.dims) <- c("I", "L", "J")
+tens.dims[, "I"] <- Is[correct.dims[,1]]
+tens.dims[, "L"] <- Ls[correct.dims[,2]]
+tens.dims[, "J"] <- n - tens.dims[, "I"] - tens.dims[, "L"] + 2
+
+tens.dims <- tens.dims[order(tens.dims[,1], tens.dims[,2], decreasing = TRUE),]
+```
+
+Table
+```{r}
+freq1.tssa.df <- freq1.rrmse |> as.data.frame() |>
+  mutate(dims = factor(
+    x = apply(tens.dims, 1, paste, collapse = "x"),
+    levels = apply(tens.dims, 1, paste, collapse = "x")
+  )) |>
+  pivot_longer(
+    !dims,
+    names_to = "Estimation\nDimension",
+    names_prefix = "V",
+    values_to = "RRMSE"
+  ) |> mutate(RMSE = RRMSE * freqs.true[1] / 100, Method = "T-SSA") 
+
+freq1.ssa.df <- data.frame(RRMSE = freq1.ssa.rrmse, RMSE = freq1.ssa.rrmse * freqs.true[1] / 100, 
+                           L = Ls.ssa, Method = rep("SSA", 11))
+
+freq1.summary <- summarise(
+  freq1.tssa.df,
+  Method = "T-SSA",
+  Min = min(RMSE),
+  Max = max(RMSE),
+  Median = median(RMSE), 
+  Mean = mean(RMSE)
+) |>
+  rbind(
+    summarise(
+      freq1.ssa.df,
+      Method = "SSA",
+      Min = min(RMSE),
+      Max = max(RMSE),
+      Median = median(RMSE),
+      Mean = mean(RMSE)
+    )
+  )
+
+save(freq1.summary, file = "./Research/comp_results/cdam25_1d_param.RData")
+xtable(
+  freq1.summary,
+  digits = 4,
+  display = c("s", "s", rep("f", 4)),
+  align = rep("c", 6)
+)
+```
+
+If symmetry relative to L / 2 is considered
+```{r}
+freq1.summary <- summarise(
+  freq1.tssa.df,
+  Method = "T-SSA",
+  Min = min(RMSE),
+  Max = max(RMSE),
+  Median = median(RMSE), 
+  Mean = mean(RMSE)
+) |>
+  rbind(
+    summarise(
+      freq1.ssa.df[7:11, ],
+      Method = "SSA",
+      Min = min(RMSE),
+      Max = max(RMSE),
+      Median = median(RMSE),
+      Mean = mean(RMSE)
+    )
+  )
+
+save(freq1.summary, file = "./Research/comp_results/cdam25_1d_param.RData")
+xtable(
+  freq1.summary,
+  digits = 4,
+  display = c("s", "s", rep("f", 4)),
+  align = rep("c", 6)
+)
+```
+
+
+<!-- SSA and T-SSA errors on one plot -->
+<!-- ```{r} -->
+
+<!-- x1_range <- range(freq1.ssa.df$L) -->
+<!-- x2_range <- range(1:111) -->
+
+<!-- freq1.tssa.df.transformed <- freq1.tssa.df %>% -->
+<!--   mutate(Dims_scaled = scales::rescale(1:111, to = x1_range, from = x2_range)) -->
+
+<!-- ggplot() + -->
+<!--   geom_line(data = freq1.ssa.df, aes(x = L, y = RMSE, color = "SSA"), size = 1) + -->
+<!--   geom_line(data = freq1.tssa.df.transformed, aes(x = Dims_scaled, y = RMSE, color = "T-SSA"), size = 1) + -->
+<!--   scale_x_continuous( -->
+<!--     name = "L, SSA", -->
+<!--     labels = function(x) as.integer(round(x)), -->
+<!--     sec.axis = sec_axis( -->
+<!--       trans = ~ scales::rescale(., to = x2_range, from = x1_range), -->
+<!--       name = "Dimensions index, T-SSA", -->
+<!--       labels = function(x) as.integer(round(x)) -->
+<!--     ) -->
+<!--   ) + -->
+<!--   scale_color_manual( -->
+<!--     name = "Method", -->
+<!--     values = c("SSA" = "blue", "T-SSA" = "red") -->
+<!--   ) + -->
+<!--   labs( -->
+<!--     y = "RMSE", -->
+<!--   ) + -->
+<!--   theme_minimal() + -->
+<!--   theme( -->
+<!--     legend.position = "bottom" -->
+<!--   ) -->
+
+<!-- ``` -->
+
+# Single Channel signal extraction
+
+Loading data
+```{r}
+load(file = paste0("./Research/comp_results/signal_no_rates_hossa.RData"))
+load(file = paste0("./Research/comp_results/signal_no_rates_ssa.RData"))
+```
+
+Preparation
+```{r}
+sd <- 0.04
+n <- 25
+rates.true <- c(0, 0)
+freqs.true <- c(0.2, 0.22)
+
+signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) +
+  exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1))
+
+groups <- list(1:2)
+max.r <- max(sapply(groups, max))
+trunc_dims <- list(1, 1:2, 1:3)
+Ls.ssa <- seq(from = max.r + 1, to = (n + 1) %/% 2, by = 1)
+
+# I >= L >= J
+Is <- seq(from = max.r + 1, to = n - max.r - 1, by = 1)
+Ls <- seq(from = max.r + 1, to = n - max.r - 1, by = 1)
+
+correct.dims <- which(outer(Is, Ls, (
+  \(i, l) ifelse((i >= l) &
+                   (n - i - l + 2 > max.r) &
+                   (n - i - l + 2 <= l), TRUE, FALSE)
+)), arr.ind = TRUE)
+
+len.out <- nrow(correct.dims)
+
+tens.dims <- matrix(ncol = 3, nrow = len.out)
+colnames(tens.dims) <- c("I", "L", "J")
+tens.dims[, "I"] <- Is[correct.dims[,1]]
+tens.dims[, "L"] <- Ls[correct.dims[,2]]
+tens.dims[, "J"] <- n - tens.dims[, "I"] - tens.dims[, "L"] + 2
+
+tens.dims <- tens.dims[order(tens.dims[,1], tens.dims[,2], decreasing = TRUE),]
+
+R <- 500
+```
+
+Table
+```{r}
+rec.tssa.df <- rec.rmse |> as.data.frame() |>
+  mutate(dims = factor(x = apply(tens.dims, 1, paste, collapse = "x"),
+                       levels = apply(tens.dims, 1, paste, collapse = "x"))) |>
+  pivot_longer(!dims, names_to = "trunc dims", names_prefix = "V", values_to = "RMSE") |>
+  mutate(`trunc dims` = as.factor(paste(trunc_dims[as.integer(`trunc dims`)])))
+
+rec.ssa.df <- data.frame(RMSE = rec.ssa.rmse, L = Ls.ssa)
+
+rec.summary <- summarise(
+  rec.tssa.df,
+  Method = "T-SSA",
+  Min = min(RMSE),
+  Max = max(RMSE),
+  Median = median(RMSE), 
+  Mean = mean(RMSE)
+) |>
+  rbind(
+    summarise(
+      rec.ssa.df,
+      Method = "SSA",
+      Min = min(RMSE),
+      Max = max(RMSE),
+      Median = median(RMSE),
+      Mean = mean(RMSE)
+    )
+  )
+
+save(rec.summary, file = "./Research/comp_results/cdam25_1d_rec.RData")
+xtable(
+  rec.summary,
+  digits = 4,
+  display = c("s", "s", rep("f", 4)),
+  align = rep("c", 6)
+)
+```
+
+

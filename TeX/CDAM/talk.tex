@@ -50,7 +50,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \vspace{0.1cm}
 }
 
-\date{\small DD.09.2025, CDAM'2025}
+\date{\small 25.09.2025, CDAM'2025}
 
 \begin{document}
 
@@ -59,6 +59,8 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 \end{frame}
 
 \begin{frame}{Introduction to Singular Spectrum Analysis (SSA)}
+  SSA - family of methods for time series analysis\\ \bigskip
+
   Problems that can be solved by SSA-related methods:
   \begin{itemize}
       \bluetext{
@@ -102,51 +104,50 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 \end{frame}
 
 \begin{frame}{Decomposition and Estimation Example}
-  Data: Coordinates of Earth pole motion [IERS EOP 14 C04]\\
-  Plotted each over time and against each other
+  Data: Coordinates of Earth pole motion [IERS EOP 14 C04]\\ \smallskip
+  Raw data:
 
   % \vspace{0.3cm}
 
   % Position ($X$/$Y$) vs Date
 
-  % \vspace{2.2cm}
-  \vspace{5.5cm}
+  \vspace{3.2cm}
+  % \vspace{5.5cm}
 
   \begin{tikzpicture}[remember picture, overlay]
-    \node[right=3.3cm, below=2.2cm] at (current page.north west)
+    \node[right=3.3cm, below=2.3cm] at (current page.north west)
     {
-      \includegraphics[width=0.49\textwidth]{Earth_x.pdf}
+      \includegraphics[width=0.51\textwidth]{Earth_x.pdf}
     };
   \end{tikzpicture}
 
   \begin{tikzpicture}[remember picture, overlay]
-    \node[left=3.3cm, below=2.2cm] at (current page.north east)
+    \node[left=3.3cm, below=2.3cm] at (current page.north east)
     {
-      \includegraphics[width=0.49\textwidth]{Earth_y.pdf}
+      \includegraphics[width=0.51\textwidth]{Earth_y.pdf}
     };
   \end{tikzpicture}
 
   \begin{tikzpicture}[remember picture, overlay]
-    \node[above=0.2cm] at (current page.south)
+    \node[left=4.2cm, above=0.3cm] at (current page.south east)
     {
-      \includegraphics[width=0.58\textwidth]{Earth_complex.pdf}
+      \includegraphics[width=0.62\textwidth]{Earth_complex.pdf}
     };
   \end{tikzpicture}
 
-  % \begin{columns}
-  %   \begin{column}{0.1\textwidth}
+  \begin{columns}
+    \begin{column}{0.03\textwidth}
 
-  %   \end{column}
-  %   \begin{column}{0.41\textwidth}
-  %     \centering
-  %     $Y$ vs $X$
-  %   \end{column}
-  %   \begin{column}{0.58\textwidth}
+    \end{column}
+    \begin{column}{0.417\textwidth}
+      As complex time series:
+    \end{column}
+    \begin{column}{0.58\textwidth}
 
-  %   \end{column}
-  % \end{columns}
+    \end{column}
+  \end{columns}
 
-  % \vspace{3cm}
+  \vspace{1.6cm}
 
 \end{frame}
 
@@ -158,17 +159,18 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
     \item Trend + Seasonality + Noise
   \end{itemize}
 
+  \bigskip
+
   \begin{columns}
     \begin{column}{0.5\textwidth}
+      Extracted signal:
       \begin{figure}[!ht]
         \center
-        \includegraphics[width=0.99\textwidth]{Earth_complex_signal.pdf}\\
-        Extracted signal
+        \includegraphics[width=\textwidth]{Earth_complex_signal.pdf}\\
       \end{figure}
     \end{column}
-
     \begin{column}{0.5\textwidth}
-      Estimates:
+      Signal parameters estimates:
       \begin{table}
         \centering
         \begin{tabular}{c|c}
@@ -178,6 +180,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
           $\to \infty$ & $\phantom{-}2.7 \cdot 10^{-5}$
         \end{tabular}
       \end{table}
+      \vspace*{0.6cm}
     \end{column}
   \end{columns}
 \end{frame}
@@ -287,13 +290,17 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
         corners,inner sep=2pt]{};
       \end{tikzpicture}
   \end{enumerate}
+
+  \bigskip
+
+  \bluetext{Why not embed into a higher order array (tensor)?}
 \end{frame}
 
 \begin{frame}{SSA Algorithm: Decomposition, Grouping, Reconstruction}
   \begin{enumerate}
       \setcounter{enumi}{1}
     \item \textbf{Decomposition}.
-      Constructing the singular value decomposition (SVD) of matrix $\bfX$:
+      Constructing the singular value decomposition (SVD) of the matrix $\bfX$:
       $\displaystyle \bfX = \sum_{j=1}^{\operatorname{rank}\bfX}
       \sqrt{\lambda_j} U_j V_j^{\rmH} =
       \sum_{j=1}^{\operatorname{rank}\bfX} \widehat{\bfX}_j$
@@ -316,10 +323,11 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \end{enumerate}
 \end{frame}
 
-\begin{frame}{Series Rank}
+\begin{frame}{SSA-Rank of a Series}
   \begin{definition}
-    Series $\tX$ has rank $d < N/2$, if the rank of its $L$-trajectory
-    matrix equals $d$ for any $L$ such that $d \leqslant \min(L,
+    Series $\tX$ has rank $d < N/2$ in terms of SSA, if the rank of
+    its $L$-trajectory matrix equals $d$ for any $L$ such that $d
+    \leqslant \min(L,
     N - L + 1)$.\\
     If such $d$ exists, then $\tX$ is called a series of finite rank.
   \end{definition}
@@ -429,7 +437,62 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Introduction of Tensors}
+\begin{frame}{MSSA Trajectory Matrix}
+  $\tX = \left(\tX^{(1)},\, \tX^{(2)}, \, \ldots,\,
+  \tX^{(P)}\right), \qquad\tX^{(p)} = \left(x_1^{(p)}, \, x_2^{(p)},\,
+  \ldots,\,  x_N^{(p)}\right)$
+  \bigskip
+
+  \begin{gather*}
+    \bfX = \calT^{(L)}_{\mathrm{MSSA}}(\tX) =\\
+    \left(
+      \begin{NiceArray}{ccccc|ccccc|c}
+        x_1^{(1)} & \tikzmarknode{A12}{x_2^{(1)}} &
+        \tikzmarknode{A13}{x_3^{(1)}} &
+        \ldots & x_K^{(1)} &
+        x_1^{({\color{red}2})} & \tikzmarknode{A12}{x_2^{({\color{red}2})}} &
+        \tikzmarknode{A13}{x_3^{({\color{red}2})}} &
+        \ldots & x_K^{({\color{red}2})}  & \ldots \\
+        \tikzmarknode{A21}{x_2^{(1)}} & x_3^{(1)} & x_4^{(1)} &
+        \ldots & x_{K+1}^{(1)} & \tikzmarknode{A21}{x_2^{({\color{red}2})}} &
+        x_3^{({\color{red}2})} & x_4^{({\color{red}2})} &
+        \ldots & x_{K+1}^{({\color{red}2})} & \ldots \\
+        \tikzmarknode{A31}{x_3^{(1)}} & x_4^{(1)} & x_5^{(1)} &
+        \ldots & x_{K+2}^{(1)} & \tikzmarknode{A31}{x_3^{({\color{red}2})}} &
+        x_4^{({\color{red}2})} & x_5^{({\color{red}2})} &
+        \ldots & x_{K+2}^{({\color{red}2})} & \ldots \\
+        \vdots                  & \vdots & \vdots & \ddots & \vdots &
+        \vdots                  & \vdots & \vdots & \ddots & \vdots & \ldots  \\
+        x_L^{(1)}                     & x_{L+1}^{(1)} & x_{L+2}^{(1)}
+        & \ldots & x_N^{(1)} & x_L^{({\color{red}2})}                     &
+        x_{L+1}^{({\color{red}2})} & x_{L+2}^{({\color{red}2})}
+        & \ldots & x_N^{({\color{red}2})} & \ldots \\
+        \CodeAfter
+        \UnderBrace[shorten,yshift=1.5mm]{last-1}{last-5}{\bfX^{(1)}}
+        \UnderBrace[shorten,yshift=1.5mm]{last-6}{last-10}{\bfX^{(2)}}
+      \end{NiceArray}
+    \right)
+  \end{gather*}
+  % \begin{tikzpicture}[remember picture,overlay]
+  %   \draw[red] let \p1=($(A12)-(A21)$),\n1={atan2(\y1,\x1)} in
+  %   node[rotate fit=\n1,fit=(A12) (A21),draw,rounded
+  %   corners,inner sep=2pt]{};
+  %   \draw[blue] let \p1=($(A13)-(A31)$),\n1={atan2(\y1,\x1)+2} in
+  %   node[rotate fit=\n1,fit=(A13) (A31),draw,rounded
+  %   corners,inner sep=2pt]{};
+  % \end{tikzpicture}
+\end{frame}
+
+\begin{frame}[plain, c]
+  \vfill{}
+  \begin{center}
+    \huge But why limit yourself to matrices?\\
+    Matrix is just a 2D tensor
+  \end{center}
+  \vfill{}
+\end{frame}
+
+\begin{frame}{Introducing Tensors to the Algorithm}
   \begin{table}
     \hspace*{-0.9cm}
     \begin{tabular}{rlllll}
@@ -452,97 +515,138 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Mapping Time Series to Tensor}
-  \begin{tikzpicture}[remember picture, overlay]
-    \node[right=3.8cm, below=0.6cm] at (current page.north west)
-    {
-      \includegraphics[width=0.7\textwidth]{tens-injection-wide.pdf}
-    };
-  \end{tikzpicture}
-  \begin{columns}
-    \begin{column}{0.65\textwidth}
-
-    \end{column}
-    \begin{column}{0.3\textwidth}
-      $\tX = (x_1,\, x_2,\, \ldots,\, x_N)$\\\medskip
-      $\tX \mapsto \calT_{\mathrm{T-SSA}}^{(I, L)}(\tX) = \calX$\\\medskip
-      $\calX \in \bbC^{I\times L \times K}$\\\smallskip $K = N - I - L + 2$
-    \end{column}
-    \begin{column}{0.05\textwidth}
-
-    \end{column}
-  \end{columns}
-  \vspace{2.5cm}
-
-  \begin{tikzpicture}[remember picture, overlay]
-    \node[left=4.5cm, above=0.3cm] at (current page.south east)
-    {
-      \includegraphics[width=0.7\textwidth]{mssa_injection_new.pdf}
-    };
-  \end{tikzpicture}
-  \begin{columns}
-    \begin{column}{0.01\textwidth}
-
-    \end{column}
-    \begin{column}{0.4\textwidth}
-      $\tX = \left(\tX^{(1)},\, \tX^{(2)},\, \ldots,\,
-      \tX^{(P)}\right)$\\\medskip
-      $\tX \mapsto \calT_{\mathrm{T-MSSA}}^{(L)}(\tX) = \calX$\\\medskip
-      $\calX \in \bbC^{P\times L \times K}$\\\smallskip $K = N - L + 1$
-    \end{column}
-    \begin{column}{0.59\textwidth}
-
-    \end{column}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Some tensor decompositions}
+\begin{frame}{Reminder: Trajectory Matrix}
   \begin{itemize}
-    \item \bluetext{CPD}: sum of rank-1
-      tensors ($\calA$ is rank-1 if $\calA=B \circ C \circ D$ for
-      some vectors $B$, $C$, $D$, where $\circ$ denotes an outer product).
-      \begin{itemize}
-        \item Considered for signal extraction in [Kouchaki, Sanei (2013)]
-        \item Requires to know number of components in advance
-        \item Does not provide any form of orthogonality of components
-        \item No connection between signal rank and number of components
-      \end{itemize}
-      \medskip
-    \item \bluetext{T-SVD}: $\calA = \calU * \calS * \calV^\rmH$,
-      where $\calD = \calB * \calC \Leftrightarrow d_{ilk} = \sum_{j}
-      b_{ijk} c_{jlk}$, subindex $\rmH$ denotes complex conjugation of
-      all frontal slices, $\calU = \calU^{\rmH}$, $\calV = \calV^{\rmH}$,
-      all frontal slices of $\calS$ are diagonal matrices (tubal form)
-      \begin{itemize}
-        \item Considered for signal extraction and decomposition in
-          [Trung~et~al.~(2024)]
-        \item Provides some orthogonality
-        \item Numerical experiments show less precision than
-          matrix-based methods
-      \end{itemize}
+    \item Single-Channel:
   \end{itemize}
+  \begin{gather*}
+    \calT^{(L)}(\tX) =
+    \begin{pmatrix}
+      x_1 & x_2 & x_3 & \ldots & x_K     \\
+      x_2 & x_3 & x_4 & \ldots & x_{K+1} \\
+      x_3 & x_4 & x_5 & \ldots & x_{K+2} \\
+      \vdots & \vdots & \vdots & \ddots & \vdots  \\
+      x_L & x_{L+1} & x_{L+2} & \ldots & x_N \\
+    \end{pmatrix}
+  \end{gather*}
+  \begin{itemize}
+    \item Multi-Channel:
+  \end{itemize}
+  \begin{gather*}
+    \calT_{\mathrm{MSSA}}^{(L)}(\tX) =
+    \left(
+      \begin{NiceArray}{cccc|cccc|c}
+        x_1^{(1)} & x_2^{(1)} & \ldots & x_K^{(1)} &
+        x_1^{({\color{red}2})} & x_2^{({\color{red}2})} & \ldots
+        & x_K^{({\color{red}2})}  & \ldots \\
+        x_2^{(1)} & x_3^{(1)} & \ldots & x_{K+1}^{(1)} &
+        x_2^{({\color{red}2})} &
+        x_3^{({\color{red}2})} & \ldots &
+        x_{K+1}^{({\color{red}2})} & \ldots \\
+        \vdots & \vdots & \ddots & \vdots &
+        \vdots & \vdots & \ddots &
+        \vdots & \ldots  \\
+        x_L^{(1)} & x_{L+1}^{(1)} & \ldots & x_N^{(1)} &
+        x_L^{({\color{red}2})} & x_{L+1}^{({\color{red}2})} &
+        \ldots & x_N^{({\color{red}2})} & \ldots \\
+      \end{NiceArray}
+    \right)
+  \end{gather*}
+\end{frame}
+
+\begin{frame}{Mapping Single-Channel Time Series to a Tensor}
+  $\tX = (x_1,\, x_2,\, \ldots,\, x_N)$\\ \medskip
+  $\tX \mapsto \calT_{\mathrm{T-SSA}}^{(I, L)}(\tX) = \calX \in
+  \bbC^{I\times L \times K}$, $K = N - I - L + 2$
+
+  \begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.7\textwidth]{tens-injection-wide.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Mapping Multi-Channel Time Series to a Tensor}
+  $\tX = \left(\tX^{(1)},\, \tX^{(2)},\, \ldots,\,
+  \tX^{(P)}\right)$, $\tX^{(p)} = (x_1^{(p)},\, x_2^{(p)},\,
+  \ldots,\, x_N^{(p)})$\\ \medskip
+  $\tX \mapsto \calT_{\mathrm{T-MSSA}}^{(L)}(\tX)
+  = \calX \in \bbC^{P\times L \times K}$, $K = N - L + 1$
+
+  \bigskip
+
+  \begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{mssa_injection_new.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Some Tensor Decompositions}
+  Unlike in matrix case, there exist several definitions of tensor ranks and
+  SVD generalizations based on them.
+
+  \begin{definition}[Tensor rank]
+    Tensor $\calA$ has rank 1, if there exist vectors $B$, $C$ and $D$ such that
+    $\calA=B \circ C \circ D$, where $\circ$ denotes an outer
+    product.\\ \medskip
+
+    Tensor $\calA$ has rank $R$, if it can be represented as a sum of
+    $R$ rank-1 tensors: $\calA = \sum_{i=1}^{R} \calB_i$,
+    $\operatorname{rank}(\calB_i)=1$, and such $R$ is minimal.
+  \end{definition}
+
+  \medskip
+
+  The representation of a tensor as a sum of $R$ rank-1 tensors is called
+  \bluetext{Canonical Polyadic Decomposition (CPD)}.
+
+  \smallskip
+
+  \begin{itemize}
+    \item Considered for signal extraction in [Kouchaki, Sanei (2013)]
+    \item Does not provide any form of orthogonality of components
+    \item Requires to know the tensor rank in advance
+    \item No connection between signal SSA-rank and the rank of a
+      trajectory tensor
+  \end{itemize}
+  %   \medskip
+  % \item \bluetext{T-SVD}: $\calA = \calU * \calS * \calV^\rmH$,
+  %   where $\calD = \calB * \calC \Leftrightarrow d_{ilk} = \sum_{j}
+  %   b_{ijk} c_{jlk}$, subindex $\rmH$ denotes complex conjugation of
+  %   all frontal slices, $\calU = \calU^{\rmH}$, $\calV = \calV^{\rmH}$,
+  %   all frontal slices of $\calS$ are diagonal matrices (tubal form)
+  %   \begin{itemize}
+  %     \item Considered for signal extraction and decomposition in
+  %       [Trung~et~al.~(2024)]
+  %     \item Provides some orthogonality
+  %     \item Numerical experiments show less precision than
+  %       matrix-based methods
+  %   \end{itemize}
 \end{frame}
 
 \begin{frame}{Some tensor decompositions}
+  \begin{definition}
+    \bluetext{$n$-mode vectors} of a tensor $\calA$ are vectors
+    obtained from $\calA$ by varying the index of the
+    $n$-th direction and keeping the other indices fixed (analog of
+    rows and columns of a matrix).\\ \medskip
+
+    \bluetext{$n$-rank} of a tensor $\calA$, denoted by $R_n =
+    \operatorname{rank}_n(\calA)$, is the dimension of the linear
+    space spanned by the $n$-mode vectors.
+  \end{definition}
+
+  \medskip
+
+  \bluetext{HOSVD}: $\calA = \sum_{i=1}^{R_1}\,
+  \sum_{l=1}^{R_2}\, \sum_{k=1}^{R_3}\, z_{ilk} U_i^{(1)} \circ
+  U_l^{(2)} \circ U_k^{(3)}$
   \begin{itemize}
-    \item \bluetext{$(L_r, L_r, 1)$}: sum of tensors with elements of
-      form $a_{ilk}^{(r)} = b_{il}^{(r)} d_k^{(r)}$, for some vector
-      $D^{(r)}$ and matrix $\bfB^{(r)}$ of rank $L_r$ ($r$ is a sum index)
-      \begin{itemize}
-        \item Considered for signal extraction and decomposition in
-          [De~Lathauwer~(2011)]
-        \item Sparse theory and no open-source implementation
-      \end{itemize}
-      \medskip
-    \item \bluetext{HOSVD}: $\calX = \sum_{i=1}^{I}\,
-      \sum_{l=1}^{L}\, \sum_{k=1}^{K}\, z_{ilk} U_i^{(1)} \circ
-      U_l^{(2)} \circ U_k^{(3)}$
-      \begin{itemize}
-        \item Considered for signal parameter estimation in [Papy et
-          al. (2005)], [Papy et al. (2009)]
-        \item Provides orthogonality of components
-        \item Has proven connection between number of components and signal rank
-      \end{itemize}
+    \item Considered for signal parameter estimation in [Papy et
+      al. (2005)], [Papy et al. (2009)]
+    \item Provides orthogonality of components
+    \item Does not require any prior knowledge about tensor $n$-ranks
+    \item There is a proven connection between number of components
+      and signal SSA-rank
   \end{itemize}
 \end{frame}
 
@@ -555,7 +659,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
     \sum_{i=1}^{\operatorname{rank}_{\color{red}1}(\calX)}\,
     \sum_{l=1}^{\operatorname{rank}_{\color{red}2}(\calX)}\,
     \sum_{k=1}^{\operatorname{rank}_{\color{red}3}(\calX)}\,
-    \calZ_{ilk} U_i^{(1)} \circ U_l^{(2)} \circ U_k^{(3)}
+    z_{ilk} U_i^{(1)} \circ U_l^{(2)} \circ U_k^{(3)}
   \end{align*}
 
   \begin{itemize}
@@ -614,7 +718,8 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
           Hankel tensors
         \item \textbf{Estimation}. Finding eigenvalues $z_j$ of
           matrix $\underline{\bfU}^{-}\overline{\bfU}$, where
-          $\bfU = \left[U_1^{(d)}:U_2^{(d)}:\ldots :U_{r_d}^{(d)}\right]$.
+          $\bfU = \bfU_d = \left[U_1^{(d)}:U_2^{(d)}:\ldots
+          :U_{r_d}^{(d)}\right]$.
           From $z_j = \exp(\alpha_j + \mathrm{i}2\pi\omega_j)$
           damping factors $\alpha_j$ and frequencies $\omega_j$ of
           the signal can be found
