@@ -10,6 +10,7 @@ library(scales)
 library(rTensor)
 library(ggplot2)
 library(dplyr)
+library(tidyr)
 
 setwd(rprojroot::find_rstudio_root_file())
 knitr::opts_knit$set(root.dir = getwd())
@@ -21,8 +22,8 @@ source(file = "./Source/cdam25_extra.R")
 
 Loading data
 ```{r}
-load(file = paste0("./Research/comp_results/dim_rrmse_no_rates_tens.RData"))
-load(file = paste0("./Research/comp_results/dim_rrmse_no_rates_ssa.RData"))
+load("./Research/comp_results/dim_rrmse_no_rates_tens.RData")
+load("./Research/comp_results/dim_rrmse_no_rates_ssa.RData")
 ```
 
 Preparation
@@ -80,52 +81,23 @@ freq1.ssa.df <- data.frame(RRMSE = freq1.ssa.rrmse, RMSE = freq1.ssa.rrmse * fre
 
 freq1.summary <- summarise(
   freq1.tssa.df,
-  Method = "T-SSA",
+  Method = "T-ESPRIT",
   Min = min(RMSE),
   Max = max(RMSE),
-  Median = median(RMSE), 
+  Median = median(RMSE),
   Mean = mean(RMSE)
 ) |>
   rbind(
     summarise(
       freq1.ssa.df,
-      Method = "SSA",
+      Method = "ESPRIT",
       Min = min(RMSE),
       Max = max(RMSE),
       Median = median(RMSE),
       Mean = mean(RMSE)
     )
-  )
+  ) 
 
-save(freq1.summary, file = "./Research/comp_results/cdam25_1d_param.RData")
-xtable(
-  freq1.summary,
-  digits = 4,
-  display = c("s", "s", rep("f", 4)),
-  align = rep("c", 6)
-)
-```
-
-If symmetry relative to L / 2 is considered
-```{r}
-freq1.summary <- summarise(
-  freq1.tssa.df,
-  Method = "T-SSA",
-  Min = min(RMSE),
-  Max = max(RMSE),
-  Median = median(RMSE), 
-  Mean = mean(RMSE)
-) |>
-  rbind(
-    summarise(
-      freq1.ssa.df[7:11, ],
-      Method = "SSA",
-      Min = min(RMSE),
-      Max = max(RMSE),
-      Median = median(RMSE),
-      Mean = mean(RMSE)
-    )
-  )
 
 save(freq1.summary, file = "./Research/comp_results/cdam25_1d_param.RData")
 xtable(
@@ -172,12 +144,12 @@ xtable(
 
 <!-- ``` -->
 
-# Single Channel signal extraction
+# Single-Channel signal extraction
 
 Loading data
 ```{r}
-load(file = paste0("./Research/comp_results/signal_no_rates_hossa.RData"))
-load(file = paste0("./Research/comp_results/signal_no_rates_ssa.RData"))
+load("./Research/comp_results/signal_no_rates_hossa.RData")
+load("./Research/comp_results/signal_no_rates_ssa.RData")
 ```
 
 Preparation
@@ -250,10 +222,252 @@ rec.summary <- summarise(
 save(rec.summary, file = "./Research/comp_results/cdam25_1d_rec.RData")
 xtable(
   rec.summary,
-  digits = 4,
+  digits = 3,
   display = c("s", "s", rep("f", 4)),
   align = rep("c", 6)
 )
 ```
 
+# Multi-Channel parameters estimation
+
+Loading data
+```{r}
+load("./Research/comp_results/mv_L_rrmse_no_rates.RData")
+```
+
+Preparation
+```{r}
+n <- 25
+Q <- 12
+rates.true <- c(0, 0)
+freqs.true <- c(0.2, 0.22)
+sd <- 0.2
+
+groups <- list(1:2)
+max.r <- max(sapply(groups, max))
+
+Ls <- seq(from = ((n %/% 2) + (max.r + 1)) %/% 2, to = n - max.r - 1, by = 1)
+len.out <- length(Ls)
+
+load("./Research/mv_coef/L_no_rates.RData")
+
+signal.mult <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) %o% coef[, 1] + 
+  exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1)) %o% coef[, 2]
+
+R <- 500
+```
+
+Table
+```{r}
+freq1.df <- freq1.mult.rrmse |> as.data.frame() |> mutate(L = Ls) |>
+  pivot_longer(!L, names_to = "Method", values_to = "RRMSE") |>
+  mutate(
+    Method = ifelse(Method == "HO.MSSA", "T-M-ESPRIT", "M-ESPRIT"),
+    RMSE = RRMSE * abs(freqs.true[1]) / 100
+  )
+freq1.summary <- freq1.df |> group_by(Method) |> summarise(
+  Min = min(RMSE),
+  Max = max(RMSE),
+  Median = median(RMSE),
+  Mean = mean(RMSE)
+) |> arrange(desc(Method))
+
+save(freq1.summary, file = "./Research/comp_results/cdam25_2d_param.RData")
+xtable(
+  freq1.summary,
+  digits = 2,
+  display = c("s", "s", rep("e", 4)),
+  align = rep("c", 6)
+)
+```
+
+# Multi-Channel signal extraction
+
+Loading data
+```{r}
+load("./Research/comp_results/mv_L_rmse_no_rates.RData")
+```
+
+Preparation
+```{r}
+n <- 25
+Q <- 12
+rates.true <- c(0, 0)
+
+freqs.true <- c(0.2, 0.22)
+
+sd <- 0.2
+
+groups <- list(1:2)
+groups3 <- list(1:2)
+max.r <- max(sapply(groups, max))
+
+Ls <- seq(from = max.r + 1, to = n - max.r - 1, by = 1)
+len.out <- length(Ls)
+
+load("./Research/mv_coef/L_no_rates.RData")
+
+signal.mult <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) %o% coef[, 1] +
+  exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1)) %o% coef[, 2]
+
+R <- 500
+```
+
+Table
+```{r}
+rec.df <- cbind(rec.mssa.rmse, rec.tmssa.rmse) |> as.data.frame() |> mutate(L = Ls) |>
+  rename(MSSA = rec.mssa.rmse, `T-MSSA` = rec.tmssa.rmse) |>
+  pivot_longer(!L, names_to = "Method", values_to = "RMSE")
+
+rec.summary <- rec.df |> group_by(Method) |> summarise(
+  Min = min(RMSE),
+  Max = max(RMSE),
+  Median = median(RMSE),
+  Mean = mean(RMSE)
+) |> arrange(desc(Method))
+
+save(rec.summary, file = "./Research/comp_results/cdam25_2d_rec.RData")
+xtable(
+  rec.summary,
+  digits = 3,
+  display = c("s", "s", rep("f", 4)),
+  align = rep("c", 6)
+)
+```
+
+# Dstack parameters estimation
+
+Loading data
+```{r}
+load("./Research/comp_results/htlsd_byL_real_param_rmse.RData")
+```
+
+Preparation
+```{r}
+N <- 990
+A <- c(1, 1)
+phi <- c(0, 0)
+rate <- c(0, 0)
+freq <- c(0.2, 0.205)
+D <- 10
+Ls_esprit <- as.integer(seq(from = N %/% 3, to = 2 * N %/% 3, length.out = 20))
+Ls_dstack <- as.integer(seq(from = (N %/% D) %/% 3, to = 2 * (N %/% D) %/% 3, length.out = 20))
+groups_esprit <- list(1:4)
+groups_htlsd <- list(1:4)
+groups_tens <- list(1:4)
+r3_1 <- 4
+r3_2 <- 1
+est_dim <- 1
+dt <- 0.1
+
+
+s <- colSums(A * exp(-rate) * cos(phi + 2 * pi * freq %o% seq(
+  from = 0,
+  length.out = N,
+  by = dt
+)))
+
+sds <- c(0, 0.2, 0.6)
+sd_len <- length(sds)
+Ls_len <- length(Ls_esprit)
+out_len <- sd_len * Ls_len
+```
+
+Table
+```{r}
+rmse.df <- rmse_df |>
+  filter(sd != 0) |>
+  rename(ESPRIT = esprit, `Dstack-ESPRIT` = HTLSDstack, `T-Dstack-ESPRIT` = tens2) |>
+  select(!tens1) |>
+  pivot_longer(ESPRIT:`T-Dstack-ESPRIT`, names_to = "Method", values_to = "RMSE")
+
+rmse.summary <- rmse.df |> group_by(sd, Method) |> summarise(
+  Min = min(RMSE),
+  Max = max(RMSE),
+  Median = median(RMSE),
+  Mean = mean(RMSE)
+) |> arrange(.by_group = TRUE)
+
+save(rmse.summary, file = "./Research/comp_results/cdam25_dstack_param.RData")
+rmse.summary |> filter(sd == 0.2) |>
+xtable(
+  digits = 2,
+  display = c("s", "f", "s", rep("e", 4)),
+  align = rep("c", 7)
+)
+
+rmse.summary |> filter(sd == 0.6) |>
+xtable(
+  digits = 3,
+  display = c("s", "f", "s", rep("f", 4)),
+  align = rep("c", 7)
+)
+```
+
+# Dstack signal reconstruction
+
+Loading data
+```{r}
+load("./Research/comp_results/htlsd_byL_real_rec_rmse.RData")
+```
+
+Preparation
+```{r}
+N <- 1000
+A <- c(1, 1)
+phi <- c(0, 0)
+rate <- c(0, 0)
+freq <- c(0.2, 0.205)
+D <- 10
+Ls_ssa <- as.integer(seq(from = N %/% 3, to = 2 * N %/% 3, length.out = 20))
+Ls_dstack <- as.integer(seq(from = (N %/% D) %/% 3, to = 2 * (N %/% D) %/% 3, length.out = 20))
+groups_ssa <- list(1:4)
+groups_ssad <- list(1:4)
+groups_tens <- list(1:4)
+r3_1 <- 4
+r3_2 <- 1
+dt <- 0.1
+
+s <- colSums(A * exp(-rate) * cos(phi + 2 * pi * freq %o% seq(
+  from = 0,
+  length.out = N,
+  by = dt
+)))
+
+sds <- c(0, 0.2, 0.6)
+sd_len <- length(sds)
+Ls_len <- length(Ls_ssa)
+out_len <- sd_len * Ls_len
+```
+
+Table
+```{r}
+rmse.df <- rmse_df |>
+  filter(sd != 0) |>
+  rename(SSA = ssa, `Dstack-SSA` = SSADstack, `T-Dstack-SSA` = tens1) |>
+  select(!tens2) |> 
+  pivot_longer(SSA:`T-Dstack-SSA`, names_to = "Method", values_to = "RMSE")
+
+rmse.summary <- rmse.df |> group_by(sd, Method) |> summarise(
+  Min = min(RMSE),
+  Max = max(RMSE),
+  Median = median(RMSE),
+  Mean = mean(RMSE)
+) |> arrange(.by_group = TRUE)
+
+save(rmse.summary, file = "./Research/comp_results/cdam25_dstack_rec.RData")
+rmse.summary |> filter(sd == 0.2) |>
+xtable(
+  digits = 3,
+  display = c("s", "f", "s", rep("f", 4)),
+  align = rep("c", 7)
+)
+
+rmse.summary |> filter(sd == 0.6) |>
+xtable(
+  digits = 3,
+  display = c("s", "f", "s", rep("f", 4)),
+  align = rep("c", 7)
+)
+```
 
