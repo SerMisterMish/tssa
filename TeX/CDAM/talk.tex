@@ -483,7 +483,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   % \end{tikzpicture}
 \end{frame}
 
-\begin{frame}[plain, c]
+\begin{frame}[plain, c, noframenumbering]
   \vfill{}
   \begin{center}
     \huge But why limit yourself to matrices?\\
@@ -738,41 +738,55 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   (same results for $\alpha_1=\alpha_2 < 0$ and $\alpha_1 < \alpha_2 < 0$).
 
   \medskip
-  \bluetext{RMSE statistics across all method parameters:}
+  \bluetext{RMSE results with respect to parameters choice:}
   \begin{itemize}
     \item Parameters estimation
   \end{itemize}
-  \begin{table}[ht]
-    \centering
-    \begin{tabular}{c|cccc}
-      \hline
-      & Min & Max & Median & Mean \\
-      \hline
-      \textbf{T-ESPRIT} & \textbf{\bluetext{0.0012}} &
-      \textbf{\bluetext{0.0033}} & 0.0016 &
-      \textbf{\bluetext{0.0016}} \\
-      \textbf{ESPRIT} & 0.0013 & 0.0140 & 0.0016 & 0.0031 \\
-      \hline
-    \end{tabular}
-    % \caption{RMSE statistics across all method parameters}
-  \end{table}
+  \begin{columns}
+    \begin{column}{0.65\textwidth}
+      \begin{table}[ht]
+        \centering
+        \begin{tabular}{c|ccc}
+          \hline
+          & Best & Worst & Mean \\
+          \hline
+          \textbf{T-ESPRIT} & \textbf{\bluetext{0.0012}} &
+          \textbf{\bluetext{0.0033}} &
+          \textbf{\bluetext{0.0016}} \\
+          \textbf{ESPRIT} & 0.0013 & 0.0140 & 0.0031 \\
+          \hline
+        \end{tabular}
+        % \caption{RMSE statistics across all method parameters}
+      \end{table}
+    \end{column}
+    \begin{column}{0.35\textwidth}
+      T-method is better
+    \end{column}
+  \end{columns}
 
   \begin{itemize}
     \item Signal extraction
   \end{itemize}
-  \begin{table}[ht]
-    \centering
-    \begin{tabular}{c|cccc}
-      \hline
-      & Min & Max & Median & Mean \\
-      \hline
-      \textbf{T-SSA} & 0.019 & \textbf{\bluetext{0.024}} &
-      0.020 & \textbf{\bluetext{0.020}} \\
-      \textbf{SSA} & \textbf{\bluetext{0.018}} & 0.031 & 0.020 & 0.021 \\
-      \hline
-    \end{tabular}
-    % \caption{RMSE statistics across all method parameters}
-  \end{table}
+  \begin{columns}
+    \begin{column}{0.65\textwidth}
+      \begin{table}[ht]
+        \centering
+        \begin{tabular}{c|ccc}
+          \hline
+          & Best & Worst & Mean \\
+          \hline
+          \textbf{T-SSA} & 0.019 & \textbf{\bluetext{0.024}} &
+          \textbf{\bluetext{0.020}} \\
+          \textbf{SSA} & \textbf{\bluetext{0.018}} & 0.031 & 0.021 \\
+          \hline
+        \end{tabular}
+        % \caption{RMSE statistics across all method parameters}
+      \end{table}
+    \end{column}
+    \begin{column}{0.35\textwidth}
+      T-method is worse with optimal parameter choice but better on average
+    \end{column}
+  \end{columns}
   % \begin{figure}
   %   \centering
   %   \includegraphics[width=0.89\textwidth]{img/freq1_dims_no_rates.pdf}
@@ -794,40 +808,56 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 
   \medskip
 
-  \bluetext{RMSE statistics across all method parameters:}
+  \bluetext{RMSE results with respect to parameters choice:}
   \begin{itemize}
     \item Parameters estimation
   \end{itemize}
-  \begin{table}[ht]
-    \centering
-    \begin{tabular}{c|cccc}
-      \hline
-      & Min & Max & Median & Mean \\
-      \hline
-      \textbf{T-M-ESPRIT} & \textbf{\bluetext{5.33e-04}} &
-      \textbf{\bluetext{9.99e-04}} &
-      5.58e-04 & \textbf{\bluetext{6.16e-04}} \\
-      \textbf{M-ESPRIT} & 5.36e-04 & 1.80e-03 & 5.58e-04 & 7.13e-04 \\
-      \hline
-    \end{tabular}
-  \end{table}
+
+  \begin{columns}
+    \begin{column}{0.8\textwidth}
+      \begin{table}[ht]
+        \centering
+        \begin{tabular}{c|ccc}
+          \hline
+          & Best & Worst & Mean \\
+          \hline
+          \textbf{T-M-ESPRIT} & \textbf{\bluetext{5.33e-04}} &
+          \textbf{\bluetext{9.99e-04}} &
+          \textbf{\bluetext{6.16e-04}} \\
+          \textbf{M-ESPRIT} & 5.36e-04 & 1.80e-03 & 7.13e-04 \\
+          \hline
+        \end{tabular}
+      \end{table}
+    \end{column}
+    \begin{column}{0.2\textwidth}
+      T-method is better
+    \end{column}
+  \end{columns}
 
   \begin{itemize}
     \item Signal extraction
   \end{itemize}
-  \begin{table}[ht]
-    \centering
-    \begin{tabular}{c|cccc}
-      \hline
-      & Min & Max & Median & Mean \\
-      \hline
-      \textbf{T-MSSA} & \textbf{\bluetext{0.065}} &
-      \textbf{\bluetext{0.068}} & \textbf{\bluetext{0.066}} &
-      \textbf{\bluetext{0.066}} \\
-      \textbf{MSSA} & 0.066 & 0.152 & 0.077 & 0.086 \\
-      \hline
-    \end{tabular}
-  \end{table}
+
+  \begin{columns}
+    \begin{column}{0.7\textwidth}
+      \begin{table}[ht]
+        \centering
+        \begin{tabular}{c|ccc}
+          \hline
+          & Best & Worst & Mean \\
+          \hline
+          \textbf{T-MSSA} & \textbf{\bluetext{0.065}} &
+          \textbf{\bluetext{0.068}} &
+          \textbf{\bluetext{0.066}} \\
+          \textbf{MSSA} & 0.066 & 0.152 & 0.086 \\
+          \hline
+        \end{tabular}
+      \end{table}
+    \end{column}
+    \begin{column}{0.3\textwidth}
+      T-method is better
+    \end{column}
+  \end{columns}
 \end{frame}
 
 % \begin{frame}{Single-Channel Case Comparison, Signal Extraction}
@@ -885,13 +915,12 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
     \end{tabular}
   \end{table}
 
-  \bluetext{Undersampling}: $\displaystyle\omega \mapsto \hat\omega=
-  D \omega \implies
-  \max|\omega| \leqslant \frac{1}{2D}$
+  Undersampling: $\displaystyle\omega \mapsto \hat\omega=
+  D \omega \implies |\omega| \leqslant \frac{1}{2D}$ is required
 \end{frame}
 
 \begin{frame}{Single-Channel Series Comparison with Dstack}
-  % \vspace*{-0.3cm}
+  \vspace*{-0.3cm}
   \[
     x_{n} = \cos(2 \pi \omega_1 n) +
     \cos(2 \pi \omega_2 n) + \xi_n
@@ -900,44 +929,59 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   noise, $\mathrm{D}(\xi_n) = \sigma^2$
 
   \medskip
-  \bluetext{RMSE statistics across all method parameters:}
+  \bluetext{RMSE results with respect to parameters choice:}
 
   \begin{itemize}
     \item Parametes estimation, $\sigma = 0.2$
   \end{itemize}
-  \begin{table}[ht]
-    \centering
-    \begin{tabular}{c|cccc}
-      \hline
-      & Min & Max & Median & Mean \\
-      \hline
-      \textbf{ESPRIT} & \textbf{\bluetext{4.98e-05}} &
-      \textbf{\bluetext{5.66e-05}} & \textbf{\bluetext{5.28e-05}} &
-      \textbf{\bluetext{5.32e-05}} \\
-      \textbf{Dstack-ESPRIT} & 5.30e-05 & 7.63e-05 & 6.21e-05 & 6.24e-05 \\
-      \textbf{T-Dstack-ESPRIT} & 5.40e-05 & 6.24e-05 & 5.88e-05 & 5.86e-05 \\
-      \hline
-    \end{tabular}
-  \end{table}
+
+  \begin{columns}
+    \begin{column}{0.9\textwidth}
+      \begin{table}[ht]
+        \centering
+        \begin{tabular}{c|ccc}
+          \hline
+          & Best & Worst & Mean \\
+          \hline
+          \textbf{ESPRIT} & \textbf{\bluetext{4.98e-05}} &
+          \textbf{\bluetext{5.66e-05}} &
+          \textbf{\bluetext{5.32e-05}} \\
+          \textbf{Dstack-ESPRIT} & 5.30e-05 & 7.63e-05 & 6.24e-05 \\
+          \textbf{T-Dstack-ESPRIT} & 5.40e-05 & 6.24e-05 & 5.86e-05 \\
+          \hline
+        \end{tabular}
+      \end{table}
+    \end{column}
+    \begin{column}{0.15\textwidth}
+      T-method is worse
+    \end{column}
+  \end{columns}
 
   \begin{itemize}
     \item Parametes estimation, $\sigma = 0.6$
   \end{itemize}
 
-  \begin{table}[ht]
-    \centering
-    \begin{tabular}{c|cccc}
-      \hline
-      & Min & Max & Median & Mean \\
-      \hline
-      \textbf{ESPRIT} & 0.101 & 0.138 & 0.113 & 0.115 \\
-      \textbf{Dstack-ESPRIT} & 0.009 & 0.011 & 0.010 & 0.010 \\
-      \textbf{T-Dstack-ESPRIT} & \textbf{\bluetext{0.003}} &
-      \textbf{\bluetext{0.005}} & \textbf{\bluetext{0.004}} &
-      \textbf{\bluetext{0.004}} \\
-      \hline
-    \end{tabular}
-  \end{table}
+  \begin{columns}
+    \begin{column}{0.7\textwidth}
+      \begin{table}[ht]
+        \centering
+        \begin{tabular}{c|ccc}
+          \hline
+          & Best & Worst & Mean \\
+          \hline
+          \textbf{ESPRIT} & 0.101 & 0.138 & 0.115 \\
+          \textbf{Dstack-ESPRIT} & 0.009 & 0.011 & 0.010 \\
+          \textbf{T-Dstack-ESPRIT} & \textbf{\bluetext{0.003}} &
+          \textbf{\bluetext{0.005}} &
+          \textbf{\bluetext{0.004}} \\
+          \hline
+        \end{tabular}
+      \end{table}
+    \end{column}
+    \begin{column}{0.3\textwidth}
+      T-method is better
+    \end{column}
+  \end{columns}
 
   % \begin{figure}[!ht]
   %   \begin{minipage}{0.48\textwidth}
@@ -954,7 +998,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 \end{frame}
 
 \begin{frame}{Single-Channel Series Comparison with Dstack}
-  % \vspace*{-0.3cm}
+  \vspace*{-0.3cm}
   \[
     x_{n} = \cos(2 \pi \omega_1 n) +
     \cos(2 \pi \omega_2 n) + \xi_n
@@ -963,44 +1007,59 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   noise, $\mathrm{D}(\xi_n) = \sigma^2$
 
   \medskip
-  \bluetext{RMSE statistics across all method parameters:}
+  \bluetext{RMSE results with respect to parameters choice:}
 
   \begin{itemize}
     \item Signal extraction, $\sigma = 0.2$
   \end{itemize}
-  \begin{table}[ht]
-    \centering
-    \begin{tabular}{c|cccc}
-      \hline
-      & Min & Max & Median & Mean \\
-      \hline
-      \textbf{SSA} & \textbf{\bluetext{0.020}} &
-      \textbf{\bluetext{0.021}} & \textbf{\bluetext{0.020}} &
-      \textbf{\bluetext{0.021}} \\
-      \textbf{Dstack-SSA} & 0.052 & 0.066 & 0.057 & 0.057 \\
-      \textbf{T-Dstack-SSA} & 0.050 & 0.052 & 0.051 & 0.051 \\
-      \hline
-    \end{tabular}
-  \end{table}
+
+  \begin{columns}
+    \begin{column}{0.7\textwidth}
+      \begin{table}[ht]
+        \centering
+        \begin{tabular}{c|ccc}
+          \hline
+          & Best & Worst & Mean \\
+          \hline
+          \textbf{SSA} & \textbf{\bluetext{0.020}} &
+          \textbf{\bluetext{0.021}} &
+          \textbf{\bluetext{0.021}} \\
+          \textbf{Dstack-SSA} & 0.052 & 0.066 & 0.057 \\
+          \textbf{T-Dstack-SSA} & 0.050 & 0.052 & 0.051 \\
+          \hline
+        \end{tabular}
+      \end{table}
+    \end{column}
+    \begin{column}{0.3\textwidth}
+      T-method is worse
+    \end{column}
+  \end{columns}
 
   \begin{itemize}
     \item Signal extraction, $\sigma = 0.6$
   \end{itemize}
 
-  \begin{table}[ht]
-    \centering
-    \begin{tabular}{c|cccc}
-      \hline
-      & Min & Max & Median & Mean \\
-      \hline
-      \textbf{SSA} & \textbf{\bluetext{0.086}} &
-      \textbf{\bluetext{0.095}} & \textbf{\bluetext{0.089}} &
-      \textbf{\bluetext{0.090}} \\
-      \textbf{Dstack-SSA} & 0.175 & 0.208 & 0.186 & 0.189 \\
-      \textbf{T-Dstack-SSA} & 0.175 & 0.179 & 0.178 & 0.178 \\
-      \hline
-    \end{tabular}
-  \end{table}
+  \begin{columns}
+    \begin{column}{0.7\textwidth}
+      \begin{table}[ht]
+        \centering
+        \begin{tabular}{c|ccc}
+          \hline
+          & Best & Worst & Mean \\
+          \hline
+          \textbf{SSA} & \textbf{\bluetext{0.086}} &
+          \textbf{\bluetext{0.095}} &
+          \textbf{\bluetext{0.090}} \\
+          \textbf{Dstack-SSA} & 0.175 & 0.208 & 0.189 \\
+          \textbf{T-Dstack-SSA} & 0.175 & 0.179 & 0.178 \\
+          \hline
+        \end{tabular}
+      \end{table}
+    \end{column}
+    \begin{column}{0.3\textwidth}
+      T-method is worse
+    \end{column}
+  \end{columns}
 \end{frame}
 
 % \begin{frame}{Single-Channel Case, Dstack Parameters Estimation}
@@ -1120,15 +1179,15 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   $I + L + K = N + 2$, $\hat{L} + \hat{K} = N + 1$
   \medskip
   \begin{itemize}
-    \item \bluetext{SVD}$(\bfX)$: $O(\hat{L}^2 \hat{K})$, or
+    \item \bluetext{SVD}$(\bfX)$:\\ $O(\hat{L}^2 \hat{K})$,\\ or
       $O(r\hat{L}\hat{K})$ if only
-      need $r$-rank approximation, or $O(r N \log (N))$ if $\bfX$ is Hankel
+      need $r$-rank approximation,\\ or $O(r N \log (N))$ if $\bfX$ is Hankel
       \medskip
-    \item \bluetext{HOSVD}$(\calX)$: $O(ILKN)$, or
+    \item \bluetext{HOSVD}$(\calX)$:\\ $O(ILKN)$,\\ or
       $O(ILK(r_1 + r_2 + r_3))$ if only need $(r_1, r_2, r_3)$-rank
-      approximation, or $O((r_1 + r_2 + r_3)I(L + K)\log(L + K))$ if
+      approximation,\\ or $O((r_1 + r_2 + r_3)I(L + K)\log(L + K))$ if
       $\calX$ is Hankel
-      \medskip
+      % \medskip
       % \item \bluetext{HOOI-SSA:}
       %   \[
       %     O(r_1 r_2 r_3 (I + L + J)),
