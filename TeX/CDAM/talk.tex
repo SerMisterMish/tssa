@@ -506,7 +506,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \end{table}
   \vspace{0.4cm}
 
-  Tensor SVD Extensions:
+  Tensor SVD Generalizations:
   \begin{itemize}
     \item \bluetext{Higher-Order SVD (HOSVD)}
     \item Canonical Polyadic Decomposition (CPD)
@@ -1144,27 +1144,40 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 % \end{frame}
 
 \begin{frame}{Conclusions}
-\begin{itemize}
-    \item Using High-Order SVD tensor decompositions instead of matrix SVD appears to be a more natural extension of the tensor that serves signal ranks. However, even in this case, truncation is not optimal for approximation, and ranks in different directions may differ.
-    \smallskip
-    \item HO-SSA is a natural extension of SSA, as are HO-M-SSA (signal extraction) and HO-ESPRIT and HO-M-ESPRIT (frequency estimation).
-    \smallskip
-    \item For optimal parameters, the accuracy of the tensor and matrix SSA/ESPRIT versions is comparable. The advantage of tensor-based methods is that they are generally less dependent on parameter choice (the worst and best parameter sets provide errors of the same order). However, the drawback is the complexity of tensor decompositions.
-   \smallskip
-    \item The HO-extension has fewer advantages for extracting one-dimensional signals. Therefore, this usage is not recommended.
-   \smallskip
-    \item Tensor methods using Dstack mapping can be useful for estimating parameters in the presence of strong noise.
-\end{itemize}
-%
-%  \vspace{0.3cm}
+  \begin{itemize}
+    \item Using High-Order SVD tensor decompositions instead of
+      matrix SVD appears to be a more natural extension of the tensor
+      that serves signal ranks. However, even in this case,
+      truncation is not optimal for approximation, and ranks in
+      different directions may differ.
+      \smallskip
+    \item HO-SSA is a natural extension of SSA, as are HO-M-SSA
+      (signal extraction) and HO-ESPRIT and HO-M-ESPRIT (frequency estimation).
+      \smallskip
+    \item For optimal parameters, the accuracy of the tensor and
+      matrix SSA/ESPRIT versions is comparable. The advantage of
+      tensor-based methods is that they are generally less dependent
+      on parameter choice (the worst and best parameter sets provide
+      errors of the same order). However, the drawback is the
+      complexity of tensor decompositions.
+      \smallskip
+    \item The HO-extension has fewer advantages for extracting
+      one-dimensional signals. Therefore, this usage is not recommended.
+      \smallskip
+    \item Tensor methods using Dstack mapping can be useful for
+      estimating parameters in the presence of strong noise.
+  \end{itemize}
+  %
+  %  \vspace{0.3cm}
 
-%  \bluetext{For future:}
-%  \begin{itemize}
-%    \item Considering non-stationary signals
-%    \item Trying other tensor decompositions (CPD, T-SVD)
-%    \item Investigation of tensor modifications for other SSA-based methods such that ...  (forecasting?)
-%    \item \dots
-%  \end{itemize}
+  %  \bluetext{For future:}
+  %  \begin{itemize}
+  %    \item Considering non-stationary signals
+  %    \item Trying other tensor decompositions (CPD, T-SVD)
+  %    \item Investigation of tensor modifications for other
+  % SSA-based methods such that ...  (forecasting?)
+  %    \item \dots
+  %  \end{itemize}
 \end{frame}
 
 \begin{frame}[noframenumbering]{Algorithms Complexities}
@@ -1194,4 +1207,4 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \end{itemize}
 \end{frame}
 
-\end{document} 
+\end{document}
