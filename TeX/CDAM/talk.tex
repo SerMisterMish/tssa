@@ -784,7 +784,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
       \end{table}
     \end{column}
     \begin{column}{0.35\textwidth}
-      T-method is worse with optimal parameter choice but better on average
+      T-method is worse with optimal parameter choice.
     \end{column}
   \end{columns}
   % \begin{figure}
@@ -819,7 +819,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
         \centering
         \begin{tabular}{c|ccc}
           \hline
-          & Best & Worst & Mean \\
+          & Best & Worst & Average \\
           \hline
           \textbf{T-M-ESPRIT} & \textbf{\bluetext{5.33e-04}} &
           \textbf{\bluetext{9.99e-04}} &
@@ -844,7 +844,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
         \centering
         \begin{tabular}{c|ccc}
           \hline
-          & Best & Worst & Mean \\
+          & Best & Worst & Average \\
           \hline
           \textbf{T-MSSA} & \textbf{\bluetext{0.065}} &
           \textbf{\bluetext{0.068}} &
@@ -941,7 +941,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
         \centering
         \begin{tabular}{c|ccc}
           \hline
-          & Best & Worst & Mean \\
+          & Best & Worst & Average \\
           \hline
           \textbf{ESPRIT} & \textbf{\bluetext{4.98e-05}} &
           \textbf{\bluetext{5.66e-05}} &
@@ -967,7 +967,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
         \centering
         \begin{tabular}{c|ccc}
           \hline
-          & Best & Worst & Mean \\
+          & Best & Worst & Average \\
           \hline
           \textbf{ESPRIT} & 0.101 & 0.138 & 0.115 \\
           \textbf{Dstack-ESPRIT} & 0.009 & 0.011 & 0.010 \\
@@ -1019,7 +1019,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
         \centering
         \begin{tabular}{c|ccc}
           \hline
-          & Best & Worst & Mean \\
+          & Best & Worst & Average \\
           \hline
           \textbf{SSA} & \textbf{\bluetext{0.020}} &
           \textbf{\bluetext{0.021}} &
@@ -1045,7 +1045,7 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
         \centering
         \begin{tabular}{c|ccc}
           \hline
-          & Best & Worst & Mean \\
+          & Best & Worst & Average \\
           \hline
           \textbf{SSA} & \textbf{\bluetext{0.086}} &
           \textbf{\bluetext{0.095}} &
@@ -1143,34 +1143,28 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 %   \end{figure}
 % \end{frame}
 
-\begin{frame}{Results and Fututre Work}
-  \bluetext{Results:}
-  \begin{itemize}
-    \item Tensor-based methods are generally less dependent on the
-      parameters choice, and has lower minimal and maximal RMSEs except for
-      single-channel signal extraction case, where basic SSA has
-      lower minimal RMSE
-    \item Mean and median RMSE are close for both methods in the
-      single-channel case but
-      in the multi-channel case tensor methods have advantage
-    \item Tensor methods with applying Dstack mapping can be useful
-      for estimation of parameters in presence of strong noise
-      % \item Majority of tensor-based methods have lower precision than their
-      %   matrix-based counterparts for single-channel problems
-      % \item Exception is estimation of parameters for components with
-      %   close frequencies in presence of high-level noise using Dstack
-      % \item For multi-channel problems tensor-based methods have
-      %   generally higher precision
-      %   but the difference between minimal errors is low
-  \end{itemize}
-  \vspace{0.3cm}
+\begin{frame}{Conclusions}
+\begin{itemize}
+    \item Using High-Order SVD tensor decompositions instead of matrix SVD appears to be a more natural extension of the tensor that serves signal ranks. However, even in this case, truncation is not optimal for approximation, and ranks in different directions may differ.
+    \smallskip
+    \item HO-SSA is a natural extension of SSA, as are HO-M-SSA (signal extraction) and HO-ESPRIT and HO-M-ESPRIT (frequency estimation).
+    \smallskip
+    \item For optimal parameters, the accuracy of the tensor and matrix SSA/ESPRIT versions is comparable. The advantage of tensor-based methods is that they are generally less dependent on parameter choice (the worst and best parameter sets provide errors of the same order). However, the drawback is the complexity of tensor decompositions.
+   \smallskip
+    \item The HO-extension has fewer advantages for extracting one-dimensional signals. Therefore, this usage is not recommended.
+   \smallskip
+    \item Tensor methods using Dstack mapping can be useful for estimating parameters in the presence of strong noise.
+\end{itemize}
+%
+%  \vspace{0.3cm}
 
-  \bluetext{Future Work:}
-  \begin{itemize}
-    \item Trying other tensor decompositions (CPD, T-SVD)
-    \item Implementation of tensor modifications for other SSA-based methods
-    \item \dots
-  \end{itemize}
+%  \bluetext{For future:}
+%  \begin{itemize}
+%    \item Considering non-stationary signals
+%    \item Trying other tensor decompositions (CPD, T-SVD)
+%    \item Investigation of tensor modifications for other SSA-based methods such that ...  (forecasting?)
+%    \item \dots
+%  \end{itemize}
 \end{frame}
 
 \begin{frame}[noframenumbering]{Algorithms Complexities}
@@ -1200,4 +1194,4 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \end{itemize}
 \end{frame}
 
-\end{document}
+\end{document} 
