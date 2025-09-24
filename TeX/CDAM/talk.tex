@@ -59,7 +59,12 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 \end{frame}
 
 \begin{frame}{Introduction to Singular Spectrum Analysis (SSA)}
-  SSA - family of methods for time series analysis\\ \bigskip
+  SSA - family of methods for time series analysis
+
+  Origins: D.Broomhead and G.King  (1986), K.Fraedrich (1986),\\
+  R. Vautard and M. Ghil (1989)
+
+  \bigskip
 
   Problems that can be solved by SSA-related methods:
   \begin{itemize}
@@ -74,7 +79,6 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
     \item Change in structure detection
     \item Many others\dots
   \end{itemize}
-
 \end{frame}
 
 \begin{frame}{SSA References}
@@ -101,6 +105,25 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
     \item Python Package: PyRssa (Python wrapper over Rssa) \\
       \hspace{2ex} https://pypi.org/project/pyrssa/
   \end{itemize}
+\end{frame}
+
+\begin{frame}{SSA decomposition}
+  \vspace*{-0.3cm}
+  \[
+    \begin{array}{l}
+      \nonumber
+      \widetilde{s}_n=C_1\, 0.997^n+C_2\, 0.994^n\sin(2\pi n/12+\phi_2)+\\  \\ +
+      C_3\, \sin(2\pi n/4+\phi_3)+
+      C_4\, 1.003^n\sin(2\pi n/5.96+\phi_4)+\\  \\+
+      C_5\, 0.998^n\sin(2\pi n/2.39+\phi_5)+
+      C_6\, 0.989^n\sin(2\pi n/3.03+\phi_6).
+    \end{array}
+  \]
+  \centering
+  \includegraphics[width=8cm, height=4.5cm]{fort_rec}
+
+  Australian Fortified wine sales in thousands of litres.
+
 \end{frame}
 
 \begin{frame}{Decomposition and Estimation Example}
@@ -368,6 +391,8 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   \bigskip
   ESPRIT method estimates factors $\alpha_j$ and
   frequencies $\omega_j$
+
+  [Roy et al. (1986)]
 \end{frame}
 
 \begin{frame}{ESPRIT Algorithm: General Idea}
@@ -412,9 +437,15 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
       From $z_j = \exp(\alpha_j + \mathrm{i}2\pi\omega_j)$
       parameters $\alpha_j$ and $\omega_j$ can be found
   \end{enumerate}
+
+  \bigskip
+
+  Methods that are based on a basis of the signal trajectory space
+  are called subspace-based
 \end{frame}
 
 \begin{frame}{Multi-Channel Time Series, MSSA}
+  [Broomhead, King (1986)]\\ \smallskip
   $\tX = \left(\tX^{(1)},\, \tX^{(2)}, \, \ldots,\,
   \tX^{(P)}\right), \qquad\tX^{(p)} = \left(x_1^{(p)}, \, x_2^{(p)},\,
   \ldots,\,  x_N^{(p)}\right)$ -- channels
@@ -481,6 +512,22 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
   %   node[rotate fit=\n1,fit=(A13) (A31),draw,rounded
   %   corners,inner sep=2pt]{};
   % \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Multivariate SSA: Example}
+  \begin{figure}
+    \centering
+    \includegraphics[width=0.55\textwidth]{wine_trends}
+    \caption{`Australian wines': Extraction of trends.}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Multivariate SSA: Example}
+  \begin{figure}
+    \centering
+    \includegraphics[width=0.61\textwidth]{wine_seasonality}
+    \caption{`Australian wines': Extraction of seasonality.}
+  \end{figure}
 \end{frame}
 
 \begin{frame}[plain, c, noframenumbering]
@@ -555,17 +602,19 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 \end{frame}
 
 \begin{frame}{Mapping Single-Channel Time Series to a Tensor}
-  $\tX = (x_1,\, x_2,\, \ldots,\, x_N)$\\ \medskip
+  Considered in [Papy et al. (2005)]\\ \smallskip
+  $\tX = (x_1,\, x_2,\, \ldots,\, x_N)$\\ \smallskip
   $\tX \mapsto \calT_{\mathrm{T-SSA}}^{(I, L)}(\tX) = \calX \in
   \bbC^{I\times L \times K}$, $K = N - I - L + 2$
 
   \begin{figure}[!ht]
     \centering
-    \includegraphics[width=0.7\textwidth]{tens-injection-wide.pdf}
+    \includegraphics[width=0.66\textwidth]{tens-injection-wide.pdf}
   \end{figure}
 \end{frame}
 
 \begin{frame}{Mapping Multi-Channel Time Series to a Tensor}
+  Considered in [Papy et al. (2005)]\\ \smallskip
   $\tX = \left(\tX^{(1)},\, \tX^{(2)},\, \ldots,\,
   \tX^{(P)}\right)$, $\tX^{(p)} = (x_1^{(p)},\, x_2^{(p)},\,
   \ldots,\, x_N^{(p)})$\\ \medskip
@@ -688,8 +737,8 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 \begin{frame}{T-SSA, T-MSSA and T-ESPRIT with HOSVD}
   \textbf{Input:} time series $\tX$,
   window length: $(I, L)$ for single-channel or $L$ for multi-channel,
-  signal ranks $(r_1,\, r_2,\, r_3)$, $d$ --- estimation dimension
-  for HO-ESPRIT.
+  signal ranks $(r_1,\, r_2,\, r_3)$, $d$ --- number of the
+  estimation dimension direction for HO-ESPRIT.
   \vspace{0.4cm}\\
   \begin{enumerate}
     \item \textbf{Embedding}.
@@ -884,7 +933,8 @@ Khromov}}{Nikita Khromov}, Nina Golyandina}
 
 \begin{frame}{Dtack Modifications}
   Possible problem for ESPRIT: components with close frequencies can
-  mix into one in the presence of noise. Solution: using Dstack mapping.
+  mix into one in the presence of noise. Solution: using Dstack
+  mapping [Morren~et~al.~(2003)].
   \medskip
 
   Consider $\tX = (x_1,\, x_2,\, \ldots,\, x_N)$, $M = \lfloor N /
