@@ -924,7 +924,7 @@ for (i in seq_along(sds)) {
         compare_rec_r()
       }, simplify = "array", future.seed = 5)
     }
-    if (sd == 1)
+    if (sd == 0)
       recs <- batch_recs(2)
     else
       recs <- batch_recs(R)

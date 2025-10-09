@@ -1,0 +1,213 @@
+---
+title: "Research Cases"
+author: "Khromov Nikita"
+output: html_document
+---
+
+```{r}
+library(Rssa)
+library(svd)
+library(scales)
+library(rTensor)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(future.apply)
+library(progressr)
+
+setwd(rprojroot::find_rstudio_root_file())
+knitr::opts_knit$set(root.dir = getwd())
+source(file = "./Source/TSSA.R")
+```
+
+```{r enable progressr, eval = FALSE}
+# This commands should be executed in R console, not as a chunk
+# Otherwise they fail
+progressr::handlers(global = TRUE)
+progressr::handlers("progress")
+```
+
+```{r}
+pred_ssa_rec <- function() {
+  noise <- rnorm(N, 0, sd)
+  x <- signal + noise
+  rec <- reconstruct(ssa(x, L = L_ssa), groups = groups_ssa)
+  Reduce("+", rec)
+}
+
+pred_hossa_rec <- function() {
+  noise <- rnorm(N, 0, sd)
+  x <- signal + noise
+  
+  rec <- tens_ssa_reconstruct(
+    x,
+    # c(I_hossa, L_hossa),
+    unlist(L_hossa),
+    groups = groups_hossa,
+    decomp = "hooi",
+    trunc_dims = unlist(td_hossa),
+    status = FALSE
+  )
+  
+  Reduce("+", rec)
+}
+
+# compare_mssa_rec <- function() {
+#   noise <- rnorm(N * P, 0, sd)
+#   x <- signal + noise
+#   
+#   rec <- list(
+#     ssa = reconstruct(ssa(x, L = L_mssa, kind="mssa"), groups = groups_mssa),
+#     hossa = tens_mssa_reconstruct(
+#       x,
+#       L_homssa,
+#       groups = groups_homssa,
+#       groups3 = groups3_homssa,
+#       decomp = "hooi",
+#       status = FALSE
+#     )
+#   )
+#   
+#   sapply(rec, function(m)
+#     Reduce("+", m))
+# }
+```
+
+```{r}
+mse <- function(true, pred) {
+  err <- pred - true
+  Re(mean(err * Conj(err)))
+}
+
+# true is scalar, pred is vector
+rmse <- function(true, pred) {
+  sqrt(mse(true, pred))
+}
+
+# true is vector, pred is matrix with predictions for each parameter in rows
+rmse_params_mat <- function(true, pred) {
+  apply(cbind(true, pred), 1, \(v) rmse(v[1], v[-1]))
+}
+
+# true is nd-array, pred is (n+1)d-array with n+1-mode slices as predictions
+rmse_ts_nd <- function(true, pred) {
+  sqrt(mean(apply(pred, length(dim(pred)), \(p) mse(true, p))))
+}
+
+## true is vector (ts), pred is matrix with columns as predictions of the ts
+# rmse_ts <- function(true, pred) {
+#   # sqrt(mean(apply(pred, 2, \(p) mean((true - p)^2))))
+#   sqrt(mean(apply(pred, 2, \(p) mse(true, p))))
+# }
+
+## true is matrix (mts) with columns as individual ts, pred is 3d-array with 3-mode slices as predictions of the mts
+# rmse_mts <- function(true, pred) {
+#   sqrt(mean(apply(pred, 3, \(p) mse(true, p))))  
+# }
+```
+
+
+```{r}
+calc_errors <- function(R, pred_func, err_func, signal, seed = 5) {
+  with(plan(multisession), {
+    batch_recs <- function(R) {
+      p <- progressor(R)
+      future_replicate(R, {
+        p()
+        pred_func()
+      }, simplify = "array", future.seed = seed)
+    }
+    if (sd == 0)
+      recs <- batch_recs(2) # don't need R because no noise present. Set to 2, because with 1 will be simplified
+    else
+      recs <- batch_recs(R)
+  })
+  
+  return(err_func(signal, recs))
+}
+
+# params_grid_list: list with the parameter names as names and vectors of the parameters values as values
+calc_errors_by_params <- function(params_grid_list, R, comp_func, err_func, signal, seed = 5) {
+  params_grid <- expand.grid(params_grid_list)
+  results <- params_grid
+  results$error <- numeric(nrow(params_grid))
+  for (i in seq(nrow(params_grid))) {
+    print(paste0(names(params_grid), " = ", params_grid[i,], collapse = ", "))
+    list2env(params_grid[i,], envir = parent.frame())
+    results[i,]$error <- calc_errors(R, comp_func, err_func, signal, seed)
+  }
+  return(results)
+}
+```
+
+```{r}
+# no rates
+rates.true <- c(0, 0)
+plot.name <- "_no_rates"
+# both rates -0.01
+# rates.true <- c(-0.01, -0.01)
+# plot.name <- "_small_eq_rates"
+# both rates -0.02
+# rates.true <- c(-0.02, -0.02)
+# plot.name <- "_large_eq_rates"
+# rates from paper
+# rates.true <- c(-0.01, -0.02)
+# plot.name <- ""
+
+freqs.true <- c(0.2, 0.22)
+N <- 25
+
+signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(N - 1)) +
+  exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(N - 1))
+
+groups_ssa <- list(1:4)
+max.r <- max(sapply(groups_ssa, max))
+Ls_ssa <- seq(from = max.r + 1,
+              to = (N + 1) %/% 2,
+              by = 1)
+
+
+groups_hossa <- list(1:4)
+trunc_dims <- list(1, 1:2, 1:3)
+max.r <- max(sapply(groups_hossa, max))
+
+# I >= L >= J
+Is <- seq(from = max.r + 1,
+          to = N - max.r - 1,
+          by = 1)
+Ls <- seq(from = max.r + 1,
+          to = N - max.r - 1,
+          by = 1)
+
+correct.dims <- which(outer(Is, Ls, (\(i, l) ifelse((i >= l) &
+                                                      (N - i - l + 2 > max.r) &
+                                                      (N - i - l + 2 <= l), TRUE, FALSE
+))), arr.ind = TRUE)
+
+len.out <- nrow(correct.dims)
+
+tens.dims <- matrix(ncol = 3, nrow = len.out)
+colnames(tens.dims) <- c("I", "L", "J")
+tens.dims[, "I"] <- Is[correct.dims[, 1]]
+tens.dims[, "L"] <- Ls[correct.dims[, 2]]
+tens.dims[, "J"] <- N - tens.dims[, "I"] - tens.dims[, "L"] + 2
+
+tens.dims <- tens.dims[order(tens.dims[, 1], tens.dims[, 2], decreasing = TRUE), ]
+tens.dims_list <- apply(tens.dims, 1, \(v) v[1:2], simplify = list)
+
+
+sds <- c(0.2, 0.6)
+
+params_grid_ssa <- list(sd = sds, L_ssa = Ls_ssa)
+params_grid_hossa <- list(sd = sds,
+                          td_hossa =  trunc_dims,
+                          L_hossa = tens.dims_list)
+```
+
+```{r}
+R <- 40
+
+ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_rec, rmse_ts_nd, signal, seed = 5)
+hossa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
+```
+
