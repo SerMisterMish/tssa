@@ -143,7 +143,7 @@ calc_errors_by_params <- function(params_grid_list, R, comp_func, err_func, sign
 ```{r}
 # no rates
 rates.true <- c(0, 0)
-plot.name <- "_no_rates"
+rates_case <- "_no_rates"
 # both rates -0.01
 # rates.true <- c(-0.01, -0.01)
 # plot.name <- "_small_eq_rates"
@@ -152,9 +152,19 @@ plot.name <- "_no_rates"
 # plot.name <- "_large_eq_rates"
 # rates from paper
 # rates.true <- c(-0.01, -0.02)
-# plot.name <- ""
+# plot.name <- "_regular_rates"
 
+
+# no freqs
+# freqs.true <- c(0, 0)
+# freqs_case <- "_no_freqs"
+# different freqs
 freqs.true <- c(0.2, 0.22)
+freqs_case <- "_regular_freqs"
+# close freqs
+# freqs.true <- c(0.02, 0.0205)
+# freqs_case <- "_close_freqs"
+
 N <- 25
 
 signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(N - 1)) +
@@ -205,9 +215,10 @@ params_grid_hossa <- list(sd = sds,
 ```
 
 ```{r}
-R <- 40
+R <- 500
 
 ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_rec, rmse_ts_nd, signal, seed = 5)
 hossa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
+save(ssa_err, hossa_err, file = paste0("./comp_results/cases_errors/sum_of_2_complex_periodics", rates_case, freqs_case, ".RData"))
 ```
 
