@@ -12,12 +12,12 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // reconstruct_group_t3
-Rcpp::NumericVector reconstruct_group_t3(const arma::dcube& data);
+Rcpp::ComplexVector reconstruct_group_t3(const arma::cx_dcube& data);
 RcppExport SEXP _TssaCppDev_reconstruct_group_t3(SEXP dataSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::dcube& >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< const arma::cx_dcube& >::type data(dataSEXP);
     rcpp_result_gen = Rcpp::wrap(reconstruct_group_t3(data));
     return rcpp_result_gen;
 END_RCPP
