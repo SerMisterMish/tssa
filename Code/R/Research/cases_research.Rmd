@@ -5,6 +5,9 @@ output: html_document
 ---
 
 ```{r}
+setwd(rprojroot::find_rstudio_root_file())
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
 library(Rssa)
 library(svd)
 library(scales)
@@ -12,11 +15,11 @@ library(rTensor)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
+library(Rcpp)
+library(RcppArmadillo)
 library(future.apply)
 library(progressr)
 
-setwd(rprojroot::find_rstudio_root_file())
-knitr::opts_knit$set(root.dir = getwd())
 source(file = "./Source/TSSA.R")
 ```
 
@@ -106,7 +109,6 @@ rmse_ts_nd <- function(true, pred) {
 # }
 ```
 
-
 ```{r}
 calc_errors <- function(R, pred_func, err_func, signal, seed = 5) {
   with(plan(multisession), {
@@ -141,55 +143,116 @@ calc_errors_by_params <- function(params_grid_list, R, comp_func, err_func, sign
 ```
 
 ```{r}
+construct_periodics <- function(N,
+                                ampl,
+                                rate,
+                                freq,
+                                phase,
+                                complex = TRUE,
+                                from = 0,
+                                by = 1) {
+  if (any(c(length(ampl), length(rate), length(freq)) != length(phase)))
+    stop("Amplitudes, rates, frequencies and phases all must have the same length")
+  
+  if (complex) {
+    period_f <- exp
+    unit <- 1i
+  }
+  else {
+    period_f <- cos
+    unit <- 1
+  }
+  
+  
+  
+  colSums(ampl * exp(rate) * period_f(phase + 2 * pi * unit * freq %o% seq(
+    from = from,
+    length.out = N,
+    by = by
+  )))
+}
+
+calc_rank <- function(ampl, rate, freq, phase, complex = TRUE, tol = 1e-6) {
+  if (any(c(length(ampl), length(rate), length(freq)) != length(phase)))
+    stop("Amplitudes, rates, frequencies and phases all must have the same length")
+  
+  (2 - complex) *
+    (sum(A != 0) + nrow(unique(matrix(c(freqs.true, rate), ncol = 2))) - length(A)) - sum(abs(freqs.true - 0.5) < tol)
+}
+```
+
+
+# Two periodics case
+## Short series
+```{r}
 # no rates
 rates.true <- c(0, 0)
-rates_case <- "_no_rates"
-# both rates -0.01
+rates_case <- "_nr"
+# small equal rated
 # rates.true <- c(-0.01, -0.01)
-# plot.name <- "_small_eq_rates"
-# both rates -0.02
+# plot.name <- "_ser"
+# large equal rates
 # rates.true <- c(-0.02, -0.02)
-# plot.name <- "_large_eq_rates"
-# rates from paper
+# plot.name <- "_ler"
+# different rated
 # rates.true <- c(-0.01, -0.02)
-# plot.name <- "_regular_rates"
-
+# plot.name <- "_dr"
 
 # no freqs
-# freqs.true <- c(0, 0)
-# freqs_case <- "_no_freqs"
+freqs.true <- c(0, 0)
+freqs_case <- "_nf"
 # different freqs
-freqs.true <- c(0.2, 0.22)
-freqs_case <- "_regular_freqs"
-# close freqs
+# freqs.true <- c(0.2, 0.22)
+# freqs_case <- "_df"
+# close different freqs
 # freqs.true <- c(0.02, 0.0205)
-# freqs_case <- "_close_freqs"
+# freqs_case <- "_cdf"
+
+# equal amplitudes
+A <- c(1, 1)
+A_case <- "_ea"
+# different amplitudes
+# A <- c(1, 2)
+# A_case <- "_da"
+
+# equal phases
+phases.true <- c(0, 0)
+phases_case <- "_ep"
+# different phases
+# phases.true <- c(0, pi / 3)
+# phases_case <- "_dp"
+
+complex.signal <- TRUE
+complex_case <- "_c" # complex
+# complex.signal <- FALSE
+# complex_case <- "_r" # real
+
+full_case <- paste0(rates_case, freqs_case, A_case, phases_case, complex_case)
+
+max.r <- calc_rank(A, rates.true, freqs.true, phases.true, complex.signal)
 
 N <- 25
+stopifnot(N > max.r * 2 + 1)
+signal <- construct_periodics(N, A, rates.true, freqs.true, phases.true, complex.signal)
 
-signal <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(N - 1)) +
-  exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(N - 1))
-
-groups_ssa <- list(1:4)
-max.r <- max(sapply(groups_ssa, max))
+groups_ssa <- list(1:max.r)
 Ls_ssa <- seq(from = max.r + 1,
               to = (N + 1) %/% 2,
               by = 1)
 
 
-groups_hossa <- list(1:4)
-trunc_dims <- list(1, 1:2, 1:3)
-max.r <- max(sapply(groups_hossa, max))
+groups_hossa <- list(1:max.r)
+trunc_dims <- list(1, 1:3)
 
 # I >= L >= J
-Is <- seq(from = max.r + 1,
+Is_tmp <- seq(from = max.r + 1,
           to = N - max.r - 1,
           by = 1)
-Ls <- seq(from = max.r + 1,
+Ls_tmp <- seq(from = max.r + 1,
           to = N - max.r - 1,
           by = 1)
 
-correct.dims <- which(outer(Is, Ls, (\(i, l) ifelse((i >= l) &
+correct.dims <- which(outer(Is_tmp, Ls_tmp, (\(i, l) ifelse((i >= l) &
                                                       (N - i - l + 2 > max.r) &
                                                       (N - i - l + 2 <= l), TRUE, FALSE
 ))), arr.ind = TRUE)
@@ -198,15 +261,15 @@ len.out <- nrow(correct.dims)
 
 tens.dims <- matrix(ncol = 3, nrow = len.out)
 colnames(tens.dims) <- c("I", "L", "J")
-tens.dims[, "I"] <- Is[correct.dims[, 1]]
-tens.dims[, "L"] <- Ls[correct.dims[, 2]]
+tens.dims[, "I"] <- Is_tmp[correct.dims[, 1]]
+tens.dims[, "L"] <- Ls_tmp[correct.dims[, 2]]
 tens.dims[, "J"] <- N - tens.dims[, "I"] - tens.dims[, "L"] + 2
 
 tens.dims <- tens.dims[order(tens.dims[, 1], tens.dims[, 2], decreasing = TRUE), ]
 tens.dims_list <- apply(tens.dims, 1, \(v) v[1:2], simplify = list)
 
 
-sds <- c(0.2, 0.6)
+sds <- seq(0, 0.6, by = 0.2)
 
 params_grid_ssa <- list(sd = sds, L_ssa = Ls_ssa)
 params_grid_hossa <- list(sd = sds,
@@ -219,6 +282,31 @@ R <- 500
 
 ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_rec, rmse_ts_nd, signal, seed = 5)
 hossa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
-save(ssa_err, hossa_err, file = paste0("./comp_results/cases_errors/sum_of_2_complex_periodics", rates_case, freqs_case, ".RData"))
+save(ssa_err, hossa_err, file = paste0("./comp_results/cases_errors/two_periodics", full_case, ".RData"))
+```
+
+```{r}
+print_errors <- function(err_df) {
+  err_df |> mutate(zapped_error = zapsmall(error)) |> group_by(sd) |> arrange(zapped_error, L_ssa, .by_group = TRUE)
+}
+
+summarise_errors <- function(err_df) {
+  err_df |> mutate(zapped_error = zapsmall(error)) |> group_by(sd) |> summarise(
+    best = min(zapped_error),
+    avg = mean(zapped_error),
+    worst = max(zapped_error)
+  )
+}
+```
+
+
+```{r}
+print_errors(ssa_err)
+summarise_errors(ssa_err)
+```
+
+```{r}
+print_errors(hossa_err)
+summarise_errors(hossa_err)
 ```
 

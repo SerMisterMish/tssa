@@ -1,13 +1,36 @@
-if (!require(Rssa))
+if (!require("Rssa"))
   install.packages("Rssa")
-if (!require(rTensor))
+if (!require("rTensor"))
   install.packages("rTensor")
+if (!require("Rcpp"))
+  install.packages("Rcpp")
+if (!require("RcppArmadillo"))
+  install.packages("RcppArmadillo")
+
+library(Rssa)
+library(rTensor)
+library(Rcpp)
+library(RcppArmadillo)
+
+if (!exists("reconstruct_group_t3", mode = "function")) {
+  if (!require("TssaCppDev")) {
+    if (!require("devtools")) {
+      install.packages("devtools") 
+      library(devtools)
+    }
+    oldwd <- getwd()
+    setwd("TssaCppDev")
+    Rcpp::compileAttributes(".")
+    devtools::install()
+    setwd(oldwd)
+    library(TssaCppDev)
+  }
+  # Rcpp::sourceCpp("Source/reconstruct_group_t3.cpp")
+}
 
 # Single-channel series tensorisation
 
 tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
-  if (!require(rTensor))
-    install.packages("rTensor")
   kind <- toupper(kind)
   kind <- match.arg(kind)
   
@@ -16,9 +39,9 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
     N <- length(s)
     I <- L[1]
     L <- L[2]
-    J <- N - I - L + 2
+    K <- N - I - L + 2
     X <- outer(1:I, 1:L, `+`) |>
-      outer(1:J, function(il, j)
+      outer(1:K, function(il, j)
         s[il + j - 2]) |> as.tensor()
   }
   else if (kind == "CP") {
@@ -50,30 +73,30 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
   return(X)
 }
 
-
 reconstruct.group3 <- function(X.tens, kind = c("SSA", "MSSA", "CP")) {
   stopifnot(is(X.tens, "Tensor"))
   X <- X.tens@data
   kind <- toupper(kind)
   kind <- match.arg(kind)
   if (kind == "SSA") {
-    I <- length(X[, 1, 1])
-    L <- length(X[1, , 1])
-    J <- length(X[1, 1, ])
-    s <- vector(mode = "numeric", length = I + L + J - 2)
-    for (C in 3:(I + L + J)) {
-      sum <- 0
-      count <- 0
-      for (i in 1:(C - 2)) {
-        for (l in 1:(C - 1 - i)) {
-          if (i <= I && l <= L && C - i - l <= J) {
-            sum <- sum + X[i, l, C - i - l]
-            count <- count + 1
-          }
-        }
-      }
-      s[C - 2] <- sum / count
-    }
+    s <- reconstruct_group_t3(X)
+    # I <- length(X[, 1, 1])
+    # L <- length(X[1, , 1])
+    # K <- length(X[1, 1, ])
+    # s <- vector(mode = "numeric", length = I + L + K - 2)
+    # for (C in 3:(I + L + K)) {
+    #   sum <- 0
+    #   count <- 0
+    #   for (i in 1:(C - 2)) {
+    #     for (l in 1:(C - 1 - i)) {
+    #       if (i <= I && l <= L && C - i - l <= K) {
+    #         sum <- sum + X[i, l, C - i - l]
+    #         count <- count + 1
+    #       }
+    #     }
+    #   }
+    #   s[C - 2] <- sum / count
+    # }
   } else if (kind == "CP") {
     s <- Reduce(c, lapply(seq(dim(X)[1]), function(i)
       hankel(as.matrix(X[i, , ]))))
