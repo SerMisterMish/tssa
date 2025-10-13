@@ -4,13 +4,13 @@
 // [[Rcpp::export]]
 Rcpp::ComplexVector reconstruct_group_t3(const arma::cx_dcube& data) {
   auto I = data.n_rows, L = data.n_cols, K = data.n_slices, N = I + L + K - 2;
-  int count;
+  size_t count;
   arma::cx_double sum, mean;
   Rcpp::ComplexVector result(N);
-  for (int C = 2; C < N + 2; ++C) {
+  for (size_t C = 2; C < N + 2; ++C) {
     sum = 0; count = 0;
-    for (int i = 0; i < C - 1; ++i) {
-      for (int l = 0; l < C - i; ++l) {
+    for (size_t i = 0; i < C - 1; ++i) {
+      for (size_t l = 0; l < C - i; ++l) {
         if (i < I && l < L && C - i - l - 2 < K) {
           sum += data(i, l, C - i - l - 2);
           ++count;

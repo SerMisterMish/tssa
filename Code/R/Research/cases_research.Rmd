@@ -55,6 +55,29 @@ pred_hossa_rec <- function() {
   Reduce("+", rec)
 }
 
+pred_mssa_rec <- function() {
+  noise <- rnorm(N * P, 0, sd)
+  x <- signal + noise
+  rec <- reconstruct(ssa(x, L = L_mssa, kind = 'mssa'), groups = groups_mssa)
+  Reduce("+", rec)
+}
+
+pred_homssa_rec <- function() {
+  noise <- rnorm(N * P, 0, sd)
+  x <- signal + noise
+  
+  rec <- tens_mssa_reconstruct(
+    x,
+    L_homssa,
+    groups = groups_homssa,
+    groups3 = groups3_homssa,
+    decomp = "hooi",
+    status = FALSE
+  )
+  
+  Reduce("+", rec)
+}
+
 # compare_mssa_rec <- function() {
 #   noise <- rnorm(N * P, 0, sd)
 #   x <- signal + noise
@@ -145,6 +168,11 @@ calc_errors_by_params <- function(params_grid_list, R, comp_func, err_func, sign
 ```
 
 ```{r}
+# If parameters are matrices, then a multivariate series will be constructed.
+# In this parameters matrices columns correspond to series and rows to summands
+# This means, if you want to increase number of ts in a sum, you grow rows,
+# and if you want to add a 1d ts to a mv ts, you grow columns.
+# The results is either a 1d ts, or a matrix, where each column is a 1d ts.
 construct_periodics <- function(N,
                                 ampl,
                                 rate,
@@ -153,39 +181,58 @@ construct_periodics <- function(N,
                                 complex = TRUE,
                                 from = 0,
                                 by = 1) {
-  if (any(c(length(ampl), length(rate), length(freq)) != length(phase)))
+  if (any(c(length(ampl), length(rate), length(freq)) != length(phase))) {
     stop("Amplitudes, rates, frequencies and phases all must have the same length")
+  }
+  if (all(is.matrix(ampl), is.matrix(rate), is.matrix(freq), is.matrix(phase))) {
+    if (any(c(dim(ampl), dim(rate), dim(freq)) != dim(phase))) {
+      stop("Amplitudes, rates, frequencies and phases all must have the same dimensions")
+    }
+  } else if (any(is.matrix(ampl), is.matrix(rate), is.matrix(freq), is.matrix(phase))) {
+    stop("All parameters should be either matrices, or vectors at the same time")
+  }
   
   if (complex) {
     period_f <- exp
     unit <- 1i
-  }
-  else {
+  } else {
     period_f <- cos
     unit <- 1
   }
-  
-  
-  
-  colSums(ampl * exp(rate) * period_f(phase + 2 * pi * unit * freq %o% seq(
-    from = from,
-    length.out = N,
-    by = by
-  )))
+  N_ones <- rep(1, N)
+  ts_arr <- (N_ones %o% ampl) * (N_ones %o% exp(rate)) *
+    period_f(N_ones %o% phase + 2 * pi * unit * seq(
+      from = from,
+      length.out = N,
+      by = by
+    ) %o% freq)
+
+  apply(ts_arr, 1:(length(dim(ts_arr)) - 1), sum)
 }
 
 calc_rank <- function(ampl, rate, freq, phase, complex = TRUE, tol = 1e-6) {
   if (any(c(length(ampl), length(rate), length(freq)) != length(phase)))
     stop("Amplitudes, rates, frequencies and phases all must have the same length")
-  
+  fr_unique <- unique(matrix(c(freq, rate), ncol = 2))
   (2 - complex) *
-    (sum(A != 0) + nrow(unique(matrix(c(freqs.true, rate), ncol = 2))) - length(A)) - sum(abs(freqs.true - 0.5) < tol)
+    (sum(ampl != 0) + nrow(fr_unique) - length(ampl)) - sum(abs(fr_unique[,1] - 0.5) < tol)
+}
+
+# Assumes all amplitudes are non-zero
+# TODO: This is totally wrong
+calc_rank3 <- function(rate, freq, phase, complex = TRUE, tol = 1e-6) {
+  if (any(c(length(ampl), length(rate), length(freq)) != length(phase)))
+    stop("Amplitudes, rates, frequencies and phases all must have the same length")
+  f_unique <- nrow(unique(freq))
+  r_unique <- nrow(unique(rate))
+  p_unique <- nrow(unique(phase))
+  return(min(ncol(rate), f_unique + r_unique + p_unique - 2))
 }
 ```
 
 
 # Two periodics case
-## Short series
+## Parameters for 1d series
 ```{r}
 # no rates
 rates.true <- c(0, 0)
@@ -196,7 +243,7 @@ rates_case <- "_nr"
 # large equal rates
 # rates.true <- c(-0.02, -0.02)
 # rates_case <- "_ler"
-# different rated
+# different rates
 # rates.true <- c(-0.01, -0.02)
 # rates_case <- "_dr"
 
@@ -224,22 +271,95 @@ phases_case <- "_ep"
 # phases.true <- c(0, pi / 3)
 # phases_case <- "_dp"
 
-complex.signal <- TRUE
-complex_case <- "_c" # complex
-# complex.signal <- FALSE
-# complex_case <- "_r" # real
+# complex.signal <- TRUE
+# complex_case <- "_c" # complex
+complex.signal <- FALSE
+complex_case <- "_r" # real
 
 # N <- 25
 # n_case <- ""
 N <- 100
 n_case <- "_long"
+```
 
+## Parameters for mv series (P = 2)
+```{r}
+P <- 2
+P_case <- "2s"
+
+# no rates
+rates.true <- matrix(c(0, 0, 0, 0), ncol = P)
+rates_case <- "_nr"
+# small equal rated
+# rates.true <- matrix(c(-0.01, -0.01, -0.01, -0.01), ncol = P)
+# rates_case <- "_ser"
+# large equal rates
+# rates.true <- matrix(c(-0.02, -0.02, -0.02, -0.02), ncol = P)
+# rates_case <- "_ler"
+# different by summands rates
+# rates.true <- matrix(c(-0.01, -0.01, -0.02, -0.02), ncol = P)
+# rates_case <- "_dsr"
+# different by time series rates
+# rates.true <- matrix(c(-0.01, -0.02, -0.01, -0.02), ncol = P)
+# rates_case <- "_dtr"
+# different rates
+# rates.true <- matrix(c(-0.01, -0.02, -0.015, -0.025), ncol = P)
+# rates_case <- "_dr"
+
+# no freqs
+# freqs.true <- matrix(c(0, 0, 0, 0), ncol = P)
+# freqs_case <- "_nf"
+# different by summands freqs
+freqs.true <- matrix(c(0.2, 0.2, 0.22, 0.22), ncol = P)
+freqs_case <- "_dsf"
+# different by time series freqs
+# freqs.true <- matrix(c(0.2, 0.22, 0.2, 0.22), ncol = P)
+# freqs_case <- "_dtf"
+# different freqs
+# freqs.true <- matrix(c(0.2, 0.22, 0.18, 0.24), ncol = P)
+# freqs_case <- "_df"
+# close different by summands freqs
+# freqs.true <- matrix(c(0.02, 0.02, 0.0205, 0.0205), ncol = P)
+# freqs_case <- "_cdsf"
+
+# equal amplitudes
+A <- matrix(c(1, 1, 1, 1), ncol = P)
+A_case <- "_ea"
+# different amplitudes
+# A <- matrix(c(1, 2, 1.5, 2.5), ncol = P)
+# A_case <- "_da"
+
+# equal phases
+phases.true <- matrix(c(0, 0, 0, 0), ncol = P)
+phases_case <- "_ep"
+# different by time series phases
+# phases.true <- matrix(c(0, pi / 3, 0, pi / 3), ncol = P)
+# phases_case <- "_dtp"
+
+complex.signal <- TRUE
+complex_case <- "_c" # complex
+# complex.signal <- FALSE
+# complex_case <- "_r" # real
+
+N <- 25
+n_case <- ""
+# N <- 100
+# n_case <- "_long"
+```
+
+
+```{r}
 full_case <- paste0(n_case, rates_case, freqs_case, A_case, phases_case, complex_case)
 max.r <- calc_rank(A, rates.true, freqs.true, phases.true, complex.signal)
 
 stopifnot(N > max.r * 2 + 1)
 signal <- construct_periodics(N, A, rates.true, freqs.true, phases.true, complex.signal)
+```
 
+
+## Parameters grid for 1d case
+```{r}
+if (!is.matrix(signal)) {
 groups_ssa <- list(1:max.r)
 
 if (n_case == "") {
@@ -295,6 +415,38 @@ params_grid_ssa <- list(sd = sds, L_ssa = Ls_ssa)
 params_grid_hossa <- list(sd = sds,
                           td_hossa =  trunc_dims,
                           L_hossa = tens.dims_list)
+}
+```
+
+## Parameters grid for mv case
+```{r}
+if (is.matrix(signal)) {
+groups_mssa <- list(1:max.r)
+
+if (n_case == "") {
+  Ls_mssa <- seq(from = max.r + 1,
+                to = N - max.r - 1,
+                by = 2)
+} else {
+  Ls_mssa <- seq(from = max.r + 1,
+                to = N - max.r - 1,
+                by = 10)
+}
+
+max.r3 <- tens_mssa_decompose(signal, N %/% 2)$Z@data |> zapsmall() |> apply(3, \(x) any(x != 0)) |> sum()
+groups_homssa <- list(1:max.r)
+groups3_homssa <- list(1:max.r3)
+
+Ls_homssa = seq(from = max.r + 1,
+                to = (N + 1) %/% 2,
+                by = 2)
+
+sds <- seq(0, 0.6, by = 0.2)
+
+params_grid_ssa <- list(sd = sds, L_mssa = Ls_mssa)
+params_grid_hossa <- list(sd = sds,
+                          L_homssa = Ls_homssa)
+}
 ```
 
 ```{r}
