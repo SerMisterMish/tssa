@@ -593,6 +593,28 @@ cmesprit <- function(s, L, groups, qrtol = 1e-07) {
   estimates
 }
 
+# Complex multi-channel SSA (decomposition and reconstruction)
+
+cmssa_reconstruct <- function(s, L, groups) {
+  stopifnot(is.matrix(s) && is.list(groups))
+  Q <- ncol(s)
+  K <- nrow(s) - L + 1
+  H <- apply(s, 2, Rssa::hankel, L = L, simplify = FALSE) |>
+    Reduce(cbind, x = _)
+  
+  max_rank <- max(sapply(groups, max))
+  H.dec <- svd(H, nu = max_rank, nv = max_rank)
+  rec <- list()
+  
+  for (i in seq_along(groups)) {
+    group <- groups[[i]]
+    rec.mat <- H.dec$u[, group] %*% diag(H.dec$d[group], nrow = length(group)) %*% Conj(t(H.dec$v[, group]))
+    rec.tens <- rTensor::fold(rec.mat, 1, 2:3, modes = c(L, K, Q))
+    rec[[i]] <- reconstruct.group3(rec.tens, kind = "MSSA")
+  }
+  rec
+}
+
 # Complex Circular White Gaussian Noise Generator
 
 CCSWGN <- function(n, mean = 0, sd = 1) {

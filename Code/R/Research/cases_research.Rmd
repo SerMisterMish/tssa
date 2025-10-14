@@ -58,7 +58,8 @@ pred_hossa_rec <- function() {
 pred_mssa_rec <- function() {
   noise <- rnorm(N * P, 0, sd)
   x <- signal + noise
-  rec <- reconstruct(ssa(x, L = L_mssa, kind = 'mssa'), groups = groups_mssa)
+  # rec <- reconstruct(ssa(x, L = L_mssa, kind = 'mssa'), groups = groups_mssa)
+  rec <- cmssa_reconstruct(x, L = L_mssa, groups = groups_mssa)
   Reduce("+", rec)
 }
 
@@ -427,19 +428,21 @@ if (n_case == "") {
   Ls_mssa <- seq(from = max.r + 1,
                 to = N - max.r - 1,
                 by = 2)
+  Ls_homssa = seq(from = max.r + 1,
+                to = (N + 1) %/% 2,
+                by = 2)
 } else {
   Ls_mssa <- seq(from = max.r + 1,
                 to = N - max.r - 1,
+                by = 10)
+  Ls_homssa = seq(from = max.r + 1,
+                to = (N + 1) %/% 2,
                 by = 10)
 }
 
 max.r3 <- tens_mssa_decompose(signal, N %/% 2)$Z@data |> zapsmall() |> apply(3, \(x) any(x != 0)) |> sum()
 groups_homssa <- list(1:max.r)
 groups3_homssa <- list(1:max.r3)
-
-Ls_homssa = seq(from = max.r + 1,
-                to = (N + 1) %/% 2,
-                by = 2)
 
 sds <- seq(0, 0.6, by = 0.2)
 
@@ -450,11 +453,17 @@ params_grid_hossa <- list(sd = sds,
 ```
 
 ```{r}
-R <- 500
+R <- 2
 
-ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_rec, rmse_ts_nd, signal, seed = 5)
-hossa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
-save(ssa_err, hossa_err, file = paste0("./comp_results/cases_errors/two_periodics", full_case, ".RData"))
+if (is.matrix(signal)) {
+  ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_mssa_rec, rmse_ts_nd, signal, seed = 5)
+  tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_homssa_rec, rmse_ts_nd, signal, seed = 5)
+  save(ssa_err, tssa_err, file = paste0("./comp_results/cases_errors/two_periodics_mv", full_case, ".RData"))
+} else {
+  ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_rec, rmse_ts_nd, signal, seed = 5)
+  tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
+  save(ssa_err, tssa_err, file = paste0("./comp_results/cases_errors/two_periodics", full_case, ".RData"))
+}
 ```
 
 ```{r}
@@ -478,7 +487,7 @@ summarise_errors(ssa_err)
 ```
 
 ```{r}
-print_errors(hossa_err)
-summarise_errors(hossa_err)
+print_errors(tssa_err)
+summarise_errors(tssa_err)
 ```
 
