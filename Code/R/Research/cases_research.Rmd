@@ -289,8 +289,8 @@ P <- 2
 P_case <- "2s"
 
 # no rates
-rates.true <- matrix(c(0, 0, 0, 0), ncol = P)
-rates_case <- "_nr"
+# rates.true <- matrix(c(0, 0, 0, 0), ncol = P)
+# rates_case <- "_nr"
 # small equal rated
 # rates.true <- matrix(c(-0.01, -0.01, -0.01, -0.01), ncol = P)
 # rates_case <- "_ser"
@@ -301,8 +301,8 @@ rates_case <- "_nr"
 # rates.true <- matrix(c(-0.01, -0.01, -0.02, -0.02), ncol = P)
 # rates_case <- "_dsr"
 # different by time series rates
-# rates.true <- matrix(c(-0.01, -0.02, -0.01, -0.02), ncol = P)
-# rates_case <- "_dtr"
+rates.true <- matrix(c(-0.01, -0.02, -0.01, -0.02), ncol = P)
+rates_case <- "_dtr"
 # different rates
 # rates.true <- matrix(c(-0.01, -0.02, -0.015, -0.025), ncol = P)
 # rates_case <- "_dr"
@@ -311,11 +311,11 @@ rates_case <- "_nr"
 # freqs.true <- matrix(c(0, 0, 0, 0), ncol = P)
 # freqs_case <- "_nf"
 # different by summands freqs
-freqs.true <- matrix(c(0.2, 0.2, 0.22, 0.22), ncol = P)
-freqs_case <- "_dsf"
+# freqs.true <- matrix(c(0.2, 0.2, 0.22, 0.22), ncol = P)
+# freqs_case <- "_dsf"
 # different by time series freqs
-# freqs.true <- matrix(c(0.2, 0.22, 0.2, 0.22), ncol = P)
-# freqs_case <- "_dtf"
+freqs.true <- matrix(c(0.2, 0.22, 0.2, 0.22), ncol = P)
+freqs_case <- "_dtf"
 # different freqs
 # freqs.true <- matrix(c(0.2, 0.22, 0.18, 0.24), ncol = P)
 # freqs_case <- "_df"
@@ -337,10 +337,10 @@ phases_case <- "_ep"
 # phases.true <- matrix(c(0, pi / 3, 0, pi / 3), ncol = P)
 # phases_case <- "_dtp"
 
-complex.signal <- TRUE
-complex_case <- "_c" # complex
-# complex.signal <- FALSE
-# complex_case <- "_r" # real
+# complex.signal <- TRUE
+# complex_case <- "_c" # complex
+complex.signal <- FALSE
+complex_case <- "_r" # real
 
 N <- 25
 n_case <- ""
@@ -453,7 +453,7 @@ params_grid_hossa <- list(sd = sds,
 ```
 
 ```{r}
-R <- 2
+R <- 500
 
 if (is.matrix(signal)) {
   ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_mssa_rec, rmse_ts_nd, signal, seed = 5)
@@ -471,6 +471,10 @@ print_errors <- function(err_df) {
   err_df |> mutate(zapped_error = zapsmall(error)) |> group_by(sd) |> arrange(zapped_error, L_ssa, .by_group = TRUE)
 }
 
+print_errors_m <- function(err_df) {
+  err_df |> mutate(zapped_error = zapsmall(error)) |> group_by(sd) |> arrange(zapped_error, L_mssa, .by_group = TRUE)
+}
+
 summarise_errors <- function(err_df) {
   err_df |> mutate(zapped_error = zapsmall(error)) |> group_by(sd) |> summarise(
     best = min(zapped_error),
@@ -482,12 +486,14 @@ summarise_errors <- function(err_df) {
 
 
 ```{r}
-print_errors(ssa_err)
+# print_errors(ssa_err)
+print_errors_m(ssa_err)
 summarise_errors(ssa_err)
 ```
 
 ```{r}
-print_errors(tssa_err)
+# print_errors(tssa_err)
+print_errors_m(tssa_err)
 summarise_errors(tssa_err)
 ```
 
