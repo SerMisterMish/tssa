@@ -1918,7 +1918,7 @@ freqs.true <- c(0.2, 0.22)
 sd <- 0.2
 
 groups <- list(1:2)
-groups3 <- list(1:2)
+groups3 <- list(1)
 max.r <- max(sapply(groups, max))
 
 Ls <- seq(from = max.r + 1, to = n - max.r - 1, by = 1)
@@ -1987,11 +1987,11 @@ close(pb)
 rec.mssa.rmse <- mult.mse$MSSA |> colMeans() |> sqrt()
 rec.tmssa.rmse <- mult.mse$`HO-MSSA` |> colMeans() |> sqrt()
 
-save(
-  rec.mssa.rmse,
-  rec.tmssa.rmse,
-  file = paste0("./Research/comp_results/mv_L_rmse", plot.name, ".RData")
-)
+# save(
+#   rec.mssa.rmse,
+#   rec.tmssa.rmse,
+#   file = paste0("./Research/comp_results/mv_L_rmse", plot.name, ".RData")
+# )
 ```
 
 ## Графики RMSE

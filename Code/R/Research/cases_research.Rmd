@@ -4,7 +4,7 @@ author: "Khromov Nikita"
 output: html_document
 ---
 
-```{r}
+```{r setup}
 setwd(rprojroot::find_rstudio_root_file())
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 
@@ -289,8 +289,8 @@ P <- 2
 P_case <- "2s"
 
 # no rates
-# rates.true <- matrix(c(0, 0, 0, 0), ncol = P)
-# rates_case <- "_nr"
+rates.true <- matrix(c(0, 0, 0, 0), ncol = P)
+rates_case <- "_nr"
 # small equal rated
 # rates.true <- matrix(c(-0.01, -0.01, -0.01, -0.01), ncol = P)
 # rates_case <- "_ser"
@@ -301,8 +301,8 @@ P_case <- "2s"
 # rates.true <- matrix(c(-0.01, -0.01, -0.02, -0.02), ncol = P)
 # rates_case <- "_dsr"
 # different by time series rates
-rates.true <- matrix(c(-0.01, -0.02, -0.01, -0.02), ncol = P)
-rates_case <- "_dtr"
+# rates.true <- matrix(c(-0.01, -0.02, -0.01, -0.02), ncol = P)
+# rates_case <- "_dtr"
 # different rates
 # rates.true <- matrix(c(-0.01, -0.02, -0.015, -0.025), ncol = P)
 # rates_case <- "_dr"
@@ -311,11 +311,11 @@ rates_case <- "_dtr"
 # freqs.true <- matrix(c(0, 0, 0, 0), ncol = P)
 # freqs_case <- "_nf"
 # different by summands freqs
-# freqs.true <- matrix(c(0.2, 0.2, 0.22, 0.22), ncol = P)
-# freqs_case <- "_dsf"
+freqs.true <- matrix(c(0.2, 0.2, 0.22, 0.22), ncol = P)
+freqs_case <- "_dsf"
 # different by time series freqs
-freqs.true <- matrix(c(0.2, 0.22, 0.2, 0.22), ncol = P)
-freqs_case <- "_dtf"
+# freqs.true <- matrix(c(0.2, 0.22, 0.2, 0.22), ncol = P)
+# freqs_case <- "_dtf"
 # different freqs
 # freqs.true <- matrix(c(0.2, 0.22, 0.18, 0.24), ncol = P)
 # freqs_case <- "_df"
@@ -324,8 +324,14 @@ freqs_case <- "_dtf"
 # freqs_case <- "_cdsf"
 
 # equal amplitudes
-A <- matrix(c(1, 1, 1, 1), ncol = P)
-A_case <- "_ea"
+# A <- matrix(c(1, 1, 1, 1), ncol = P)
+# A_case <- "_ea"
+# different by summands amplitudes 
+# A <- matrix(c(1, 2, 1, 2), ncol = P)
+# A_case <- "_dsa"
+# different by summands, proportional by ts amplitudes 
+A <- matrix(c(1, 2, 3, 6), ncol = P)
+A_case <- "_dspta"
 # different amplitudes
 # A <- matrix(c(1, 2, 1.5, 2.5), ncol = P)
 # A_case <- "_da"
@@ -337,10 +343,10 @@ phases_case <- "_ep"
 # phases.true <- matrix(c(0, pi / 3, 0, pi / 3), ncol = P)
 # phases_case <- "_dtp"
 
-# complex.signal <- TRUE
-# complex_case <- "_c" # complex
-complex.signal <- FALSE
-complex_case <- "_r" # real
+complex.signal <- TRUE
+complex_case <- "_c" # complex
+# complex.signal <- FALSE
+# complex_case <- "_r" # real
 
 N <- 25
 n_case <- ""
@@ -458,11 +464,11 @@ R <- 500
 if (is.matrix(signal)) {
   ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_mssa_rec, rmse_ts_nd, signal, seed = 5)
   tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_homssa_rec, rmse_ts_nd, signal, seed = 5)
-  save(ssa_err, tssa_err, file = paste0("./comp_results/cases_errors/two_periodics_mv", full_case, ".RData"))
+  save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/two_periodics_mv", full_case, ".RData"))
 } else {
   ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_rec, rmse_ts_nd, signal, seed = 5)
   tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
-  save(ssa_err, tssa_err, file = paste0("./comp_results/cases_errors/two_periodics", full_case, ".RData"))
+  save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/two_periodics", full_case, ".RData"))
 }
 ```
 
@@ -486,14 +492,25 @@ summarise_errors <- function(err_df) {
 
 
 ```{r}
-# print_errors(ssa_err)
-print_errors_m(ssa_err)
+# load()
+```
+
+
+```{r}
+if (is.matrix(signal)) {
+  print_errors_m(ssa_err)
+} else {
+  print_errors(ssa_err)
+}
 summarise_errors(ssa_err)
 ```
 
 ```{r}
-# print_errors(tssa_err)
-print_errors_m(tssa_err)
+if (is.matrix(signal)) {
+  print_errors_m(tssa_err)
+} else {
+  print_errors(tssa_err)
+}
 summarise_errors(tssa_err)
 ```
 

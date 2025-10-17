@@ -299,13 +299,13 @@ freqs.true <- c(0.2, 0.22)
 sd <- 0.2
 
 groups <- list(1:2)
-groups3 <- list(1:2)
+groups3 <- list(1)
 max.r <- max(sapply(groups, max))
 
 Ls <- seq(from = max.r + 1, to = n - max.r - 1, by = 1)
 len.out <- length(Ls)
 
-load("./Research/mv_coef/L_no_rates.RData")
+# load("./Research/mv_coef/L_no_rates.RData")
 
 signal.mult <- exp((rates.true[1] + 2i * pi * freqs.true[1]) * 0:(n - 1)) %o% coef[, 1] +
   exp((rates.true[2] + 2i * pi * freqs.true[2]) * 0:(n - 1)) %o% coef[, 2]
@@ -326,7 +326,7 @@ rec.summary <- rec.df |> group_by(Method) |> summarise(
   Mean = mean(RMSE)
 ) |> arrange(desc(Method))
 
-save(rec.summary, file = "./Research/comp_results/cdam25_2d_rec.RData")
+# save(rec.summary, file = "./Research/comp_results/cdam25_2d_rec.RData")
 xtable(
   rec.summary,
   digits = 3,
