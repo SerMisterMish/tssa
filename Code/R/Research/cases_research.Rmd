@@ -4,6 +4,8 @@ author: "Khromov Nikita"
 output: html_document
 ---
 
+# Setup
+
 ```{r setup}
 setwd(rprojroot::find_rstudio_root_file())
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
@@ -170,10 +172,10 @@ calc_errors_by_params <- function(params_grid_list, R, comp_func, err_func, sign
 
 ```{r}
 # If parameters are matrices, then a multivariate series will be constructed.
-# In this parameters matrices columns correspond to series and rows to summands
-# This means, if you want to increase number of ts in a sum, you grow rows,
-# and if you want to add a 1d ts to a mv ts, you grow columns.
-# The results is either a 1d ts, or a matrix, where each column is a 1d ts.
+# In this parameters matrices columns correspond to summnands and rows to channels
+# This means, if you want to increase number of ts in a sum, you grow columns,
+# and if you want to add a channel to an mv ts, you grow rows
+# The results is either a 1d ts, or a matrix, where each column is a 1d ts -- channel.
 construct_periodics <- function(N,
                                 ampl,
                                 rate,
@@ -283,70 +285,70 @@ N <- 100
 n_case <- "_long"
 ```
 
+
 ## Parameters for mv series (P = 2)
 ```{r}
 P <- 2
-P_case <- "2s"
 
 # no rates
-rates.true <- matrix(c(0, 0, 0, 0), ncol = P)
-rates_case <- "_nr"
+# rates.true <- matrix(c(0, 0, 0, 0), nrow = P)
+# rates_case <- "_nr"
 # small equal rated
-# rates.true <- matrix(c(-0.01, -0.01, -0.01, -0.01), ncol = P)
+# rates.true <- matrix(c(-0.01, -0.01, -0.01, -0.01), nrow = P)
 # rates_case <- "_ser"
 # large equal rates
-# rates.true <- matrix(c(-0.02, -0.02, -0.02, -0.02), ncol = P)
+# rates.true <- matrix(c(-0.02, -0.02, -0.02, -0.02), nrow = P)
 # rates_case <- "_ler"
 # different by summands rates
-# rates.true <- matrix(c(-0.01, -0.01, -0.02, -0.02), ncol = P)
+# rates.true <- matrix(c(-0.01, -0.01, -0.02, -0.02), nrow = P)
 # rates_case <- "_dsr"
 # different by time series rates
-# rates.true <- matrix(c(-0.01, -0.02, -0.01, -0.02), ncol = P)
-# rates_case <- "_dtr"
+rates.true <- matrix(c(-0.01, -0.02, -0.01, -0.02), nrow = P)
+rates_case <- "_dtr"
 # different rates
-# rates.true <- matrix(c(-0.01, -0.02, -0.015, -0.025), ncol = P)
+# rates.true <- matrix(c(-0.01, -0.02, -0.015, -0.025), nrow = P)
 # rates_case <- "_dr"
 
 # no freqs
-# freqs.true <- matrix(c(0, 0, 0, 0), ncol = P)
+# freqs.true <- matrix(c(0, 0, 0, 0), nrow = P)
 # freqs_case <- "_nf"
 # different by summands freqs
-freqs.true <- matrix(c(0.2, 0.2, 0.22, 0.22), ncol = P)
-freqs_case <- "_dsf"
+# freqs.true <- matrix(c(0.2, 0.2, 0.22, 0.22), nrow = P)
+# freqs_case <- "_dsf"
 # different by time series freqs
-# freqs.true <- matrix(c(0.2, 0.22, 0.2, 0.22), ncol = P)
-# freqs_case <- "_dtf"
+freqs.true <- matrix(c(0.2, 0.22, 0.2, 0.22), nrow = P)
+freqs_case <- "_dtf"
 # different freqs
-# freqs.true <- matrix(c(0.2, 0.22, 0.18, 0.24), ncol = P)
+# freqs.true <- matrix(c(0.2, 0.22, 0.18, 0.24), nrow = P)
 # freqs_case <- "_df"
 # close different by summands freqs
-# freqs.true <- matrix(c(0.02, 0.02, 0.0205, 0.0205), ncol = P)
+# freqs.true <- matrix(c(0.02, 0.02, 0.0205, 0.0205), nrow = P)
 # freqs_case <- "_cdsf"
 
 # equal amplitudes
-# A <- matrix(c(1, 1, 1, 1), ncol = P)
-# A_case <- "_ea"
+A <- matrix(c(1, 1, 1, 1), nrow = P)
+A_case <- "_ea"
 # different by summands amplitudes 
-# A <- matrix(c(1, 2, 1, 2), ncol = P)
+# A <- matrix(c(1, 2, 1, 2), nrow = P)
 # A_case <- "_dsa"
 # different by summands, proportional by ts amplitudes 
-A <- matrix(c(1, 2, 3, 6), ncol = P)
-A_case <- "_dspta"
+# A <- matrix(c(1, 2, 3, 6), nrow = P)
+# A_case <- "_dspta"
 # different amplitudes
-# A <- matrix(c(1, 2, 1.5, 2.5), ncol = P)
+# A <- matrix(c(1, 2, 1.5, 2.5), nrow = P)
 # A_case <- "_da"
 
 # equal phases
-phases.true <- matrix(c(0, 0, 0, 0), ncol = P)
+phases.true <- matrix(c(0, 0, 0, 0), nrow = P)
 phases_case <- "_ep"
 # different by time series phases
-# phases.true <- matrix(c(0, pi / 3, 0, pi / 3), ncol = P)
+# phases.true <- matrix(c(0, pi / 3, 0, pi / 3), nrow = P)
 # phases_case <- "_dtp"
 
-complex.signal <- TRUE
-complex_case <- "_c" # complex
-# complex.signal <- FALSE
-# complex_case <- "_r" # real
+# complex.signal <- TRUE
+# complex_case <- "_c" # complex
+complex.signal <- FALSE
+complex_case <- "_r" # real
 
 N <- 25
 n_case <- ""
@@ -355,13 +357,97 @@ n_case <- ""
 ```
 
 
+## Parameters for mv series (P = 4)
 ```{r}
-full_case <- paste0(n_case, rates_case, freqs_case, A_case, phases_case, complex_case)
+P <- 4
+P_case <- "_c4"
+
+# no rates
+# rates.true <- matrix(c(0, 0, 0, 0), nrow = P)
+# rates_case <- "_nr"
+# small equal rated
+# rates.true <- matrix(c(-0.01, -0.01, -0.01, -0.01), nrow = P)
+# rates_case <- "_ser"
+# large equal rates
+# rates.true <- matrix(c(-0.02, -0.02, -0.02, -0.02), nrow = P)
+# rates_case <- "_ler"
+# different by summands rates
+# rates.true <- matrix(c(-0.01, -0.01, -0.02, -0.02), nrow = P)
+# rates_case <- "_dsr"
+# different by time series rates
+# rates.true <- matrix(rep(c(-0.01, -0.02), P), nrow = P)
+# rates_case <- "_dtr"
+rates.true <- matrix(rep(c(-0.01, -0.02, -0.03, -0.04), P), nrow = P)
+rates_case <- "_dtr"
+# different rates
+# rates.true <- matrix(c(-0.01, -0.02, -0.015, -0.025), nrow = P)
+# rates_case <- "_dr"
+
+# no freqs
+# freqs.true <- matrix(c(0, 0, 0, 0), nrow = P)
+# freqs_case <- "_nf"
+# different by summands freqs
+# freqs.true <- matrix(c(0.2, 0.2, 0.22, 0.22), nrow = P)
+# freqs_case <- "_dsf"
+# different by time series freqs
+# freqs.true <- matrix(rep(c(0.2, 0.22), P), nrow = P)
+# freqs_case <- "_dtf"
+freqs.true <- matrix(rep(c(0.2, 0.22, 0.24, 0.26), P), nrow = P)
+freqs_case <- "_dtf"
+# different freqs
+# freqs.true <- matrix(c(0.2, 0.22, 0.18, 0.24), nrow = P)
+# freqs_case <- "_df"
+# close different by summands freqs
+# freqs.true <- matrix(c(0.02, 0.02, 0.0205, 0.0205), nrow = P)
+# freqs_case <- "_cdsf"
+
+# equal amplitudes
+# A <- matrix(rep(1, P * 2), nrow = P)
+# A_case <- "_ea"
+A <- matrix(rep(1, P * 4), nrow = P)
+A_case <- "_ea"
+# different by summands amplitudes 
+# A <- matrix(c(1, 2, 1, 2), nrow = P)
+# A_case <- "_dsa"
+# different by summands, proportional by ts amplitudes 
+# A <- matrix(c(1, 2, 3, 6), nrow = P)
+# A_case <- "_dspta"
+# different amplitudes
+# A <- matrix(c(1, 2, 1.5, 2.5), nrow = P)
+# A_case <- "_da"
+
+# equal phases
+# phases.true <- matrix(rep(0, P * 2), nrow = P)
+# phases_case <- "_ep"
+phases.true <- matrix(rep(0, P * 4), nrow = P)
+phases_case <- "_ep"
+# different by time series phases
+# phases.true <- matrix(c(0, pi / 3, 0, pi / 3), nrow = P)
+# phases_case <- "_dtp"
+
+# complex.signal <- TRUE
+# complex_case <- "_c" # complex
+complex.signal <- FALSE
+complex_case <- "_r" # real
+
+N <- 25
+n_case <- ""
+# N <- 100
+# n_case <- "_long"
+```
+
+
+
+## Constructing Signal
+
+```{r}
+full_case <- paste0(n_case, P_case, rates_case, freqs_case, A_case, phases_case, complex_case)
 max.r <- calc_rank(A, rates.true, freqs.true, phases.true, complex.signal)
 
 stopifnot(N > max.r * 2 + 1)
 signal <- construct_periodics(N, A, rates.true, freqs.true, phases.true, complex.signal)
 ```
+
 
 
 ## Parameters grid for 1d case
@@ -464,7 +550,7 @@ R <- 500
 if (is.matrix(signal)) {
   ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_mssa_rec, rmse_ts_nd, signal, seed = 5)
   tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_homssa_rec, rmse_ts_nd, signal, seed = 5)
-  save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/two_periodics_mv", full_case, ".RData"))
+  save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/four_periodics_mv", full_case, ".RData"))
 } else {
   ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_rec, rmse_ts_nd, signal, seed = 5)
   tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
@@ -491,6 +577,7 @@ summarise_errors <- function(err_df) {
 ```
 
 
+# Results
 ```{r}
 # load()
 ```
