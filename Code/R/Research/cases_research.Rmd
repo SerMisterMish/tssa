@@ -442,6 +442,39 @@ n_case <- ""
 # n_case <- "_long"
 ```
 
+## Parameters for P from 2 to 12 with one periodic
+```{r}
+# P <- 2
+# P_case <- "_c2"
+# P <- 4
+# P_case <- "_c4"
+# P <- 8
+# P_case <- "_c8"
+P <- 12
+P_case <- "_c12"
+
+rates.true <- matrix(rep(0, P), nrow = P)
+rates_case <- "_nr"
+
+freqs.true <- matrix(rep(0.2, P), nrow = P)
+freqs_case <- "_ef"
+
+A <- matrix(rnorm(P), nrow = P)
+A_case <- "_da"
+
+phases.true <- matrix(rep(0, P), nrow = P)
+phases_case <- "_ep"
+
+# complex.signal <- TRUE
+# complex_case <- "_c" # complex
+complex.signal <- FALSE
+complex_case <- "_r" # real
+
+N <- 25
+n_case <- ""
+# N <- 100
+# n_case <- "_long"
+```
 
 
 ## Constructing Signal
@@ -556,12 +589,22 @@ R <- 500
 if (is.matrix(signal)) {
   ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_mssa_rec, rmse_ts_nd, signal, seed = 5)
   tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_homssa_rec, rmse_ts_nd, signal, seed = 5)
-  save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/two_periodics_mv", full_case, ".RData"))
+  save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/one_periodic_mv", full_case, ".RData"))
 } else {
   ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_rec, rmse_ts_nd, signal, seed = 5)
   tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
-  save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/two_periodics", full_case, ".RData"))
+  save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/one_periodic", full_case, ".RData"))
 }
+
+# if (is.matrix(signal)) {
+#   ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_mssa_rec, rmse_ts_nd, signal, seed = 5)
+#   tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_homssa_rec, rmse_ts_nd, signal, seed = 5)
+#   save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/two_periodics_mv", full_case, ".RData"))
+# } else {
+#   ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_rec, rmse_ts_nd, signal, seed = 5)
+#   tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
+#   save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/two_periodics", full_case, ".RData"))
+# }
 ```
 
 ```{r}

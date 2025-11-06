@@ -69,6 +69,32 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
     X <- apply(s, 2, Rssa::hankel, L = L, simplify = FALSE) |>
       Reduce(cbind, x = _) |>
       rTensor::fold(1, 2:3, modes = c(L, K, Q))
+    
+    sR <- Re(s)
+    unfolds_r <- list()
+    
+    unfolds_r[[1]] <- new.hbhmat(sR, c(L, 1))
+    unfolds_r[[2]] <- new.hbhmat(sR, c(K, 1))
+    
+    mulR <- function(v) as.numeric(t(Re(s)) %*% v)
+    tmulR <- function(v) as.numeric(Re(s) %*% v)
+    unfolds_r[[3]] <- extmat(mulR, tmulR, nrow = Q, ncol = N)
+    
+    if (is.complex(s)) {
+      sI <- Im(s)
+      unfolds_i <- list()
+      
+      unfolds_i[[1]] <- new.hbhmat(sI, c(L, 1))
+      unfolds_i[[2]] <- new.hbhmat(sI, c(K, 1))
+      
+      mulI <- function(v) as.numeric(t(Im(s)) %*% v)
+      tmulI <- function(v) as.numeric(Im(s) %*% v)
+      unfolds_i[[3]] <- extmat(mulI, tmulI, nrow = Q, ncol = N)
+    }
+   
+    
+    attr(X, "unfolds_r") <- unfolds_r
+    attr(X, "unfolds_i") <- unfolds_i
   }
   return(X)
 }
@@ -109,7 +135,7 @@ reconstruct.group3 <- function(X.tens, kind = c("SSA", "MSSA", "CP")) {
 # Complex norm
 
 fnorm_complex <- function(x) {
-  sqrt(sum(abs(x)^2))
+  sqrt(sum(x * Conj(x)))
 }
 
 setMethod("fnorm_complex", "Tensor", function(x) {
@@ -142,6 +168,7 @@ setMethod("get_tensor_eigenvalues", "list", function(X, dims = seq(X$Z@num_modes
 
 hosvd_mod <- function(tnsr,
                       ranks = NULL,
+                      svd.method = c("svd", "primme"),
                       status = TRUE)
 {
   stopifnot(is(tnsr, "Tensor"))
@@ -157,12 +184,51 @@ hosvd_mod <- function(tnsr,
     if (sum(ranks > tnsr@modes) != 0)
       stop("ranks must be smaller than the corresponding mode")
   }
+  svd.method <- match.arg(svd.method)
+  if (identical(svd.method, "primme") && !requireNamespace("PRIMME", quietly = TRUE))
+      stop("PRIMME package is required for SVD method `primme'")
+    
   if (status)
     pb <- txtProgressBar(min = 0, max = num_modes, style = 3)
   U_list <- vector("list", num_modes)
   for (m in 1:num_modes) {
     temp_mat <- rs_unfold(tnsr, m = m)@data
-    U_list[[m]] <- svd(temp_mat, nu = ranks[m])$u
+    
+    if (identical(svd.method, "svd")) {
+      U_list[[m]] <- svd(temp_mat, nu = ranks[m])$u
+    } else if (identical(svd.method, "primme")) {
+      R <- attr(tnsr, "unfolds_r")[[m]]
+      I <- attr(tnsr, "unfolds_i")[[m]]
+      
+      matmul <- function(x, y) {
+        if (is.matrix(y))
+          apply(y, 2, ematmul, emat = x, transposed = FALSE)
+        else
+          ematmul(x, y, transposed = FALSE)
+      }
+      
+      tmatmul <- function(x, y) {
+        if (is.matrix(y))
+          apply(y, 2, ematmul, emat = x, transposed = TRUE)
+        else
+          ematmul(x, y, transposed = TRUE)
+      }
+      
+      A <- function(x, trans) {
+        rX <- Re(x); iX <- Im(x)
+        if (identical(trans, "c")) {
+          (tmatmul(R, rX) + tmatmul(I, iX)) +
+            1i*(tmatmul(R, iX) - tmatmul(I, rX))
+        } else {
+          (matmul(R, rX) - matmul(I, iX)) +
+            1i*(matmul(R, iX) + matmul(I, rX))
+        }
+      }
+      
+      U_list[[m]] <- PRIMME::svds(A, NSvals = ranks[m], m = nrow(R), n = ncol(R), isreal = FALSE)$u
+    } else 
+      stop("Unsupported svd method")
+    
     if (status)
       setTxtProgressBar(pb, m)
   }
@@ -438,6 +504,7 @@ tens_esprit <- function(s,
                         groups,
                         kind = c("HO-SSA", "HO-MSSA"),
                         decomp = c("HOOI", "HOSVD"),
+                        svd.method = c("svd", "primme"),
                         est_dim,
                         r3 = NULL,
                         status = TRUE,
@@ -449,6 +516,7 @@ tens_esprit <- function(s,
   kind <- match.arg(kind)
   decomp <- toupper(decomp)
   decomp <- match.arg(decomp)
+  svd.method <- match.arg(svd.method)
   
   if (identical(kind[1], "HO-SSA"))
     H <- tens3(s, L)
@@ -471,12 +539,12 @@ tens_esprit <- function(s,
     if (identical(decomp[1], "HOOI")) {
       H.decomp <- tucker_mod(H, c(max_rank1, max_rank2, max_rank3), status = status)
     } else {
-      H.decomp <- hosvd_mod(H, c(max_rank1, max_rank2, max_rank3), status = status)
+      H.decomp <- hosvd_mod(H, c(max_rank1, max_rank2, max_rank3), svd.method = svd.method, status = status)
     }
   } else if (identical(decomp[1], "HOOI")) {
     H.decomp <- tucker_mod(H, c(max_rank1, max_rank2, max_rank3), status = status)
   } else {
-    H.decomp <- hosvd_mod(H, c(max_rank1, max_rank2, max_rank3), status = status)
+    H.decomp <- hosvd_mod(H, c(max_rank1, max_rank2, max_rank3), svd.method = svd.method, status = status)
   }
   estimates <- list()
   for (i in seq(groups)) {
@@ -498,12 +566,14 @@ tens_ssa_reconstruct <- function(s,
                                  L,
                                  groups,
                                  decomp = c("HOSVD", "HOOI", "CP"),
+                                 svd.method = c("svd", "primme"),
                                  trunc_dims = NULL,
                                  status = TRUE,
                                  cp_span = c("mean", "last"),
                                  ...) {
   decomp <- toupper(decomp)
   decomp <- match.arg(decomp)
+  svd.method <- match.arg(svd.method)
   if (decomp == "CP")
     H <- tens3(s, L, kind = "CP")
   else
@@ -524,7 +594,7 @@ tens_ssa_reconstruct <- function(s,
   
   H.dec <- switch(
     decomp,
-    HOSVD = hosvd_mod(H, ranks = trunc_ranks, status = status),
+    HOSVD = hosvd_mod(H, ranks = trunc_ranks, svd.method = svd.method, status = status),
     HOOI = tucker_mod(H, ranks = trunc_ranks, status = status, ...),
     CP = cp_mod(H, num_components = max_rank, status = status, ...)
   )
@@ -626,6 +696,7 @@ CCSWGN <- function(n, mean = 0, sd = 1) {
 tens_mssa_decompose <- function(s,
                                 L,
                                 decomp = c("HOSVD", "HOOI", "TSVD", "CP"),
+                                svd.method = c("svd", "primme"),
                                 neig = NULL,
                                 neig3 = NULL,
                                 status = TRUE,
@@ -634,6 +705,7 @@ tens_mssa_decompose <- function(s,
                                 cp_start = c("rand", "svd")) {
   decomp <- toupper(decomp)
   decomp <- match.arg(decomp)
+  svd.method <- match.arg(svd.method)
   
   if (decomp == "CP" && is.null(neig))
     stop("For CP decomposition `neig` argument must be provided")
@@ -646,7 +718,7 @@ tens_mssa_decompose <- function(s,
   H <- tens3(s, L, kind = "MSSA")
   H.dec <- switch(
     decomp,
-    HOSVD = hosvd_mod(H, ranks = c(neig, neig, neig3), status = status),
+    HOSVD = hosvd_mod(H, ranks = c(neig, neig, neig3), svd.method = svd.method, status = status),
     HOOI = tucker_mod(
       H,
       ranks = c(neig, neig, neig3),
@@ -673,6 +745,7 @@ tens_mssa_reconstruct <- function(s,
                                   groups,
                                   groups3,
                                   decomp = c("HOSVD", "HOOI", "TSVD", "CP"),
+                                  svd.method = c("svd", "primme"),
                                   status = TRUE,
                                   max_iter = 25,
                                   tol = 1e-05,
@@ -681,6 +754,7 @@ tens_mssa_reconstruct <- function(s,
     groups <- as.list(groups)
   decomp <- toupper(decomp)
   decomp <- match.arg(decomp)
+  svd.method <- match.arg(svd.method)
   
   H <- tens3(s, L, kind = "MSSA")
   max_rank <- max(sapply(groups, max))
@@ -702,6 +776,7 @@ tens_mssa_reconstruct <- function(s,
     HOSVD = hosvd_mod(
       H,
       ranks = c(max_rank, max_rank, max_rank3),
+      svd.method = svd.method,
       status = status
     ),
     HOOI = tucker_mod(
