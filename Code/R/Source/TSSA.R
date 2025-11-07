@@ -25,11 +25,9 @@ if (!exists("reconstruct_group_t3", mode = "function")) {
     setwd(oldwd)
     library(TssaCppDev)
   }
-  # Rcpp::sourceCpp("Source/reconstruct_group_t3.cpp")
 }
 
-# Single-channel series tensorisation
-
+# Embedding series into tensor
 tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
   kind <- toupper(kind)
   kind <- match.arg(kind)
@@ -43,6 +41,30 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
     X <- outer(1:I, 1:L, `+`) |>
       outer(1:K, function(il, j)
         s[il + j - 2]) |> as.tensor()
+    
+    h12 <- hankel(s, I + L - 1)
+    h3 <- hankel(s, I + K - 1)
+    sR12 <- Re(h12)
+    sR3 <- Re(h3)
+    unfolds_r <- list()
+    
+    unfolds_r[[1]] <- Rssa::new.hbhmat(sR12, c(I, 1))
+    unfolds_r[[2]] <- Rssa::new.hbhmat(sR12, c(L, 1))
+    unfolds_r[[3]] <- Rssa::new.hbhmat(sR3, c(K, 1))
+    
+    if (is.complex(s)) {
+      sI12 <- Im(h12)
+      sI3 <- Im(h3)
+      unfolds_i <- list()
+      
+      unfolds_i[[1]] <- Rssa::new.hbhmat(sI12, c(I, 1))
+      unfolds_i[[2]] <- Rssa::new.hbhmat(sI12, c(L, 1))
+      unfolds_i[[3]] <- Rssa::new.hbhmat(sI3, c(K, 1))
+    }
+    
+    
+    attr(X, "unfolds_r") <- unfolds_r
+    attr(X, "unfolds_i") <- unfolds_i
   }
   else if (kind == "CP") {
     stopifnot(length(L) == 2)
@@ -58,8 +80,6 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
           v[k + j - 1])) |>
       as.matrix()
     dim(X_mat) <- c(J * K, I)
-    # print(dim(X_mat))
-    # print(paste0("l=", l, " ", paste(I, J, K, sep = "x")))
     X <- rTensor::fold(X_mat, 2:3, 1, modes = c(I, J, K))
   }
   else if (kind == "MSSA") {
@@ -73,8 +93,8 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
     sR <- Re(s)
     unfolds_r <- list()
     
-    unfolds_r[[1]] <- new.hbhmat(sR, c(L, 1))
-    unfolds_r[[2]] <- new.hbhmat(sR, c(K, 1))
+    unfolds_r[[1]] <- Rssa::new.hbhmat(sR, c(L, 1))
+    unfolds_r[[2]] <- Rssa::new.hbhmat(sR, c(K, 1))
     
     mulR <- function(v) as.numeric(t(Re(s)) %*% v)
     tmulR <- function(v) as.numeric(Re(s) %*% v)
@@ -84,8 +104,8 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
       sI <- Im(s)
       unfolds_i <- list()
       
-      unfolds_i[[1]] <- new.hbhmat(sI, c(L, 1))
-      unfolds_i[[2]] <- new.hbhmat(sI, c(K, 1))
+      unfolds_i[[1]] <- Rssa::new.hbhmat(sI, c(L, 1))
+      unfolds_i[[2]] <- Rssa::new.hbhmat(sI, c(K, 1))
       
       mulI <- function(v) as.numeric(t(Im(s)) %*% v)
       tmulI <- function(v) as.numeric(Im(s) %*% v)
@@ -99,30 +119,34 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
   return(X)
 }
 
+.USE.R.RECONSTRUCT <- FALSE
 reconstruct.group3 <- function(X.tens, kind = c("SSA", "MSSA", "CP")) {
   stopifnot(is(X.tens, "Tensor"))
   X <- X.tens@data
   kind <- toupper(kind)
   kind <- match.arg(kind)
   if (kind == "SSA") {
-    s <- reconstruct_group_t3(X)
-    # I <- length(X[, 1, 1])
-    # L <- length(X[1, , 1])
-    # K <- length(X[1, 1, ])
-    # s <- vector(mode = "numeric", length = I + L + K - 2)
-    # for (C in 3:(I + L + K)) {
-    #   sum <- 0
-    #   count <- 0
-    #   for (i in 1:(C - 2)) {
-    #     for (l in 1:(C - 1 - i)) {
-    #       if (i <= I && l <= L && C - i - l <= K) {
-    #         sum <- sum + X[i, l, C - i - l]
-    #         count <- count + 1
-    #       }
-    #     }
-    #   }
-    #   s[C - 2] <- sum / count
-    # }
+    if (!.USE.R.RECONSTRUCT)
+      s <- reconstruct_group_t3(X)
+    else {
+      I <- length(X[, 1, 1])
+      L <- length(X[1, , 1])
+      K <- length(X[1, 1, ])
+      s <- vector(mode = "numeric", length = I + L + K - 2)
+      for (C in 3:(I + L + K)) {
+        sum <- 0
+        count <- 0
+        for (i in 1:(C - 2)) {
+          for (l in 1:(C - 1 - i)) {
+            if (i <= I && l <= L && C - i - l <= K) {
+              sum <- sum + X[i, l, C - i - l]
+              count <- count + 1
+            }
+          }
+        }
+        s[C - 2] <- sum / count
+      }
+    }
   } else if (kind == "CP") {
     s <- Reduce(c, lapply(seq(dim(X)[1]), function(i)
       hankel(as.matrix(X[i, , ]))))
@@ -133,17 +157,15 @@ reconstruct.group3 <- function(X.tens, kind = c("SSA", "MSSA", "CP")) {
 }
 
 # Complex norm
-
 fnorm_complex <- function(x) {
-  sqrt(sum(x * Conj(x)))
+  sqrt(sum(Re(x * Conj(x))))
 }
 
 setMethod("fnorm_complex", "Tensor", function(x) {
-  sqrt(sum(abs(x@data)^2))
+  fnorm_complex(x@data)
 })
 
 # Calculate tensor eigenvalues
-
 get_tensor_eigenvalues <- function(X, dims = seq(num_dims)) {
   num_dims = length(dim(X))
   
@@ -165,7 +187,6 @@ setMethod("get_tensor_eigenvalues", "list", function(X, dims = seq(X$Z@num_modes
 })
 
 # HOSVD and HOOI modifications for complex cases
-
 hosvd_mod <- function(tnsr,
                       ranks = NULL,
                       svd.method = c("svd", "primme"),
@@ -249,6 +270,7 @@ hosvd_mod <- function(tnsr,
 
 tucker_mod <- function(tnsr,
                        ranks = NULL,
+                       svd.method = c("svd", "primme"),
                        max_iter = 25,
                        tol = 1e-05,
                        status = TRUE)
@@ -262,11 +284,49 @@ tucker_mod <- function(tnsr,
     stop("ranks must be positive")
   if (all(tnsr@data == 0))
     stop("Zero tensor detected")
+  svd.method <- match.arg(svd.method)
+  if (identical(svd.method, "primme") && !requireNamespace("PRIMME", quietly = TRUE))
+    stop("PRIMME package is required for SVD method `primme'")
+  
   num_modes <- tnsr@num_modes
   U_list <- vector("list", num_modes)
   for (m in 1:num_modes) {
     temp_mat <- rs_unfold(tnsr, m = m)@data
-    U_list[[m]] <- svd(temp_mat, nu = ranks[m])$u
+    if (identical(svd.method, "svd")) {
+      U_list[[m]] <- svd(temp_mat, nu = ranks[m])$u
+    } else if (identical(svd.method, "primme")) {
+      R <- attr(tnsr, "unfolds_r")[[m]]
+      I <- attr(tnsr, "unfolds_i")[[m]]
+      
+      matmul <- function(x, y) {
+        if (is.matrix(y))
+          apply(y, 2, ematmul, emat = x, transposed = FALSE)
+        else
+          ematmul(x, y, transposed = FALSE)
+      }
+      
+      tmatmul <- function(x, y) {
+        if (is.matrix(y))
+          apply(y, 2, ematmul, emat = x, transposed = TRUE)
+        else
+          ematmul(x, y, transposed = TRUE)
+      }
+      
+      A <- function(x, trans) {
+        rX <- Re(x)
+        iX <- Im(x)
+        if (identical(trans, "c")) {
+          (tmatmul(R, rX) + tmatmul(I, iX)) +
+            1i * (tmatmul(R, iX) - tmatmul(I, rX))
+        } else {
+          (matmul(R, rX) - matmul(I, iX)) +
+            1i * (matmul(R, iX) + matmul(I, rX))
+        }
+      }
+      
+      U_list[[m]] <- PRIMME::svds(A, NSvals = ranks[m], m = nrow(R), n = ncol(R), isreal = FALSE)$u
+    } else
+      stop("Unsupported svd method")
   }
   tnsr_norm <- fnorm_complex(tnsr)
   curr_iter <- 1
@@ -352,13 +412,14 @@ cp_mod <- function(tnsr,
   tnsr_norm <- fnorm_complex(tnsr)
   for (m in 1:num_modes) {
     unfolded_mat[[m]] <- rs_unfold(tnsr, m = m)@data
-    if (start == "rand") {
+    if (identical(start, "rand")) {
       U_list[[m]] <- matrix(rnorm(modes[m] * num_components),
                             nrow = modes[m],
                             ncol = num_components)
-    } else {
+    } else if (identical(start, "svd")) {
       U_list[[m]] <- svd(unfolded_mat[[m]], nu = num_components)$u
-    }
+    } else
+      stop("Unsupported `start` parameter value")
   }
   est <- tnsr
   curr_iter <- 1

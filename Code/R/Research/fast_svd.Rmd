@@ -1,0 +1,193 @@
+---
+title: "Testing fast hosvd variants"
+output: html_document
+---
+
+```{r}
+setwd(rprojroot::find_rstudio_root_file())
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+library(Rssa)
+library(rTensor)
+library(PRIMME)
+library(Rcpp)
+library(RcppArmadillo)
+
+source(file = "./Source/TSSA.R")
+```
+
+# MV case
+
+Original series
+```{r}
+s <- matrix(1:18 + 1i * 1:18, ncol = 3)
+print(s)
+```
+
+Construcucting tensor
+```{r}
+s.tens <- tens3(s, 3, "MSSA")
+print(s.tens@data)
+```
+
+Computing HOSVD using default SVD
+```{r}
+s.hosvd.svd <- hosvd_mod(s.tens, svd.method = "svd")
+print(s.hosvd.svd$est@data)
+```
+
+Computing HOSVD using faster SVD
+```{r}
+s.hosvd.primme <- hosvd_mod(s.tens, svd.method = "primme")
+all.equal(s.hosvd.svd$est@data, s.hosvd.primme$est@data)
+```
+
+Computing truncated HOSVD using default SVD
+```{r}
+s.hosvd.svd.trunc <- hosvd_mod(s.tens, ranks = c(2, 2, 2), svd.method = "svd")
+print(s.hosvd.svd.trunc$est@data)
+```
+
+Computing truncated HOSVD using faster SVD
+```{r}
+s.hosvd.primme.trunc <- hosvd_mod(s.tens, ranks = c(2, 2, 2), svd.method = "primme")
+all.equal(s.hosvd.svd.trunc$est@data, s.hosvd.primme.trunc$est@data)
+```
+
+Computing HOOI-HOSVD using default SVD
+```{r}
+s.hooi.svd <- tucker_mod(s.tens, ranks = c(3, 4, 3), svd.method = "svd")
+print(s.hooi.svd$est@data)
+```
+
+Computing HOOI using faster SVD
+```{r}
+s.hooi.primme <- hosvd_mod(s.tens, ranks = c(3, 4, 3), svd.method = "primme")
+all.equal(s.hooi.svd$est@data, s.hooi.primme$est@data)
+```
+
+Computing truncated HOOI using default SVD
+```{r}
+s.hooi.svd.trunc <- tucker_mod(s.tens, ranks = c(2, 2, 2), svd.method = "svd")
+print(s.hooi.svd.trunc$est@data)
+```
+
+Computing truncated HOSVD using faster SVD
+```{r}
+s.hooi.primme.trunc <- tucker_mod(s.tens, ranks = c(2, 2, 2), svd.method = "primme")
+all.equal(s.hooi.svd.trunc$est@data, s.hooi.primme.trunc$est@data)
+```
+
+# 1D case
+
+Original series
+```{r}
+s.1d <- 1:10 + 1i * 1:10
+s.1d.tens <- tens3(s.1d, c(3, 4), "SSA")
+print(s.1d.tens@data)
+```
+
+Computing truncated HOSVD with default SVD
+```{r}
+s.1d.hosvd.svd <- hosvd_mod(s.1d.tens, ranks = c(2, 2, 2), svd.method = "svd")
+print(s.1d.hosvd.svd$est@data)
+```
+
+Computing truncated HOSVD with faster SVD
+```{r}
+s.1d.hosvd.primme <- hosvd_mod(s.1d.tens, ranks = c(2, 2, 2), svd.method = "primme")
+all.equal(s.1d.hosvd.svd$est@data, s.1d.hosvd.primme$est@data)
+```
+
+Computing truncated HOOI with default SVD
+```{r}
+s.1d.hooi.svd <- tucker_mod(s.1d.tens, ranks = c(2, 2, 2), svd.method = "svd")
+print(s.1d.hooi.svd$est@data)
+```
+
+Computing truncated HOOI with faster SVD
+```{r}
+s.1d.hooi.primme <- tucker_mod(s.1d.tens, ranks = c(2, 2, 2), svd.method = "primme")
+all.equal(s.1d.hooi.svd$est@data, s.1d.hooi.primme$est@data)
+```
+
+# Time Benchmarks
+
+```{r}
+library(microbenchmark)
+```
+
+
+## MV Case
+
+Short series, HOSVD
+```{r}
+microbenchmark(hosvd_mod(s.tens, ranks = c(2, 2, 2), svd.method = "svd", status = FALSE), 
+               hosvd_mod(s.tens, ranks = c(2, 2, 2), svd.method = "primme", status = FALSE))
+```
+
+Short series, HOOI
+```{r}
+microbenchmark(tucker_mod(s.tens, ranks = c(2, 2, 2), svd.method = "svd", status = FALSE), 
+               tucker_mod(s.tens, ranks = c(2, 2, 2), svd.method = "primme", status = FALSE))
+```
+
+Long series, HOSVD
+```{r}
+s.long <- matrix(1:7500 + 1i * 1:7500, ncol = 3)
+s.long.tens <- tens3(s.long, 1250, "MSSA")
+```
+
+```{r}
+cat(
+  "Default SVD:\n",
+  system.time({hosvd_mod(s.long.tens, ranks = c(2, 2, 2), svd.method = "svd")}),
+  "\n\nFaster SVD:\n",
+  system.time({hosvd_mod(s.long.tens, ranks = c(2, 2, 2), svd.method = "primme")}))
+```
+
+Long series, HOOI
+```{r}
+cat(
+  "Default SVD:\n",
+  system.time({tucker_mod(s.long.tens, ranks = c(2, 2, 2), svd.method = "svd")}),
+  "\n\nFaster SVD:\n",
+  system.time({tucker_mod(s.long.tens, ranks = c(2, 2, 2), svd.method = "primme")}))
+```
+
+## 1D Case
+
+Short series, HOSVD
+```{r}
+microbenchmark(hosvd_mod(s.1d.tens, ranks = c(2, 2, 2), svd.method = "svd", status = FALSE), 
+               hosvd_mod(s.1d.tens, ranks = c(2, 2, 2), svd.method = "primme", status = FALSE))
+```
+
+Short series, HOOI
+```{r}
+microbenchmark(tucker_mod(s.1d.tens, ranks = c(2, 2, 2), svd.method = "svd", status = FALSE), 
+               tucker_mod(s.1d.tens, ranks = c(2, 2, 2), svd.method = "primme", status = FALSE))
+```
+
+Long series, HOSVD
+```{r}
+s.1d.long <- 1:3001 + 1i * 1:3001
+s.1d.long.tens <- tens3(s.1d.long, c(1500, 1500), "SSA")
+```
+
+```{r}
+cat(
+  "Default SVD:\n",
+  system.time({hosvd_mod(s.1d.long.tens, ranks = c(2, 2, 2), svd.method = "svd")}),
+  "\n\nFaster SVD:\n",
+  system.time({hosvd_mod(s.1d.long.tens, ranks = c(2, 2, 2), svd.method = "primme")}))
+```
+
+Long series, HOOI
+```{r}
+cat(
+  "Default SVD:\n",
+  system.time({tucker_mod(s.1d.long.tens, ranks = c(2, 2, 2), svd.method = "svd")}),
+  "\n\nFaster SVD:\n",
+  system.time({tucker_mod(s.1d.long.tens, ranks = c(2, 2, 2), svd.method = "primme")}))
+```
