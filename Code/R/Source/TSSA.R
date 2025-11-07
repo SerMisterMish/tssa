@@ -90,15 +90,17 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
       Reduce(cbind, x = _) |>
       rTensor::fold(1, 2:3, modes = c(L, K, Q))
     
+    unf3 <- rs_unfold(X, 3)@data
     sR <- Re(s)
     unfolds_r <- list()
     
     unfolds_r[[1]] <- Rssa::new.hbhmat(sR, c(L, 1))
     unfolds_r[[2]] <- Rssa::new.hbhmat(sR, c(K, 1))
     
-    mulR <- function(v) as.numeric(t(Re(s)) %*% v)
-    tmulR <- function(v) as.numeric(Re(s) %*% v)
-    unfolds_r[[3]] <- extmat(mulR, tmulR, nrow = Q, ncol = N)
+    unf3R <- Re(unf3)
+    mulR <- function(v) as.numeric(unf3R %*% v)
+    tmulR <- function(v) as.numeric(t(unf3R) %*% v)
+    unfolds_r[[3]] <- extmat(mulR, tmulR, nrow = nrow(unf3R), ncol = ncol(unf3R))
     
     if (is.complex(s)) {
       sI <- Im(s)
@@ -107,9 +109,10 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
       unfolds_i[[1]] <- Rssa::new.hbhmat(sI, c(L, 1))
       unfolds_i[[2]] <- Rssa::new.hbhmat(sI, c(K, 1))
       
-      mulI <- function(v) as.numeric(t(Im(s)) %*% v)
-      tmulI <- function(v) as.numeric(Im(s) %*% v)
-      unfolds_i[[3]] <- extmat(mulI, tmulI, nrow = Q, ncol = N)
+      unf3I <- Im(unf3)
+      mulI <- function(v) as.numeric(unf3I %*% v)
+      tmulI <- function(v) as.numeric(t(unf3I) %*% v)
+      unfolds_i[[3]] <- extmat(mulI, tmulI, nrow = nrow(unf3R), ncol = ncol(unf3R))
     }
    
     
