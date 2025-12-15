@@ -136,12 +136,13 @@ rmse_ts_nd <- function(true, pred) {
 ```
 
 ```{r}
-calc_errors <- function(R, pred_func, err_func, signal, seed = 5) {
+calc_errors <- function(R, pred_func, err_func, signal, progbar, seed = 5) {
   with(plan(multisession), {
     batch_recs <- function(R) {
       # p <- progressor(R)
       future_replicate(R, {
         # p()
+        progbar()
         pred_func()
       }, simplify = "array", future.seed = seed)
     }
@@ -159,12 +160,12 @@ calc_errors_by_params <- function(params_grid_list, R, comp_func, err_func, sign
   params_grid <- expand.grid(params_grid_list)
   results <- params_grid
   results$error <- numeric(nrow(params_grid))
-  q <- progressor(nrow(params_grid))
+  q <- progressor(nrow(params_grid) * R)
   for (i in seq(nrow(params_grid))) {
     # print(paste0(names(params_grid), " = ", params_grid[i,], collapse = ", "))
     list2env(params_grid[i,], envir = parent.frame())
-    results[i,]$error <- calc_errors(R, comp_func, err_func, signal, seed)
-    q()
+    results[i,]$error <- calc_errors(R, comp_func, err_func, signal, q, seed)
+    # q()
   }
   return(results)
 }
@@ -222,7 +223,7 @@ calc_rank <- function(ampl, rate, freq, phase, complex = TRUE, tol = 1e-6) {
 }
 
 # Assumes all amplitudes are non-zero
-# TODO: This is totally wrong
+# TODO: This is totally wrong and must not be used
 calc_rank3 <- function(rate, freq, phase, complex = TRUE, tol = 1e-6) {
   if (any(c(length(ampl), length(rate), length(freq)) != length(phase)))
     stop("Amplitudes, rates, frequencies and phases all must have the same length")
@@ -232,6 +233,27 @@ calc_rank3 <- function(rate, freq, phase, complex = TRUE, tol = 1e-6) {
   return(min(ncol(rate), f_unique + r_unique + p_unique - 2))
 }
 ```
+
+
+```{r}
+print_errors <- function(err_df) {
+  err_df |> mutate(zapped_error = zapsmall(error)) |> group_by(sd) |> arrange(zapped_error, L_ssa, .by_group = TRUE)
+}
+
+print_errors_m <- function(err_df) {
+  err_df |> mutate(zapped_error = zapsmall(error)) |> group_by(sd) |> arrange(zapped_error, L_mssa, .by_group = TRUE)
+}
+
+summarise_errors <- function(err_df) {
+  err_df |> mutate(zapped_error = zapsmall(error)) |> group_by(sd) |> summarise(
+    best = min(zapped_error),
+    best_L = L[which.min(zapped_error)],
+    avg = mean(zapped_error),
+    worst = max(zapped_error)
+  )
+}
+```
+
 
 
 # Two periodics case
@@ -442,7 +464,7 @@ n_case <- ""
 # n_case <- "_long"
 ```
 
-## Parameters for P from 2 to 12 with one periodic
+## Parameters for P from 2 to 20 with one periodic
 ```{r}
 # P <- 2
 # P_case <- "_c2"
@@ -450,8 +472,12 @@ n_case <- ""
 # P_case <- "_c4"
 # P <- 8
 # P_case <- "_c8"
-P <- 12
-P_case <- "_c12"
+# P <- 12
+# P_case <- "_c12"
+# P <- 16
+# P_case <- "_c16"
+P <- 20
+P_case <- "_c20"
 
 rates.true <- matrix(rep(0, P), nrow = P)
 rates_case <- "_nr"
@@ -557,14 +583,14 @@ groups_mssa <- list(1:max.r)
 
 if (n_case == "") {
   Ls_mssa <- seq(from = max.r + 1,
-                to = N - max.r - 1,
+                to = N,
                 by = 2)
   Ls_homssa = seq(from = max.r + 1,
                 to = (N + 1) %/% 2,
                 by = 2)
 } else {
   Ls_mssa <- seq(from = max.r + 1,
-                to = N - max.r - 1,
+                to = N,
                 by = 10)
   Ls_homssa = seq(from = max.r + 1,
                 to = (N + 1) %/% 2,
@@ -607,25 +633,6 @@ if (is.matrix(signal)) {
 # }
 ```
 
-```{r}
-print_errors <- function(err_df) {
-  err_df |> mutate(zapped_error = zapsmall(error)) |> group_by(sd) |> arrange(zapped_error, L_ssa, .by_group = TRUE)
-}
-
-print_errors_m <- function(err_df) {
-  err_df |> mutate(zapped_error = zapsmall(error)) |> group_by(sd) |> arrange(zapped_error, L_mssa, .by_group = TRUE)
-}
-
-summarise_errors <- function(err_df) {
-  err_df |> mutate(zapped_error = zapsmall(error)) |> group_by(sd) |> summarise(
-    best = min(zapped_error),
-    avg = mean(zapped_error),
-    worst = max(zapped_error)
-  )
-}
-```
-
-
 # Results
 ```{r}
 # load()
@@ -638,7 +645,7 @@ if (is.matrix(signal)) {
 } else {
   print_errors(ssa_err)
 }
-summarise_errors(ssa_err)
+(ssa_err_summ <- summarise_errors(rename(ssa_err, L = L_mssa)))
 ```
 
 ```{r}
@@ -647,6 +654,10 @@ if (is.matrix(signal)) {
 } else {
   print_errors(tssa_err)
 }
-summarise_errors(tssa_err)
+(tssa_err_summ <- summarise_errors(rename(tssa_err, L = L_homssa)))
 ```
 
+
+```{r}
+((ssa_err_summ[-1, 2] - tssa_err_summ[-1, 2]) / ssa_err_summ[-1, 1]) |> rename(err_diff = best)
+```

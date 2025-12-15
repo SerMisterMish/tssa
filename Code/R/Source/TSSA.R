@@ -52,6 +52,8 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
     unfolds_r[[2]] <- Rssa::new.hbhmat(sR12, c(L, 1))
     unfolds_r[[3]] <- Rssa::new.hbhmat(sR3, c(K, 1))
     
+    attr(X, "unfolds_r") <- unfolds_r
+    
     if (is.complex(s)) {
       sI12 <- Im(h12)
       sI3 <- Im(h3)
@@ -60,11 +62,9 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
       unfolds_i[[1]] <- Rssa::new.hbhmat(sI12, c(I, 1))
       unfolds_i[[2]] <- Rssa::new.hbhmat(sI12, c(L, 1))
       unfolds_i[[3]] <- Rssa::new.hbhmat(sI3, c(K, 1))
+      
+      attr(X, "unfolds_i") <- unfolds_i
     }
-    
-    
-    attr(X, "unfolds_r") <- unfolds_r
-    attr(X, "unfolds_i") <- unfolds_i
   }
   else if (kind == "CP") {
     stopifnot(length(L) == 2)
@@ -90,17 +90,17 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
       Reduce(cbind, x = _) |>
       rTensor::fold(1, 2:3, modes = c(L, K, Q))
     
-    unf3 <- rs_unfold(X, 3)@data
     sR <- Re(s)
     unfolds_r <- list()
     
     unfolds_r[[1]] <- Rssa::new.hbhmat(sR, c(L, 1))
     unfolds_r[[2]] <- Rssa::new.hbhmat(sR, c(K, 1))
     
-    unf3R <- Re(unf3)
-    mulR <- function(v) as.numeric(unf3R %*% v)
-    tmulR <- function(v) as.numeric(t(unf3R) %*% v)
-    unfolds_r[[3]] <- extmat(mulR, tmulR, nrow = nrow(unf3R), ncol = ncol(unf3R))
+    mulR <- function(v) as.numeric(t(Re(s)) %*% v)
+    tmulR <- function(v) as.numeric(Re(s) %*% v)
+    unfolds_r[[3]] <- extmat(mulR, tmulR, nrow = Q, ncol = N)
+    
+    attr(X, "unfolds_r") <- unfolds_r
     
     if (is.complex(s)) {
       sI <- Im(s)
@@ -109,15 +109,12 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP")) {
       unfolds_i[[1]] <- Rssa::new.hbhmat(sI, c(L, 1))
       unfolds_i[[2]] <- Rssa::new.hbhmat(sI, c(K, 1))
       
-      unf3I <- Im(unf3)
-      mulI <- function(v) as.numeric(unf3I %*% v)
-      tmulI <- function(v) as.numeric(t(unf3I) %*% v)
-      unfolds_i[[3]] <- extmat(mulI, tmulI, nrow = nrow(unf3R), ncol = ncol(unf3R))
+      mulI <- function(v) as.numeric(t(Im(s)) %*% v)
+      tmulI <- function(v) as.numeric(Im(s) %*% v)
+      unfolds_i[[3]] <- extmat(mulI, tmulI, nrow = Q, ncol = N)
+      
+      attr(X, "unfolds_i") <- unfolds_i
     }
-   
-    
-    attr(X, "unfolds_r") <- unfolds_r
-    attr(X, "unfolds_i") <- unfolds_i
   }
   return(X)
 }
@@ -222,7 +219,12 @@ hosvd_mod <- function(tnsr,
       U_list[[m]] <- svd(temp_mat, nu = ranks[m])$u
     } else if (identical(svd.method, "primme")) {
       R <- attr(tnsr, "unfolds_r")[[m]]
-      I <- attr(tnsr, "unfolds_i")[[m]]
+      
+      Ilist <- attr(tnsr, "unfolds_i")
+      if (!is.null(Ilist))
+        I <- Ilist[[m]]
+      else
+        I <- NULL
       
       matmul <- function(x, y) {
         if (is.matrix(y))
@@ -238,14 +240,23 @@ hosvd_mod <- function(tnsr,
           ematmul(x, y, transposed = TRUE)
       }
       
-      A <- function(x, trans) {
-        rX <- Re(x); iX <- Im(x)
-        if (identical(trans, "c")) {
-          (tmatmul(R, rX) + tmatmul(I, iX)) +
-            1i*(tmatmul(R, iX) - tmatmul(I, rX))
-        } else {
-          (matmul(R, rX) - matmul(I, iX)) +
-            1i*(matmul(R, iX) + matmul(I, rX))
+      if (is.null(I)) {
+        A <- function(x, trans) {
+          if (identical(trans, "c"))
+            tmatmul(R, x)
+          else
+            matmul(R, x)
+        }
+      } else {
+        A <- function(x, trans) {
+          rX <- Re(x); iX <- Im(x)
+          if (identical(trans, "c")) {
+            (tmatmul(R, rX) + tmatmul(I, iX)) +
+              1i*(tmatmul(R, iX) - tmatmul(I, rX))
+          } else {
+            (matmul(R, rX) - matmul(I, iX)) +
+              1i*(matmul(R, iX) + matmul(I, rX))
+          }
         }
       }
       
