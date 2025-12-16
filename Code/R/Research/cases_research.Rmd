@@ -80,26 +80,6 @@ pred_homssa_rec <- function() {
   
   Reduce("+", rec)
 }
-
-# compare_mssa_rec <- function() {
-#   noise <- rnorm(N * P, 0, sd)
-#   x <- signal + noise
-#   
-#   rec <- list(
-#     ssa = reconstruct(ssa(x, L = L_mssa, kind="mssa"), groups = groups_mssa),
-#     hossa = tens_mssa_reconstruct(
-#       x,
-#       L_homssa,
-#       groups = groups_homssa,
-#       groups3 = groups3_homssa,
-#       decomp = "hooi",
-#       status = FALSE
-#     )
-#   )
-#   
-#   sapply(rec, function(m)
-#     Reduce("+", m))
-# }
 ```
 
 ```{r}
@@ -122,17 +102,6 @@ rmse_params_mat <- function(true, pred) {
 rmse_ts_nd <- function(true, pred) {
   sqrt(mean(apply(pred, length(dim(pred)), \(p) mse(true, p))))
 }
-
-## true is vector (ts), pred is matrix with columns as predictions of the ts
-# rmse_ts <- function(true, pred) {
-#   # sqrt(mean(apply(pred, 2, \(p) mean((true - p)^2))))
-#   sqrt(mean(apply(pred, 2, \(p) mse(true, p))))
-# }
-
-## true is matrix (mts) with columns as individual ts, pred is 3d-array with 3-mode slices as predictions of the mts
-# rmse_mts <- function(true, pred) {
-#   sqrt(mean(apply(pred, 3, \(p) mse(true, p))))  
-# }
 ```
 
 ```{r}
@@ -161,6 +130,7 @@ calc_errors_by_params <- function(params_grid_list, R, comp_func, err_func, sign
   results <- params_grid
   results$error <- numeric(nrow(params_grid))
   q <- progressor(nrow(params_grid) * R)
+  # q <- progressor(nrow(params_grid))
   for (i in seq(nrow(params_grid))) {
     # print(paste0(names(params_grid), " = ", params_grid[i,], collapse = ", "))
     list2env(params_grid[i,], envir = parent.frame())
@@ -172,17 +142,25 @@ calc_errors_by_params <- function(params_grid_list, R, comp_func, err_func, sign
 ```
 
 ```{r}
+polynom_eval <- function(coefs, x) {
+  powers <- outer(x, seq_along(coefs) - 1, FUN = "^")
+  result <- powers %*% coefs
+  
+  return(as.vector(result))
+}
+
 # If parameters are matrices, then a multivariate series will be constructed.
-# In this parameters matrices columns correspond to summnands and rows to channels
+# In this parameters matrices columns correspond to summands and rows to channels
 # This means, if you want to increase number of ts in a sum, you grow columns,
 # and if you want to add a channel to an mv ts, you grow rows
-# The results is either a 1d ts, or a matrix, where each column is a 1d ts -- channel.
+# The result is either a 1d ts, or a matrix, where each column is a 1d ts -- channel.
 construct_periodics <- function(N,
                                 ampl,
                                 rate,
                                 freq,
                                 phase,
                                 complex = TRUE,
+                                poly_ampl_coefs = NULL,
                                 from = 0,
                                 by = 1) {
   if (any(c(length(ampl), length(rate), length(freq)) != length(phase))) {
@@ -192,8 +170,29 @@ construct_periodics <- function(N,
     if (any(c(dim(ampl), dim(rate), dim(freq)) != dim(phase))) {
       stop("Amplitudes, rates, frequencies and phases all must have the same dimensions")
     }
-  } else if (any(is.matrix(ampl), is.matrix(rate), is.matrix(freq), is.matrix(phase))) {
-    stop("All parameters should be either matrices, or vectors at the same time")
+    if (is.null(poly_ampl_coefs)) {
+      poly_ampl_coefs <- 1 %o% rep(1, nrow(ampl)) %o% rep(1, ncol(ampl))
+    } else {
+      stopifnot(
+                is.array(poly_ampl_coefs) && 
+                length(dim(poly_ampl_coefs)) - 1 == length(dim(ampl)) &&
+                all(dim(poly_ampl_coefs)[-1] == dim(ampl))
+               )
+    }
+  } else {
+    if (any(is.matrix(ampl), is.matrix(rate), is.matrix(freq), is.matrix(phase))) {
+      stop("All parameters should be either matrices, or vectors at the same time")
+    }
+
+    if (is.null(poly_ampl_coefs)) {
+      poly_ampl_coefs <- 1 %o% rep(1, length(ampl))
+    } else {
+      stopifnot(
+                is.matrix(poly_ampl_coefs) && 
+                length(dim(poly_ampl_coefs) == 2) &&
+                dim(poly_ampl_coefs)[2] == length(ampl)
+               )
+    }
   }
   
   if (complex) {
@@ -204,22 +203,25 @@ construct_periodics <- function(N,
     unit <- 1
   }
   N_ones <- rep(1, N)
-  ts_arr <- (N_ones %o% ampl) * (N_ones %o% exp(rate)) *
-    period_f(N_ones %o% phase + 2 * pi * unit * seq(
-      from = from,
-      length.out = N,
-      by = by
-    ) %o% freq)
+  ts_range <- seq(from = from, length.out = N, by = by)
+  poly_ampl <- apply(poly_ampl_coefs, 2:length(dim(poly_ampl_coefs)), polynom_eval, x=ts_range)
+  ts_arr <- poly_ampl * (N_ones %o% ampl) * (N_ones %o% exp(rate)) *
+    period_f(N_ones %o% phase + 2 * pi * unit * ts_range %o% freq)
 
   apply(ts_arr, 1:(length(dim(ts_arr)) - 1), sum)
 }
 
-calc_rank <- function(ampl, rate, freq, phase, complex = TRUE, tol = 1e-6) {
+calc_rank <- function(ampl, rate, freq, phase, complex = TRUE, poly_ampl_coefs = NULL, tol = 1e-6) {
   if (any(c(length(ampl), length(rate), length(freq)) != length(phase)))
     stop("Amplitudes, rates, frequencies and phases all must have the same length")
-  fr_unique <- unique(matrix(c(freq, rate), ncol = 2))
+  if (is.null(poly_ampl_coefs))
+    pac_rank <- rep(1, length(ampl))
+  else
+    pac_rank <- apply(poly_ampl_coefs, 2:length(dim(poly_ampl_coefs)), function(v) max(which(v != 0)))
+  fr_df <- data.frame(freq = freq, rate = rate, pac = pac_rank)
+  fr_unique <- fr_df |> group_by(freq, rate) |> summarise(pac = max(pac))
   (2 - complex) *
-    (sum(ampl != 0) + nrow(fr_unique) - length(ampl)) - sum(abs(fr_unique[,1] - 0.5) < tol)
+    (sum(ampl != 0) + sum(fr_unique$pac) - length(ampl)) - sum(abs(fr_unique[,1] - 0.5) < tol)
 }
 
 # Assumes all amplitudes are non-zero
@@ -466,8 +468,10 @@ n_case <- ""
 
 ## Parameters for P from 2 to 20 with one periodic
 ```{r}
-# P <- 2
-# P_case <- "_c2"
+set.seed(5)
+
+P <- 2
+P_case <- "_c2"
 # P <- 4
 # P_case <- "_c4"
 # P <- 8
@@ -476,8 +480,8 @@ n_case <- ""
 # P_case <- "_c12"
 # P <- 16
 # P_case <- "_c16"
-P <- 20
-P_case <- "_c20"
+# P <- 20
+# P_case <- "_c20"
 
 rates.true <- matrix(rep(0, P), nrow = P)
 rates_case <- "_nr"
@@ -487,6 +491,11 @@ freqs_case <- "_ef"
 
 A <- matrix(rnorm(P), nrow = P)
 A_case <- "_da"
+
+# poly.true <- 1 %o% rep(1, P) %o% 1
+# poly_case <- ""
+poly.true <- c(1, 1) * matrix(runif(2 * P, 0.5, 2), nrow = 2) %o% 1
+poly_case <- "p1"
 
 phases.true <- matrix(rep(0, P), nrow = P)
 phases_case <- "_ep"
@@ -506,11 +515,11 @@ n_case <- ""
 ## Constructing Signal
 
 ```{r}
-full_case <- paste0(n_case, P_case, rates_case, freqs_case, A_case, phases_case, complex_case)
-max.r <- calc_rank(A, rates.true, freqs.true, phases.true, complex.signal)
+full_case <- paste0(n_case, P_case, rates_case, freqs_case, A_case, poly_case, phases_case, complex_case)
+max.r <- calc_rank(A, rates.true, freqs.true, phases.true, complex.signal, poly.true)
 
 stopifnot(N > max.r * 2 + 1)
-signal <- construct_periodics(N, A, rates.true, freqs.true, phases.true, complex.signal)
+signal <- construct_periodics(N, A, rates.true, freqs.true, phases.true, complex.signal, poly.true)
 ```
 
 
@@ -583,14 +592,14 @@ groups_mssa <- list(1:max.r)
 
 if (n_case == "") {
   Ls_mssa <- seq(from = max.r + 1,
-                to = N,
+                to = N - max.r - 1,
                 by = 2)
   Ls_homssa = seq(from = max.r + 1,
                 to = (N + 1) %/% 2,
                 by = 2)
 } else {
   Ls_mssa <- seq(from = max.r + 1,
-                to = N,
+                to = N - max.r - 1,
                 by = 10)
   Ls_homssa = seq(from = max.r + 1,
                 to = (N + 1) %/% 2,
