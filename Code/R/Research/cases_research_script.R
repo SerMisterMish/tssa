@@ -6,6 +6,7 @@ library(rTensor)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
+library(english)
 library(Rcpp)
 library(RcppArmadillo)
 library(future.apply)
@@ -188,7 +189,7 @@ construct_periodics <- function(N,
   N_ones <- rep(1, N)
   ts_range <- seq(from = from, length.out = N, by = by)
   poly_ampl <- apply(poly_ampl_coefs, 2:length(dim(poly_ampl_coefs)), polynom_eval, x = ts_range)
-  ts_arr <- poly_ampl * (N_ones %o% ampl) * (N_ones %o% exp(rate)) *
+  ts_arr <- poly_ampl * (N_ones %o% ampl) * exp(ts_range %o% rate) *
     period_f(N_ones %o% phase + 2 * pi * unit * ts_range %o% freq)
 
   apply(ts_arr, 1:(length(dim(ts_arr)) - 1), sum)
@@ -203,7 +204,8 @@ calc_rank <- function(ampl, rate, freq, phase, complex = TRUE, poly_ampl_coefs =
   } else {
     pac_rank <- apply(poly_ampl_coefs, 2:length(dim(poly_ampl_coefs)), function(v) max(which(v != 0)))
   }
-  fr_df <- data.frame(freq = freq, rate = rate, pac = pac_rank)
+  
+  fr_df <- data.frame(freq = as.vector(freq), rate = as.vector(rate), pac = as.vector(pac_rank))
   fr_unique <- fr_df |>
     group_by(freq, rate) |>
     summarise(pac = max(pac))
@@ -237,28 +239,42 @@ summarise_errors <- function(err_df) {
     )
 }
 
-Ps <- c(2, 4, 8, 12, 16, 20)
+Ps <- c(2, 4, 8, 12, 16, 20, 40)
 
 for (P in Ps) {
   P_case <- sprintf("_c%d", P)
   print(P_case)
   set.seed(5)
+  
+  # S.true <- 1
+  S.true <- 2
+  S_case <- sprintf("%s_periodic%s", as.english(S.true), ifelse(S.true > 1, "s", ""))
 
-  rates.true <- matrix(rep(0, P), nrow = P)
-  rates_case <- "_nr"
+  # rates.true <- matrix(rep(0, P * S.true), nrow = P)
+  # rates_case <- "_nr"
+  # rates.true <- matrix(rep(-0.04, P * S.true), nrow = P)
+  # rates_case <- "_Ler"
+  rates.true <- matrix(rep(-0.04, P * S.true) + rep(seq(
+    from = 0,
+    length.out = S.true,
+    by = -0.02
+  ), each = P), nrow = P)
+  rates_case <- "_dsr"
 
-  freqs.true <- matrix(rep(0.2, P), nrow = P)
-  freqs_case <- "_ef"
+  # freqs.true <- matrix(rep(0.2, P * S.true), nrow = P)
+  # freqs_case <- "_ef"
+  freqs.true <- rep(1/8, P) %o% seq(from = 1, to = 8 / 6, length.out = S.true)
+  freqs_case <- "_dsf"
 
-  A <- matrix(rnorm(P), nrow = P)
+  A <- matrix(rnorm(P * S.true), nrow = P)
   A_case <- "_da"
 
-  poly.true <- 1 %o% rep(1, P) %o% 1
-  poly_case <- ""
-  # poly.true <- c(1, 1) * matrix(runif(2 * P, 0.5, 2), nrow = 2) %o% 1
-  # poly_case <- "p1"
+  # poly.true <- 1 %o% rep(1, P) %o% rep(1, S.true)
+  # poly_case <- ""
+  poly.true <- c(1, 1) * matrix(runif(2 * P, 0.5, 2), nrow = 2) %o% rnorm(S.true, mean = 1, sd = 0.25)
+  poly_case <- "p1"
 
-  phases.true <- matrix(rep(0, P), nrow = P)
+  phases.true <- matrix(rep(0, P * S.true), nrow = P)
   phases_case <- "_ep"
 
   # complex.signal <- TRUE
@@ -266,10 +282,10 @@ for (P in Ps) {
   complex.signal <- FALSE
   complex_case <- "_r" # real
 
-  N <- 25
-  n_case <- ""
-  # N <- 100
-  # n_case <- "_long"
+  # N <- 25
+  # n_case <- ""
+  N <- 99
+  n_case <- "_long"
 
   full_case <- paste0(n_case, P_case, rates_case, freqs_case, A_case, poly_case, phases_case, complex_case)
   max.r <- calc_rank(A, rates.true, freqs.true, phases.true, complex.signal, poly.true)
@@ -295,12 +311,12 @@ for (P in Ps) {
       Ls_mssa <- seq(
         from = max.r + 1,
         to = N - max.r - 1,
-        by = 10
+        by = 5
       )
       Ls_homssa <- seq(
         from = max.r + 1,
         to = (N + 1) %/% 2,
-        by = 10
+        by = 5
       )
     }
 
@@ -321,14 +337,23 @@ for (P in Ps) {
   }
 
   R <- 500
-
+# 
+#   if (is.matrix(signal)) {
+#     ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_mssa_rec, rmse_ts_nd, signal, seed = 5)
+#     tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_homssa_rec, rmse_ts_nd, signal, seed = 5)
+#     save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/one_periodic_mv", full_case, ".RData"))
+#   } else {
+#     ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_rec, rmse_ts_nd, signal, seed = 5)
+#     tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
+#     save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/one_periodic", full_case, ".RData"))
+#   }
   if (is.matrix(signal)) {
     ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_mssa_rec, rmse_ts_nd, signal, seed = 5)
     tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_homssa_rec, rmse_ts_nd, signal, seed = 5)
-    save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/one_periodic_mv", full_case, ".RData"))
+    save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/", S_case, "_mv", full_case, ".RData"))
   } else {
     ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_rec, rmse_ts_nd, signal, seed = 5)
     tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
-    save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/one_periodic", full_case, ".RData"))
+    save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/", S_case, full_case, ".RData"))
   }
 }

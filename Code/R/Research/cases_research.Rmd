@@ -205,7 +205,7 @@ construct_periodics <- function(N,
   N_ones <- rep(1, N)
   ts_range <- seq(from = from, length.out = N, by = by)
   poly_ampl <- apply(poly_ampl_coefs, 2:length(dim(poly_ampl_coefs)), polynom_eval, x=ts_range)
-  ts_arr <- poly_ampl * (N_ones %o% ampl) * (N_ones %o% exp(rate)) *
+  ts_arr <- poly_ampl * (N_ones %o% ampl) * exp(ts_range %o% rate) *
     period_f(N_ones %o% phase + 2 * pi * unit * ts_range %o% freq)
 
   apply(ts_arr, 1:(length(dim(ts_arr)) - 1), sum)
@@ -668,5 +668,5 @@ if (is.matrix(signal)) {
 
 
 ```{r}
-((ssa_err_summ[-1, 2] - tssa_err_summ[-1, 2]) / ssa_err_summ[-1, 1]) |> rename(err_diff = best)
+((ssa_err_summ[-1, 2] - tssa_err_summ[-1, 2]) / ssa_err_summ[-1, 1]) |> rename(err_diff = best) |> cbind(ssa_err_summ[-1, 1])
 ```
