@@ -167,7 +167,7 @@ setMethod("fnorm_complex", "Tensor", function(x) {
 
 # Calculate tensor eigenvalues
 get_tensor_eigenvalues <- function(X, dims = seq(num_dims)) {
-  num_dims = length(dim(X))
+  num_dims <- length(dim(X))
   
   lapply(dims, function(d) {
     mask <- as.list(rep(TRUE, num_dims))
@@ -247,6 +247,7 @@ hosvd_mod <- function(tnsr,
           else
             matmul(R, x)
         }
+        U_list[[m]] <- PRIMME::svds(A, NSvals = ranks[m], m = nrow(R), n = ncol(R), isreal = TRUE)$u
       } else {
         A <- function(x, trans) {
           rX <- Re(x); iX <- Im(x)
@@ -258,9 +259,9 @@ hosvd_mod <- function(tnsr,
               1i*(matmul(R, iX) + matmul(I, rX))
           }
         }
+        U_list[[m]] <- PRIMME::svds(A, NSvals = ranks[m], m = nrow(R), n = ncol(R), isreal = FALSE)$u
       }
       
-      U_list[[m]] <- PRIMME::svds(A, NSvals = ranks[m], m = nrow(R), n = ncol(R), isreal = FALSE)$u
     } else 
       stop("Unsupported svd method")
     
@@ -310,7 +311,12 @@ tucker_mod <- function(tnsr,
       U_list[[m]] <- svd(temp_mat, nu = ranks[m])$u
     } else if (identical(svd.method, "primme")) {
       R <- attr(tnsr, "unfolds_r")[[m]]
-      I <- attr(tnsr, "unfolds_i")[[m]]
+      
+      Ilist <- attr(tnsr, "unfolds_i")
+      if (!is.null(Ilist))
+        I <- Ilist[[m]]
+      else
+        I <- NULL
       
       matmul <- function(x, y) {
         if (is.matrix(y))
@@ -326,19 +332,27 @@ tucker_mod <- function(tnsr,
           ematmul(x, y, transposed = TRUE)
       }
       
-      A <- function(x, trans) {
-        rX <- Re(x)
-        iX <- Im(x)
-        if (identical(trans, "c")) {
-          (tmatmul(R, rX) + tmatmul(I, iX)) +
-            1i * (tmatmul(R, iX) - tmatmul(I, rX))
-        } else {
-          (matmul(R, rX) - matmul(I, iX)) +
-            1i * (matmul(R, iX) + matmul(I, rX))
+      if (is.null(I)) {
+        A <- function(x, trans) {
+          if (identical(trans, "c"))
+            tmatmul(R, x)
+          else
+            matmul(R, x)
         }
+        U_list[[m]] <- PRIMME::svds(A, NSvals = ranks[m], m = nrow(R), n = ncol(R), isreal = TRUE)$u
+      } else {
+        A <- function(x, trans) {
+          rX <- Re(x); iX <- Im(x)
+          if (identical(trans, "c")) {
+            (tmatmul(R, rX) + tmatmul(I, iX)) +
+              1i*(tmatmul(R, iX) - tmatmul(I, rX))
+          } else {
+            (matmul(R, rX) - matmul(I, iX)) +
+              1i*(matmul(R, iX) + matmul(I, rX))
+          }
+        }
+        U_list[[m]] <- PRIMME::svds(A, NSvals = ranks[m], m = nrow(R), n = ncol(R), isreal = FALSE)$u
       }
-      
-      U_list[[m]] <- PRIMME::svds(A, NSvals = ranks[m], m = nrow(R), n = ncol(R), isreal = FALSE)$u
     } else
       stop("Unsupported svd method")
   }

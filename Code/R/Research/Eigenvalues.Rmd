@@ -7,27 +7,233 @@ output: html_document
 library(Rssa)
 library(rTensor)
 library(ggplot2)
+library(english)
 library(gridExtra)
 library(factoextra)
 library(dplyr)
 library(tidyr)
+root.dir <- rprojroot::find_rstudio_root_file()
+knitr::opts_knit$set(root.dir = root.dir)
+knitr::opts_chunk$set(root.dir = root.dir)
 
-knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+source(file = sprintf("%s/Source/TSSA.R", root.dir))
+source(file = sprintf("%s/Source/tsgen.R", root.dir))
+source(file = sprintf("%s/Source/utils.R", root.dir))
 ```
 
-# Функции для тензоризации SSA
-```{r}
-source(file = "./Research/TSSA.R")
-```
 
+### Formula for eigenvalues of constant mv series
 ```{r}
-N <- 20; Q <- 4; L <- 10; A <- c(1, 1, 1, 3)
-s_const <- matrix(rep(A, N * Q / length(A)), ncol = N) |> t()
-tens3(s_const, L = L, kind = "HO-MSSA") |> 
+N <- 20
+P <- 4
+L <- 10
+A <- c(1, 1, 1, 3)
+s_const <- matrix(rep(A, N * P / length(A)), ncol = N) |> t()
+tens3(s_const, L = L, kind = "MSSA") |>
   hosvd_mod(status = FALSE) |>
   get_tensor_eigenvalues() |>
-  lapply(zapsmall) |> 
+  lapply(zapsmall) |>
   print()
-print(sqrt(mean(A^2)) * sqrt(Q * L * (N - L + 1)))
+print(sqrt(mean(A^2)) * sqrt(P * L * (N - L + 1)))
+```
+
+# Noise eigenvalues
+```{r}
+set.seed(5)
+# N <- 19; L <- 7
+# N <- 967; L <- 443
+N <- 967; L <- 484
+# N <- 19; L <- 10
+P <- 2
+K <- N - L + 1
+noise <- matrix(rnorm(N * P), ncol = P)
+noise_tens <- tens3(noise, L, "mssa")
+noise_tens_fnorm <- fnorm_complex(tens3(noise, L, "mssa"))
+sd_est <- sqrt(mean(noise^2))
+sd_tens_est <- sqrt(mean(noise_tens@data^2))
+ev <- noise |> tens_mssa_decompose(L, svd.method = "primme", neig=484, status = FALSE) |>
+      get_tensor_eigenvalues()
+ev_sums <- ev |> sapply(\(x) sum(x^2)) |> sqrt()
+
+ssa_ev <- ssa(noise, L, kind = "mssa", neig=484)$sigma
+ssa_ev_sum <- sqrt(sum(ssa_ev^2))
+
+cat("Tensor eigenvalues:\n")
+invisible(lapply(seq_along(ev), \(i) cat("  Dim", i, "-", ev[[i]][1:min(5, length(ev[[i]]))], '\n')))
+cat("Tensor eigenvalue sums:", ev_sums, '\n')
+cat("Matrix eigenvalues:\n ", ssa_ev[1:min(5, length(ssa_ev))], '\n')
+cat("Matrix eigenvalue sum:", ssa_ev_sum, '\n')
+cat("Tensor/Matrix F norm:", noise_tens_fnorm, '\n')
+cat("RMS for ts:", sd_est, '\n')
+cat("RMS for tensor:", sd_tens_est, '\n')
+cat("TEVS / RMS =", ev_sums / sd_est, '\n')
+cat("TEVS / RMS_tens =", ev_sums / sd_tens_est, '\n')
+```
+
+# Noise mixing for MSSA and HO-MSSA
+
+```{r}
+set.seed(5)
+sds <- seq(from = 0, to = 1.2, by = 0.2)
+
+# S.true <- 1
+S.true <- 2
+S_case <- sprintf("%s_periodic%s", as.english(S.true), ifelse(S.true > 1, "s", ""))
+
+P <- 2
+# P <- 4
+# P <- 8
+# P <- 12
+# P <- 16
+# P <- 20
+# P <- 40
+P_case <- sprintf("_c%d", P)
+
+# rates.true <- matrix(rep(0, P * S.true), nrow = P)
+# rates_case <- "_nr"
+# rates.true <- matrix(rep(-0.04, P * S.true), nrow = P)
+# rates_case <- "_Ler"
+rates.true <- matrix(rep(-0.04, P * S.true) + rep(seq(
+  from = 0,
+  length.out = S.true,
+  by = -0.02
+), each = P), nrow = P)
+rates_case <- "_dsr"
+
+# freqs.true <- matrix(rep(0.2, P * S.true), nrow = P)
+# freqs_case <- "_ef"
+freqs.true <- rep(1/8, P) %o% seq(from = 1, to = 8 / 6, length.out = S.true)
+freqs_case <- "_dsf"
+
+# A <- matrix(rnorm(P * S.true), nrow = P)
+# A_case <- "_da"
+A <- matrix(seq(-2, 2, length.out = P * S.true), nrow = P)
+A_case <- "_ua"
+# A <- matrix(rep(1, P * S.true), nrow = P)
+# A_case <- "_ea"
+
+poly.true <- 1 %o% rep(1, P) %o% rep(1, S.true)
+poly_case <- ""
+# poly.true <- c(1, 1) * matrix(runif(2 * P, 0.5, 2), nrow = 2) %o% rnorm(S.true, mean = 1, sd = 0.25)
+# poly_case <- sprintf("p%d", dim(poly.true)[1] - 1)
+
+phases.true <- matrix(rep(0, P * S.true), nrow = P)
+phases_case <- "_ep"
+
+# complex.signal <- TRUE
+# complex_case <- "_c" # complex
+complex.signal <- FALSE
+complex_case <- "_r" # real
+
+# N <- 25
+# n_case <- ""
+N <- 99
+n_case <- "_long"
+```
+
+```{r}
+full_case <- paste0(n_case, P_case, rates_case, freqs_case, A_case, poly_case, phases_case, complex_case)
+sample_step = 100 / N
+max.r <- calc_rank(A, rates.true, freqs.true * sample_step, phases.true, complex.signal, poly.true)
+
+stopifnot(N > max.r * 2 + 1)
+signal <- construct_ts(N, A, rates.true, freqs.true, phases.true, complex.signal, poly.true, by = sample_step)
+max.r3 <- calc_rank3(signal)
+```
+
+## Comparing smallest signal eigenvalues to noise eigenvalues
+
+```{r}
+Ls_mssa <- seq.int(from = max.r + 1, to = N - max.r)
+Ls_homssa <- seq.int(from = max.r + 1, to = (N + 1) %/% 2)
+Ks_mssa <- N - Ls_mssa + 1
+Ks_homssa <- N - Ls_homssa + 1
+
+sigmas_mssa <- sapply(Ls_mssa, \(L) ssa(signal, L, kind = "mssa")$sigma[max.r])
+sigmas_homssa <- sapply(Ls_homssa, \(L) {
+  tens_ev <- get_tensor_eigenvalues(tens_mssa_decompose(signal, L, "hooi", status = FALSE))
+  c(homssa1 = tens_ev[[1]][max.r],
+    homssa2 = tens_ev[[2]][max.r],
+    homssa3 = tens_ev[[3]][max.r3])
+})
+
+## All eigenvalues of the signal for particular L:
+# get_tensor_eigenvalues(tens_mssa_decompose(signal, L, "hosvd", status = FALSE))
+```
+
+```{r}
+mix_sd2_mssa <- sigmas_mssa^2 * (pmin(Ls_mssa, Ks_mssa * P)) / (Ls_mssa * Ks_mssa * P)
+mix_sd2_homssa <- sigmas_homssa^2 * rbind(Ls_homssa, Ks_homssa, P) / (rep(1, 3) %o% (Ls_homssa * Ks_homssa * P))
+maxind_mssa <- which.max(mix_sd2_mssa)
+maxind_homssa <- which.max(colSums(sqrt(mix_sd2_homssa)))
+# maxind_homssa <- which.max(colSums(mix_sd2_homssa))
+# maxind_homssa <- which.max(mix_sd2_homssa[2,])
+# maxind_homssa <- length(Ls_homssa)
+# maxind_homssa <- which.max(apply(mix_sd2_homssa, 2, \(v) -sd(v)))
+
+L_mssa <- Ls_mssa[maxind_mssa]; K_mssa <- Ks_mssa[maxind_mssa]
+L_homssa <- Ls_homssa[maxind_homssa]; K_homssa <- Ks_homssa[maxind_homssa]
+
+maxmin_mixsd2 <- c(mssa = mix_sd2_mssa[maxind_mssa],
+                   mix_sd2_homssa[, maxind_homssa],
+                   homssa_mean = mean(sqrt(mix_sd2_homssa[, maxind_homssa]))^2)
+
+sqrt(maxmin_mixsd2)
+```
+
+## Using mix rates
+
+```{r}
+if (N == 25) {
+  L_mssa <- 19; L_homssa <- 9
+} else {
+  L_mssa <- 80; L_homssa <- 30
+}
+R <- 100
+pb <- txtProgressBar(0, R * length(sds), style = 3)
+last_signal_evs <- sapply(sds, \(sd) {
+  set.seed(5)
+  apply(replicate(R, {
+    setTxtProgressBar(pb, pb$getVal() + 1)
+    x <- signal + rnorm(N * P, sd = sd)
+    c(mssa = mixing_rate(ssa(x, L_mssa, kind = "mssa"), max.r),
+      homssa = mixing_rate(get_tensor_eigenvalues(tens_mssa_decompose(x, L_homssa, "hooi", status = FALSE)), c(max.r, max.r, max.r3)))
+  }), 1, mean)
+})
+close(pb)
+```
+
+```{r}
+mr_df <- mr |> t() |> data.frame() |> mutate(sd = sds)
+mr_long <- mr_df |> pivot_longer(c("mssa", "homssa1", "homssa2", "homssa3"))
+
+mr_plot <- mr_long |> ggplot() + geom_line(aes(x = sd, y = value, color = name), na.rm = TRUE) + ggtitle(sprintf("P = %d", P)) + theme_minimal()
+mr_plot_wo3 <- mr_long |> filter(name != "homssa3") |> ggplot() + geom_line(aes(x = sd, y = value, color = name), na.rm = TRUE) + ggtitle(sprintf("P = %d", P)) + theme_minimal()
+{
+  pdf(
+    paste0(
+      "./Research/comp_results/cases_errors/noise_mix_plots/mr",
+      full_case,
+      ".pdf"
+    ),
+    width = 8,
+    height = 6
+  )
+  plot(mr_plot)
+  dev.off()
+  pdf(
+    paste0(
+      "./Research/comp_results/cases_errors/noise_mix_plots/mr_wo3",
+      full_case,
+      ".pdf"
+    ),
+    width = 8,
+    height = 6
+  )
+  plot(mr_plot_wo3)
+  dev.off()
+}
+mr_plot
+mr_plot_wo3
 ```
 
