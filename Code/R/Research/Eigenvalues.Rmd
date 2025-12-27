@@ -158,6 +158,7 @@ sigmas_homssa <- sapply(Ls_homssa, \(L) {
 })
 
 ## All eigenvalues of the signal for particular L:
+# L <- (N + 1) %/% 2
 # get_tensor_eigenvalues(tens_mssa_decompose(signal, L, "hosvd", status = FALSE))
 ```
 
