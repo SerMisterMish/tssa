@@ -787,7 +787,6 @@ tens_mssa_decompose <- function(s,
                                 decomp = c("HOSVD", "HOOI", "TSVD", "CP"),
                                 svd.method = c("svd", "primme"),
                                 neig = NULL,
-                                neig3 = NULL,
                                 status = TRUE,
                                 max_iter = 25,
                                 tol = 1e-05,
@@ -799,18 +798,18 @@ tens_mssa_decompose <- function(s,
   if (decomp == "CP" && is.null(neig))
     stop("For CP decomposition `neig` argument must be provided")
   else if (is.null(neig))
-    neig = min(50, L, nrow(s) - L + 1)
+    neig <- 50
   
-  if (decomp != "CP" && is.null(neig3))
-    neig3 = min(50, ncol(s))
+  if (decomp != "CP" && length(neig) == 1)
+    neig <- c(min(neig, L), min(neig, nrow(s) - L + 1), min(neig, ncol(s)))
   
   H <- tens3(s, L, kind = "MSSA")
   H.dec <- switch(
     decomp,
-    HOSVD = hosvd_mod(H, ranks = c(neig, neig, neig3), svd.method = svd.method, status = status),
+    HOSVD = hosvd_mod(H, ranks = neig, svd.method = svd.method, status = status),
     HOOI = tucker_mod(
       H,
-      ranks = c(neig, neig, neig3),
+      ranks = neig,
       status = status,
       max_iter = max_iter,
       tol = tol
