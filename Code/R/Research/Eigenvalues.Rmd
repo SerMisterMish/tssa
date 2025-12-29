@@ -41,29 +41,37 @@ print(sqrt(mean(A^2)) * sqrt(P * L * (N - L + 1)))
 ```{r}
 set.seed(5)
 # N <- 19; L <- 7
-# N <- 967; L <- 443
+N <- 967; L <- 443
 # N <- 967; L <- 484
 # N <- 19; L <- 10
-N <- 99
-L <- 20
-P <- 20
+# N <- 99; L <- 20
+P <- 200
 K <- N - L + 1
+modes <- c(L, K, P)
 noise <- matrix(rnorm(N * P), ncol = P)
 noise_tens <- tens3(noise, L, "mssa")
-noise_tens_fnorm <- fnorm_complex(tens3(noise, L, "mssa"))
+noise_tens_fnorm <- fnorm_complex(noise_tens)
 sd_est <- sqrt(mean(noise^2))
 sd_tens_est <- sqrt(mean(noise_tens@data^2))
-ev <- noise |> tens_mssa_decompose(L, neig = c(L, K, P), status = FALSE) |>
+ev <- noise |> tens_mssa_decompose(L, neig = modes, status = FALSE) |>
       get_tensor_eigenvalues()
 ev_sums <- ev |> sapply(\(x) sum(x^2)) |> sqrt()
 
-ssa_ev <- ssa(noise, L, kind = "mssa", neig = L)$sigma
+ssa_ev <- ssa(noise, L, kind = "mssa", svd.method = "primme", neig = min(L, K * P))$sigma
 ssa_ev_sum <- sqrt(sum(ssa_ev^2))
 
 cat("Tensor eigenvalues:\n")
-invisible(lapply(seq_along(ev), \(i) cat("  Dim", i, "-", ev[[i]][1:min(5, length(ev[[i]]))], '\n')))
+invisible(lapply(seq_along(ev), \(i) {
+  cat("  Dim", i, "-", ev[[i]], '\n')
+  cat(
+    "  Marchenko–Pastur Bounds for eigenvalues:",
+    noise_tens_fnorm * (1 / sqrt(min(modes[i], prod(modes[-i]))) + 1 / sqrt(max(modes[i], prod(modes[-i]))) * c(1, -1)),
+    "(actual:", sprintf("%f, %f)", max(ev[[i]]), min(ev[[i]])),
+    "\n"
+  )
+}))
 cat("Tensor eigenvalue sums:", ev_sums, '\n')
-cat("Matrix eigenvalues:\n ", ssa_ev[1:min(5, length(ssa_ev))], '\n')
+cat("Matrix eigenvalues:\n ", ssa_ev, '\n')
 cat("Matrix eigenvalue sum:", ssa_ev_sum, '\n')
 cat("Tensor/Matrix F norm:", noise_tens_fnorm, '\n')
 cat("RMS for ts:", sd_est, '\n')

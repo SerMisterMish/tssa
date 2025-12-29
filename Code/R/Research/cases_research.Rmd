@@ -364,8 +364,8 @@ n_case <- ""
 ```{r}
 set.seed(5)
 
-# S.true <- 1
-S.true <- 2
+S.true <- 1
+# S.true <- 2
 S_case <- sprintf("%s_periodic%s", as.english(S.true), ifelse(S.true > 1, "s", ""))
 
 P <- 2
@@ -377,29 +377,29 @@ P <- 2
 # P <- 40
 P_case <- sprintf("_c%d", P)
 
-# rates.true <- matrix(rep(0, P * S.true), nrow = P)
-# rates_case <- "_nr"
+rates.true <- matrix(rep(0, P * S.true), nrow = P)
+rates_case <- "_nr"
 # rates.true <- matrix(rep(-0.04, P * S.true), nrow = P)
 # rates_case <- "_Ler"
-rates.true <- matrix(rep(-0.04, P * S.true) + rep(seq(
-  from = 0,
-  length.out = S.true,
-  by = -0.02
-), each = P), nrow = P)
-rates_case <- "_dsr"
+# rates.true <- matrix(rep(-0.04, P * S.true) + rep(seq(
+#   from = 0,
+#   length.out = S.true,
+#   by = -0.02
+# ), each = P), nrow = P)
+# rates_case <- "_dsr"
 
-# freqs.true <- matrix(rep(0.2, P * S.true), nrow = P)
-# freqs_case <- "_ef"
-freqs.true <- rep(1/8, P) %o% seq(from = 1, to = 8 / 6, length.out = S.true)
-freqs_case <- "_dsf"
+freqs.true <- matrix(rep(0.2, P * S.true), nrow = P)
+freqs_case <- "_ef"
+# freqs.true <- rep(1/8, P) %o% seq(from = 1, to = 8 / 6, length.out = S.true)
+# freqs_case <- "_dsf"
 
 A <- matrix(rnorm(P * S.true), nrow = P)
 A_case <- "_da"
 
-# poly.true <- 1 %o% rep(1, P) %o% rep(1, S.true)
-# poly_case <- ""
-poly.true <- c(1, 1) * matrix(runif(2 * P, 0.5, 2), nrow = 2) %o% rnorm(S.true, mean = 1, sd = 0.25)
-poly_case <- sprintf("p%d", dim(poly.true)[1] - 1)
+poly.true <- 1 %o% rep(1, P) %o% rep(1, S.true)
+poly_case <- ""
+# poly.true <- c(1, 1) * matrix(runif(2 * P, 0.5, 2), nrow = 2) %o% rnorm(S.true, mean = 1, sd = 0.25)
+# poly_case <- sprintf("p%d", dim(poly.true)[1] - 1)
 
 phases.true <- matrix(rep(0, P * S.true), nrow = P)
 phases_case <- "_ep"
@@ -409,10 +409,10 @@ phases_case <- "_ep"
 complex.signal <- FALSE
 complex_case <- "_r" # real
 
-# N <- 25
-# n_case <- ""
-N <- 99
-n_case <- "_long"
+N <- 25
+n_case <- ""
+# N <- 99
+# n_case <- "_long"
 ```
 
 ## Constructing Signal
