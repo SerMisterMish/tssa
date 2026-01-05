@@ -1,0 +1,104 @@
+\documentclass{article}
+\usepackage{cmap}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{geometry}
+
+\newtheorem{theorem}{Лемма}
+
+\begin{document}
+\begin{theorem}
+  Рассмотрим матрицу \(A\in\mathbb{R}^{m\times n}\). Обозначим её
+  столбцы \(a_1,\dots,a_n\). Пусть все столбцы \(A\) различны, матрица
+  \(B\in\mathbb{R}^{m\times k}\, (k \geqslant n)\) составлена из
+  столбцов \(A\) так,
+  что каждый столбец из матрицы \(A\) появляется в \(B\), и некоторые
+  столбцы могут повторяться. Пусть \(r_j\) (\(j=1,\dots,n\)) "---
+  количество раз, которое столбец \(a_j\) входит в матрицу \(B\), и пусть
+  \(M=\max_j r_j\). Тогда
+  \[
+    \sigma_i(B)\leqslant \sigma_i(A)\sqrt{M}\quad \forall i
+  \]
+  где \(\sigma_i(\cdot)\) обозначает \(i\)-е сингулярное значение
+  матрицы в порядке убывания.
+\end{theorem}
+
+\begin{proof}
+  Рассмотрим матрицу \(S\in\mathbb{R}^{n\times k}\) такую, что её
+  \(k\)-й столбец "--- это вектор стандартного базиса
+  \(e_j\in\mathbb{R}^n\) если \(k\)-й столбец матрицы \(B\) совпадает
+  с \(a_j\). По построению \(B=AS\).
+  Для любого \(j\) \(j\)-ая строка \(S\) содержит ровно \(r_j\) единиц.
+
+  Обозначим столбцы матрицы \(B\) как \(b_t\).
+  Рассмотрим \(x\in\mathbb{R}^k\),
+  пусть \(y=Sx\in\mathbb{R}^n\). \(j\)-ая компонента
+  \(y\) равна
+  \[
+    y_j=\sum_{t:\:b_t=a_j} x_t,
+  \]
+  по неравенству Коши--Буняковского,
+  \[
+    |y_j|\leqslant \sqrt{r_j}\left(\sum_{t:\:b_t=a_j}
+    x_t^2\right)^{1/2}
+    \leqslant \sqrt{M}\,\left(\sum_{t:\:b_t=a_j}
+    x_t^2\right)^{1/2}.
+  \]
+  Следовательно
+  \[
+    \|y\|_2^2 = \sum_{j=1}^n |y_j|^2 \leqslant \sum_{j=1}^n M
+    \left(\sum_{t:\: b_t=a_j}x_t^2\right) = M \sum_{t=1}^k x_t^2 = M \|x\|_2^2,
+  \]
+  так как множества \(\{t:\: b_t=a_j\}\) не пересекаются, и в
+  объединении дают множество \(\{1,\dots,k\}\).
+  Но \(\|y\|_2=\|Sx\|_2\), и значит \(\|S\|_{2}\leqslant \sqrt{M}\).
+
+  Кроме того, для любого \(x\in\mathbb{R}^k\),
+  \[
+    \|Bx\|_2=\|A(Sx)\|_2 \le \|A\|_{2}\,\|Sx\|_2
+    \le \|A\|_{2}\,\|S\|_{2}\,\|x\|_2
+    \le \sqrt{M}\,\|A\|_{2}\,\|x\|_2.
+  \]
+  2-норма матрицы совпадает с её наибольшим сингулярным числом, поэтому
+  \[
+    \sigma_1(B)=\|B\|_{2}\leqslant
+    \sqrt{M}\,\|A\|_{2}=\sqrt{M}\,\sigma_1(A).
+  \]
+
+  Пусть теперь \(i=1,\dots,n\), тогда по теореме Куранта--Фишера
+  \[
+    \sigma_i(B)=\min_{\substack{U\subset\mathbb{R}^k\\\dim U=k-i+1}}
+    \;\max_{x\in U,\,x\neq\mathbf{0}} \frac{\|Bx\|_2}{\|x\|_2}.
+  \]
+  Зафиксируем произвольное подпространство \(U\subset\mathbb{R}^k\)
+  размерности \(k-i+1\) и положим
+  \[
+    V=S(U) = \left\{v:\: v = Su,\, \forall u \in U\right\}\subset\mathbb{R}^n,
+  \]
+  тогда \(\dim V \leqslant \dim U = k - i + 1\), \(y = Sx \in V\).
+
+  Пусть \(x\in U\) и \(x\neq\mathbf{0}\), тогда
+  \[
+    \frac{\|Bx\|_2}{\|x\|_2}=\frac{\|A(Sx)\|_2}{\|x\|_2}
+    =\frac{\|A y\|_2}{\|x\|_2} = \frac{\|A
+    y\|_2}{\|y\|_2}\frac{\|y\|_2}{\|x\|_2}=
+    \frac{\|A y\|_2}{\|y\|_2}\frac{\|Sx\|_2}{\|x\|_2}
+    \leqslant \frac{\|A y\|_2}{\|y\|_2}\frac{\|S\|_2 \|x\|_2}{\|x\|_2}
+    \leqslant \sqrt{M} \frac{\|A y\|_2}{\|y\|_2},
+  \]
+  так как \(\|S\|_2\leqslant\sqrt{M}\).
+  Переходя к максимуму по \(x\) и минимуму по \(U\), левая часть
+  неравенства преобразуется в \(\sigma_i(B)\), а правая в
+  \(\sqrt{M}\sigma_i(A)\).
+\end{proof}
+
+Применяя лемму, когда \(A\) "--- матрица с каналами сигнала в
+строках, а \(B\) "--- 3-развёртка траекторного тензора, получаем, что
+\[
+  \sigma_i(B) \leqslant \sqrt{\min (L, K)}\,\sigma_i(A),
+\]
+где \(L\) "--- длина окна, \(K = N - L + 1\).
+
+\end{document}
