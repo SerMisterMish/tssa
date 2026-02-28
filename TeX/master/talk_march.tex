@@ -1,0 +1,378 @@
+\documentclass[pdf, unicode, 10pt, notheorems, handout]{beamer}
+
+%\mode<handout> {
+%    \usepackage{pgfpages}
+%    \setbeameroption{show notes}
+%    \pgfpagesuselayout{2 on 1}[a4paper, border shrink=5mm]
+%    \setbeamercolor{note page}{bg=white}
+%    \setbeamercolor{note title}{bg=gray!10}
+%    \setbeamercolor{note date}{fg=gray!10}
+%}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian, english]{babel}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{graphics}
+\usepackage{mathtools}
+\usepackage{tikz}
+\usetikzlibrary{tikzmark, calc, fit}
+
+\usefonttheme[onlymath]{serif}
+\usetheme[numbers, totalnumbers, compress, nologo]{Statmod}
+\setbeamerfont{institute}{size=\normalsize}
+\setbeamertemplate{navigation symbols}{}
+
+\graphicspath{{../img}}
+
+\input{letters_series_mathbb}
+\setbeamercolor{bluetext_color}{fg=blue}
+\newcommand{\bluetext}[1]{{\usebeamercolor[fg]{bluetext_color}#1}}
+\setbeamercolor{redtext_color}{fg=red}
+\newcommand{\redtext}[1]{{\usebeamercolor[fg]{redtext_color}#1}}
+\newcommand{\iu}{\mathbf{i}}
+\newcommand{\Tp}{\mathrm{T}}
+\newcommand{\Hp}{\mathrm{H}}
+\newcommand{\rank}{\operatorname{rank}}
+
+\newtheorem{theorem}{Теорема}
+\newtheorem{statement}{Утверждение}
+\newtheorem{definition}{Определение}
+\newtheorem{remark}{Замечание}
+
+\title{Тензорный анализ сингулярного спектра}
+
+\author{Хромов Никита Андреевич, гр.24.M22-мм}
+
+\institute[Санкт-Петербургский Государственный Университет]{
+  Санкт-Петербургский государственный университет\\
+  Математическое моделирование, программирование и \\искусственный интеллект\\
+  Вычислительная стохастика и статистические модели\\
+  \vspace{0.7cm}
+Научный руководитель:  д.ф.-м.н. Голяндина Н.Э.}
+%   \\Рецензент: к.ф.-м.н. Усевич К.Д.}
+
+\date{Санкт-Петербург,\\ \number\year}
+
+\begin{document}
+
+\begin{frame}[plain, noframenumbering]
+  \titlepage
+\end{frame}
+
+\section{Введение}\label{sec:intro}
+\begin{frame}{Введение}
+  $\tX^{(m)} = \left(x_1^{(m)}, x_2^{(m)}, \ldots,
+  x_N^{(m)}\right)^{\rmT}$, $x_i \in \bbC$ ---
+  временной ряд\\
+  $\tX = \left(\tX^{(1)} : \tX^{(2)} : \ldots : \tX^{(M)}\right)$ ---
+  $M$-канальный временной ряд\\ \vspace{0.2cm}
+  $\tX = \tT + \tP + \tE$ \\
+  $\tT$ --- медленно меняющаяся составляющая (тренд)\\
+  $\tP$ --- периодическая составляющая (сезонность)\\
+  $\tE$ --- случайная составляющая (шум)\\
+  \vspace{0.2cm}
+
+  \bluetext{Возможные задачи:}
+  \begin{itemize}
+    \item Выделение сигнала из ряда: нахождение $\tS = \tT + \tP$
+    \item Разделение сигнала: нахождение составляющих $\tT$ и $\tP$
+    \item Оценка параметров сигнала: определение периода и скорости
+      изменения компонент сигнала
+  \end{itemize}
+  \smallskip
+
+  Возможный метод решения: Singular Spectrum Analysis (\bluetext{SSA})
+
+  %   [Broomhead, King (1986a)], [Golyandina, Nekrutkin, Zhigljavsky (2001)],\\
+  %   и его многомерное расширение Multivariate SSA (\bluetext{MSSA})
+
+  %   [Broomhead, King (1986b)]
+
+  \smallskip
+
+  \redtext{Цель:} сравнение и исследование свойств тензорных
+  расширений методов SSA и MSSA с точки зрения точности выделения
+  сигнала, разделения компонент и оценки параметров.
+\end{frame}
+
+\section{SSA}
+
+\begin{frame}{Алгоиртм SSA}
+  $\tX = \sum_{m=1}^{M}\tS_m + \tE$ --- временной ряд (один
+  канал),\\ \vspace{0.1cm}
+  $\tS \stackrel{\mathrm{def}}{=}\sum_{m=1}^{M}\tS_m$ ---
+  сигнал.\\ \vspace{0.2cm}
+
+  \bluetext{Параметры:} $L < N$ --- длина окна, $K
+  \stackrel{\mathrm{def}}{=} N - L + 1$,\\
+  $R$ --- число элементов разложения, относимых к сигналу,\\
+  $\gI_1,\ldots, \gI_J \subseteq \{1, 2, \ldots, R\}$, $\gI_i \cap
+  \gI_j = \varnothing$ --- наборы индексов,
+  относимых к компонентам сигнала.
+  \vspace{0.1cm}
+
+  \bluetext{Алгоритм SSA для разделения компонент сигнала}
+  \begin{enumerate}
+    \item \bluetext{Вложение}
+      $\tX \overset{L}{\longmapsto} \calT_L(\tX) = \bfX\in \bbC^{L\times K}$ ---
+      траекторная матрица,
+
+    \item \bluetext{Разложение} $\operatorname{SVD}(\bfX) =
+      \sum_{i=1}^{d} \sqrt{\lambda}_{i}
+      U_i V_i^{\Hp}, \quad d \leqslant \min(L,\, K)
+      $
+    \item \bluetext{Группировка} $\widetilde{\bfS}_j = \sum_{\color{red} i\in
+      \gI_j}\sqrt{\lambda}_{i} U_i V_i^{\Hp}, \quad R \leqslant d
+      $
+    \item \bluetext{Восстановление} усреднение $\widetilde{\bfS}_j$
+      вдоль антидиагоналей $l+k=\operatorname{const}$
+  \end{enumerate}
+  \vspace{0.1cm}
+
+  \bluetext{Результат алгоритма} $\widetilde{\tS}_j$ --- оценки
+  компонент $\tS_j$
+\end{frame}
+
+\begin{frame}{Траекторная матрица ряда}
+  $\tX = (x_1,\, x_2,\, \dots,\, x_N)$, $L < N$, $K = N - L + 1$
+  \vspace{0.4cm}\\
+  \begin{definition}
+    \[
+      \bfX = \calT^{(L)}(\tX) =
+      \begin{pmatrix}
+        x_1                     & \tikzmarknode{A12}{x_2} &
+        \tikzmarknode{A13}{x_3} & \ldots & x_K     \\
+        \tikzmarknode{A21}{x_2} & x_3                     & x_4
+        & \ldots & x_{K+1} \\
+        \tikzmarknode{A31}{x_3} & x_4                     & x_5
+        & \ldots & x_{K+2} \\
+        \vdots                  & \vdots                  & \vdots
+        & \ddots & \vdots  \\
+        x_L                     & x_{L+1}                 & x_{L+2}
+        & \ldots & x_N
+      \end{pmatrix}
+    \]
+    \begin{tikzpicture}[remember picture,overlay]
+      \draw[red] let \p1=($(A12)-(A21)$),\n1={atan2(\y1,\x1)} in
+      node[rotate fit=\n1,fit=(A12) (A21),draw,rounded
+      corners,inner sep=2pt]{};
+      \draw[blue] let \p1=($(A13)-(A31)$),\n1={atan2(\y1,\x1)+2} in
+      node[rotate fit=\n1,fit=(A13) (A31),draw,rounded
+      corners,inner sep=2pt]{};
+    \end{tikzpicture}
+  \end{definition}
+  \bigskip
+
+  Шаг восстановления: $\widetilde{\tS} =
+  \calT_L^{-1}\left(\Pi_{\calH}\left(\bfS_j\right)\right)$,\\
+  $\Pi_{\calH}$ --- проектор на пространство ганкелевых матриц.
+\end{frame}
+
+\begin{frame}{SSA-Ранг Ряда}
+  \begin{definition}
+    Ряд $\tX$ имеет SSA-ранг $\rank(\tX)=r < N/2$, если ранг его $L$-траекторной
+    матрицы равен $r$ для любой длины окна $L$ такой, что $r
+    \leqslant \min(L, K)$.\\
+    Если такое число $r$ существует, тогда ряд $\tX$ называется рядом
+    конечного ранга.
+  \end{definition}
+  \vspace{0.5cm}
+  Если сигнал $\tS$ является рядом конечного ранга, то в общем случае
+  рекомендуется использовать $\rank(\tS)$ в качестве параметра $R$ в
+  алгоритме SSA.
+  \vspace{0.4cm}\\
+  Примеры SSA-рангов
+  \begin{itemize}
+    \item ранг $\tS$ при $s_n = A \exp(\alpha n)$, $\alpha
+      \in\bbC$, равен 1
+    \item ранг $\tS$ при $s_n = A\sin(2\pi \omega n + \varphi)$,
+      $0 < \omega < 1/2$, равен 2
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Модель Сигнала}
+  Ряд $\tS = (s_1,\, s_2,\, \ldots, s_N)$ считается сигналом, если
+  траекторная матрица $\bfS = \calT^{(L)}(\tS)$ имеет неполный ранг
+  ($\implies$ ряд имеет конечный ранг:
+  $\operatorname{rank}(\tS)=r$)
+
+  \bigskip
+
+  Любой сигнал $\tS$ представим в форме конечной суммы:
+  \[
+    s_n = \sum_{j} p_j(n) \exp(\alpha_j n + \mathrm{i}2\pi
+    \omega_j n),
+  \]
+  где $p_j(n)$ --- некоторый многочлен от $n$
+
+  \bigskip
+
+  Вещественный случай:
+  \[
+    s_n = \sum_{j} p_j(n) \exp(\alpha_j n)\sin(2\pi
+    \omega_j n + \varphi_j),
+  \]
+
+  \bigskip
+  ESPRIT --- близкий к SSA метод оценки степеней $\alpha_j$ и частот $\omega_j$
+
+  %   [Roy et al. (1986)]
+\end{frame}
+
+\begin{frame}{Алгоритм ESPRIT}
+  Входные данные: ряд $\tX$, длина окна $L$, число компонент сигнала $R$
+
+  \bluetext{Алгоритм ESPRIT}
+  \begin{enumerate}
+    \item \bluetext{Вложение} $\bfX = \calT^{(L)}(\tX)$
+    \item \bluetext{Разложение} $\displaystyle\bfX =
+      \sum_{i=1}^{\operatorname{rank}\bfX}
+      \sqrt{\lambda_i} U_i V_i^{\Hp}$,
+      $\bfU_R = \left[U_1: U_2: \ldots: U_R\right]$
+    \item \bluetext{Оценивание} Вычисление собственных чисел $z_j$ матрицы
+      $\underline{\bfU}_R^{-}\overline{\bfU}_R$ \\ \smallskip
+      Из равенства $z_j = \exp(\alpha_j + \mathrm{i}2\pi\omega_j)$ находятся
+      параметры $\alpha_j$ и $\omega_j$.
+  \end{enumerate}
+
+  \bigskip
+
+  Методы SSA, ESPRIT и их модификации называются методами,
+  основанными на подпространстве сигнала.
+\end{frame}
+
+\section{Multi-Channel SSA}
+\begin{frame}{MSSA: SSA для многоканальных рядов}
+  %   [Broomhead, King (1986)]\\ \smallskip
+  $\tX = \left(\tX^{(1)},\, \tX^{(2)}, \, \ldots,\,
+  \tX^{(P)}\right)$ --- многоканальный ряд,
+  $\tX^{(p)} = \left(x_1^{(p)}, \, x_2^{(p)},\,\ldots,\,
+  x_N^{(p)}\right)$ --- каналы
+  \vspace{0.4cm}
+
+  Единственные отличия от алгоритма SSA --- шаг Вложения:
+  \[
+    \bfX = \calT_{\textrm{MSSA}}^{(L)}(\tX) = \left[\bfX^{(1)} :
+    \bfX^{(2)}: \ldots : \bfX^{(P)}\right],\quad
+    \bfX^{(p)} = \calT^{(L)}(\tX^{(p)}),
+  \]
+  и соответствующее изменение шага Восстановления.
+  \vspace{0.4cm}
+
+  Когда MSSA оказывается точнее, чем применение SSA к каждому каналу:
+  \begin{itemize}
+    \item Все каналы имеют ``похожую'' структуру
+    \item Имеются ``поддерживающие'' каналы с меньшим уровнем шума
+  \end{itemize}
+\end{frame}
+
+\section{Tensor SSA}
+\begin{frame}{Переход к тензорам}
+  \begin{table}
+    \hspace*{-0.9cm}
+    \begin{tabular}{rlllll}
+      \bluetext{Basic SSA:} & Ряд $\tX$ & $\mapsto$ & Матрица
+      $\mathbf{X}$ & $\mapsto$ & $\operatorname{SVD}(\mathbf{X})$ \\
+      \bluetext{Tensor SSA:} & Ряд $\tX$ & $\mapsto$ & Тензор
+      $\calX $ & $\mapsto$ & \hspace*{-0.18cm}
+      $\underbrace{\operatorname{TD}}_{\mathclap{\text{~~~Тензорное
+      Разложение}}}(\calX)$
+    \end{tabular}
+  \end{table}
+  \vspace{0.4cm}
+
+  Тензорные разложения, обобщающие SVD:
+  \begin{itemize}
+    \item \bluetext{Higher-Order SVD (HOSVD)}
+    \item Canonical Polyadic Decomposition (CPD)
+    \item T-SVD
+    \item $(L_r, L_r, 1)$-Decomposition
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Вложение одноканального ряда в Тензор}
+  %   Considered in [Papy et al. (2005)]\\ \smallskip
+  $\tX = (x_1,\, x_2,\, \ldots,\, x_N)$, $L, K < N - 1$, $M = N - L -
+  K + 2 > 1$\\ \smallskip
+  $\tX \mapsto \calT_{\mathrm{T-SSA}}^{(L, K)}(\tX) = \calX \in
+  \bbC^{L\times K \times M}$:
+
+  \begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.75\textwidth]{tens-injection-wide.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Вложение многоканального ряда в Тензор}
+  %   Considered in [Papy et al. (2005)]\\ \smallskip
+  $\tX = \left(\tX^{(1)},\, \tX^{(2)},\, \ldots,\,
+  \tX^{(M)}\right)$, $\tX^{(m)} = (x_1^{(m)},\, x_2^{(m)},\,
+  \ldots,\, x_N^{(m)})$, $L < N$\\ \smallskip
+  $\tX \mapsto \calT_{\mathrm{T-MSSA}}^{(L)}(\tX)
+  = \calX \in \bbC^{L \times K \times M}$, $K = N - L + 1$
+
+  \bigskip
+
+  \begin{figure}[!ht]
+    \centering
+    \includegraphics[width=\textwidth]{mssa_injection_new.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Некоторые тензорные разложения}
+  В отличие от матричного случая, существует несколько различных
+  определений тензорных рангов и соответствующих им обобщений SVD.
+
+  \begin{definition}[Ранг тензора]
+    Тензор $\calA$ имеет ранг 1, если существуют векторы $B$, $C$ и
+    $D$ такие, что
+    $\calA=B \circ C \circ D$, где $\circ$ обозначает тензорное
+    произведение.\\ \medskip
+
+    Тензор $\calA$ имеет ранг $R$, если его можно представить в виде суммы
+    $R$ одноранговых тензоров: $\calA = \sum_{i=1}^{R} \calB_i$,
+    $\rank(\calB_i)=1$, и такое $R$ минимально.
+  \end{definition}
+
+  \medskip
+
+  \bluetext{Canonical Polyadic Decomposition (CPD)} --- представление
+  тензора в виде суммы $R$ одноранговых тензоров.
+
+  \smallskip
+
+  \begin{itemize}
+      % \item Considered for signal extraction in [Kouchaki, Sanei (2013)]
+    \item Компоненты разложения не ортогональны
+    \item Необходимо знать параметр $R$ до разложения
+    \item Нет связи между SSA-рангом и рангом траекторного тензора
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Некоторые тензорные разложения}
+  \begin{definition}
+    \bluetext{$n$-векторами} тензора $\calA$ называются векторы,
+    получаемые из $\calA$ варьированием индекса $n$-го направления
+    при фиксированных остальных (аналог строк и столбцов матрицы).\\ \medskip
+
+    \bluetext{$n$-рангом} тензора $\calA$, обозначаемым $R_n =
+    \rank_n(\calA)$, называется размерность линейного пространства,
+    порождённого $n$-векторами.
+  \end{definition}
+
+  \medskip
+
+  \bluetext{HOSVD}: $\calA = \sum_{l=1}^{R_1}\,
+  \sum_{k=1}^{R_2}\, \sum_{m=1}^{R_3}\, z_{lkm} U_l^{(1)} \circ
+  U_k^{(2)} \circ U_m^{(3)}$
+  \begin{itemize}
+      % \item Considered for signal parameter estimation in [Papy et
+      %   al. (2005)], [Papy et al. (2009)]
+    \item Компоненты разложения ортогональны
+    \item Не требует заранее знать $n$-ранги тензора
+    \item Была доказана связь между SSA-рангом сигналов и $n$-рангами
+      их траекторных тензоров
+  \end{itemize}
+\end{frame}
+\end{document}
