@@ -16,6 +16,7 @@
 \usepackage{graphics}
 \usepackage{mathtools}
 \usepackage{nicematrix}
+\usepackage{multirow}
 \usepackage{tikz}
 \usetikzlibrary{tikzmark, calc, fit}
 
@@ -247,16 +248,16 @@
 \begin{frame}{MSSA: SSA для многоканальных рядов}
   %   [Broomhead, King (1986)]\\ \smallskip
   $\tX = \left(\tX^{(1)},\, \tX^{(2)}, \, \ldots,\,
-  \tX^{(P)}\right)$ --- многоканальный ряд,
-  $\tX^{(p)} = \left(x_1^{(p)}, \, x_2^{(p)},\,\ldots,\,
-  x_N^{(p)}\right)$ --- каналы
+  \tX^{(M)}\right)$ --- многоканальный ряд,
+  $\tX^{(m)} = \left(x_1^{(m)}, \, x_2^{(m)},\,\ldots,\,
+  x_N^{(m)}\right)$ --- каналы
   \vspace{0.4cm}
 
   Единственные отличия от алгоритма SSA --- шаг Вложения:
   \[
     \bfX = \calT_{\textrm{MSSA}}^{(L)}(\tX) = \left[\bfX^{(1)} :
-    \bfX^{(2)}: \ldots : \bfX^{(P)}\right],\quad
-    \bfX^{(p)} = \calT^{(L)}(\tX^{(p)}),
+    \bfX^{(2)}: \ldots : \bfX^{(M)}\right],\quad
+    \bfX^{(m)} = \calT^{(L)}(\tX^{(m)}),
   \]
   и соответствующее изменение шага Восстановления.
   \vspace{0.4cm}
@@ -365,7 +366,7 @@
   \medskip
 
   \bluetext{HOSVD}: $\calA = \sum_{l=1}^{R_1}\,
-  \sum_{k=1}^{R_2}\, \sum_{m=1}^{R_3}\, z_{lkm} U_l^{(1)} \circ
+  \sum_{k=1}^{R_2}\, \sum_{m=1}^{R_3}\, \calZ_{lkm} U_l^{(1)} \circ
   U_k^{(2)} \circ U_m^{(3)}$
   \begin{itemize}
       % \item Considered for signal parameter estimation in [Papy et
@@ -378,88 +379,88 @@
 \end{frame}
 
 \section{Известные результаты. HOSVD}
-\begin{frame}{Описание HOSVD}
-  $\calA \in \bbC^{I_1 \times I_2 \times I_3}$, тогда
-  $\operatorname{HOSVD}(\calA)$:
-  % Пусть имеется тензор $\calA\in \mathbb{C}^{I_1\times I_2
-  % \times \ldots \times I_M}$, тогда HOSVD $\calA$:
+% \begin{frame}{Описание HOSVD}
+%   $\calA \in \bbC^{I_1 \times I_2 \times I_3}$, тогда
+%   $\operatorname{HOSVD}(\calA)$:
+%   % Пусть имеется тензор $\calA\in \mathbb{C}^{I_1\times I_2
+%   % \times \ldots \times I_M}$, тогда HOSVD $\calA$:
 
-  \begin{equation*}
-    \calA  = \sum_{i_1=1}^{I_1} \sum_{i_2=1}^{I_2} \sum_{i_3=1}^{I_3}
-    \calZ_{i_1 i_2 i_3}
-    U_{i_1}^{(1)} \circ U_{i_2}^{(2)} \circ U_{i_3}^{(3)},
-    % \calA=\sum_{i_1=1}^{I_1} \sum_{i_2=1}^{I_2}\ldots
-    % \sum_{i_M=1}^{I_M} \calZ_{i_1,i_2,\ldots,i_M}
-    % U^{(1)}_{i_1} \circ U^{(2)}_{i_2} \circ \ldots\circ U^{(M)}_{i_M},
-  \end{equation*}
-  где
-  \begin{itemize}
-    \item $\mathbf{U}^{(n)}=\left[U^{(n)}_{1}, \ldots,
-      U^{(n)}_{I_n}\right]$  --- унитарные матрицы;
-      \smallskip
-    \item Тензор $\calZ\in\mathbb{C}^{I_1\times I_2 \times
-      I_3}$ удовлетворяет свойствам:
-      \begin{enumerate}
-        \item полная ортогональность:
-          \[
-            \langle\mathcal Z_{i_n=\alpha},\mathcal
-            Z_{i_n=\beta}\rangle=0 \qquad \alpha\ne\beta,
-          \]
-        \item упорядоченность:
-          \begin{equation*}
-            \|\mathcal Z_{i_n=1}\|\geqslant\|\mathcal Z_{i_n=2}\|
-            \geqslant \ldots \geqslant\|\mathcal Z_{i_n=I_n}\|.
-          \end{equation*}
-      \end{enumerate}
-  \end{itemize}
-\end{frame}
+%   \begin{equation*}
+%     \calA  = \sum_{i_1=1}^{I_1} \sum_{i_2=1}^{I_2} \sum_{i_3=1}^{I_3}
+%     \calZ_{i_1 i_2 i_3}
+%     U_{i_1}^{(1)} \circ U_{i_2}^{(2)} \circ U_{i_3}^{(3)},
+%     % \calA=\sum_{i_1=1}^{I_1} \sum_{i_2=1}^{I_2}\ldots
+%     % \sum_{i_M=1}^{I_M} \calZ_{i_1,i_2,\ldots,i_M}
+%     % U^{(1)}_{i_1} \circ U^{(2)}_{i_2} \circ \ldots\circ U^{(M)}_{i_M},
+%   \end{equation*}
+%   где
+%   \begin{itemize}
+%     \item $\mathbf{U}^{(n)}=\left[U^{(n)}_{1}, \ldots,
+%       U^{(n)}_{I_n}\right]$  --- унитарные матрицы;
+%       \smallskip
+%     \item Тензор $\calZ\in\mathbb{C}^{I_1\times I_2 \times
+%       I_3}$ удовлетворяет свойствам:
+%       \begin{enumerate}
+%         \item полная ортогональность:
+%           \[
+%             \langle\mathcal Z_{i_n=\alpha},\mathcal
+%             Z_{i_n=\beta}\rangle=0 \qquad \alpha\ne\beta,
+%           \]
+%         \item упорядоченность:
+%           \begin{equation*}
+%             \|\mathcal Z_{i_n=1}\|\geqslant\|\mathcal Z_{i_n=2}\|
+%             \geqslant \ldots \geqslant\|\mathcal Z_{i_n=I_n}\|.
+%           \end{equation*}
+%       \end{enumerate}
+%   \end{itemize}
+% \end{frame}
 
-\begin{frame}{Свойства HOSVD}
-  Все свойства представлены в работе [De Lathauwer et al. (2000)].
-  \begin{itemize}
-    \item HOSVD --- единственное 3-ортогональное разложение.
-      \vspace{0.3cm}
-    \item Если $I_n=1$ для некоторого $n$ (тензор --- матрица), то
-      HOSVD совпадает с SVD.
-      \vspace{0.3cm}
-    \item Если в HOSVD тензора $\calA$ $r_n$ --- наибольший индекс
-      такой, что $\|\calZ_{i_n=r_n}\|>0$,
-      то $r_n=\rank_n(\calA)$.
-      \vspace{0.3cm}
-    \item
-  \end{itemize}
-  \vspace*{-0.7cm}
-  \begin{gather*}
-    \|\calA\|^2=\sum_{i=1}^{R_1}\left( \sigma_i^{(1)}
-    \right)^2=\sum_{i=1}^{R_2}\left( \sigma_i^{(2)} \right)^2
-    =\sum_{i=1}^{R_3}\left( \sigma_i^{(3)} \right)^2=
-    \|\calZ\|^2\\
-    \sigma_{i}^{(n)}=\|\calZ_{{i_n}=i}\|, \qquad
-    R_n=\rank_n(\calA).
-  \end{gather*}
-  % \end{itemize}
-\end{frame}
+% \begin{frame}{Свойства HOSVD}
+%   Все свойства представлены в работе [De Lathauwer et al. (2000)].
+%   \begin{itemize}
+%     \item HOSVD --- единственное 3-ортогональное разложение.
+%       \vspace{0.3cm}
+%     \item Если $I_n=1$ для некоторого $n$ (тензор --- матрица), то
+%       HOSVD совпадает с SVD.
+%       \vspace{0.3cm}
+%     \item Если в HOSVD тензора $\calA$ $r_n$ --- наибольший индекс
+%       такой, что $\|\calZ_{i_n=r_n}\|>0$,
+%       то $r_n=\rank_n(\calA)$.
+%       \vspace{0.3cm}
+%     \item
+%   \end{itemize}
+%   \vspace*{-0.7cm}
+%   \begin{gather*}
+%     \|\calA\|^2=\sum_{i=1}^{R_1}\left( \sigma_i^{(1)}
+%     \right)^2=\sum_{i=1}^{R_2}\left( \sigma_i^{(2)} \right)^2
+%     =\sum_{i=1}^{R_3}\left( \sigma_i^{(3)} \right)^2=
+%     \|\calZ\|^2\\
+%     \sigma_{i}^{(n)}=\|\calZ_{{i_n}=i}\|, \qquad
+%     R_n=\rank_n(\calA).
+%   \end{gather*}
+%   % \end{itemize}
+% \end{frame}
 
-\begin{frame}{Свойства HOSVD}
-  \begin{itemize}
-    \item $n$-векторы $\calA$ содержат наибольший вклад в направлении
-      $U^{(n)}_1$,
-      величина этого вклада равна $\sigma^{(n)^2}_1$.
-      Следующий по величине вклад по измерению $n$ достигается в
-      направлении $U^{(n)}_2$, перпендикулярном $U^{(n)}_1$, с
-      величиной $\sigma^{(n)^2}_2$, и т.д.
-      \vspace{0.4cm}
-    \item Определим тензор $\widehat{\calA}$ отсечением
-      наименьших сингулярных значений $\sigma_{I_{n}'+1}^{(n)},
-      \sigma_{I_{n}'+2}^{(n)},\ldots, \sigma_{R_n}^{(n)}$, тогда
-      \begin{equation*}
-        \|\calA-\widehat{\calA}\|^2\leqslant
-        \sum_{i_1=I_{1}'+1}^{R_1}\left( \sigma_{i_1}^{(1)}\right)^2 +
-        \sum_{i_2=I_{2}'+2}^{R_2}\left( \sigma_{i_2}^{(2)}\right)^2 +
-        \sum_{i_3=I_{3}'+1}^{R_3}\left( \sigma_{i_3}^{(3)}\right)^2.
-      \end{equation*}
-  \end{itemize}
-\end{frame}
+% \begin{frame}{Свойства HOSVD}
+%   \begin{itemize}
+%     \item $n$-векторы $\calA$ содержат наибольший вклад в направлении
+%       $U^{(n)}_1$,
+%       величина этого вклада равна $\sigma^{(n)^2}_1$.
+%       Следующий по величине вклад по измерению $n$ достигается в
+%       направлении $U^{(n)}_2$, перпендикулярном $U^{(n)}_1$, с
+%       величиной $\sigma^{(n)^2}_2$, и т.д.
+%       \vspace{0.4cm}
+%     \item Определим тензор $\widehat{\calA}$ отсечением
+%       наименьших сингулярных значений $\sigma_{I_{n}'+1}^{(n)},
+%       \sigma_{I_{n}'+2}^{(n)},\ldots, \sigma_{R_n}^{(n)}$, тогда
+%       \begin{equation*}
+%         \|\calA-\widehat{\calA}\|^2\leqslant
+%         \sum_{i_1=I_{1}'+1}^{R_1}\left( \sigma_{i_1}^{(1)}\right)^2 +
+%         \sum_{i_2=I_{2}'+2}^{R_2}\left( \sigma_{i_2}^{(2)}\right)^2 +
+%         \sum_{i_3=I_{3}'+1}^{R_3}\left( \sigma_{i_3}^{(3)}\right)^2.
+%       \end{equation*}
+%   \end{itemize}
+% \end{frame}
 
 \begin{frame}{Неоптимальность усечения}
   \vspace*{-0.7cm}
@@ -551,107 +552,123 @@
   \end{enumerate}
 \end{frame}
 
-\section{Известные результаты. Свойства тензорных алгоритмов}
-\begin{frame}{Разделимость и ранги рядов в терминах SSA}
+\section{Известные результаты}
+\begin{frame}{Цели и необходимые результаты}
+  \begin{enumerate}
+    \item Разновидности задач
+      \begin{itemize}
+        \item Выделение сигнала -- разделение компонент -- оценка параметров
+        \item Одноканальный ряд -- многоканальный ряд
+        \item Вещественный ряд -- комплексный ряд
+      \end{itemize}\medskip
+    \item Подбор параметров метода
+      \begin{itemize}
+        \item Определение ранга ряда, ранги сигналов
+        \item Определение разделимости рядов, разделимые сигналы
+      \end{itemize}\medskip
+    \item Определение применимости методов
+      \begin{itemize}
+        \item Условия наибольшей точности методов
+        \item Нахождение трудоёмкости методов
+        \item Сравнение методов по точности
+      \end{itemize}\medskip
+    \item Изучение сингулярных чисел рядов
+      \begin{itemize}
+        \item Сравнение сингулярных чисел сигналов и шума для
+          определения смешивания сигнала с шумом
+        \item Связь сингулярных чисел с единственностью разложения
+          (сильная разделимость)
+      \end{itemize}
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Цели и необходимые результаты}
+  \small
+  \bluetext{Известные результаты}
   \begin{itemize}
-    \item \bluetext{Выделение сигнала:} нахождение ранга ряда\\ \vspace{0.1cm}
-      {\small
-        Пусть $\tS$ --- сигнал, $\bfS_L$ --- его траекторная матрица с
-      длиной окна $L$.}
-      \begin{definition}[Ранг сигнала в терминах SSA]
-        $\tS$ имеет ранг $R$, если $R \leqslant N/2$ и $\forall L$:
-        $R\leqslant \min(L, N-L+1)$\\
-        $\operatorname{rank}(\bfS_L)=R$
-      \end{definition}
-    \item \bluetext{Разделение составляющих сигнала} пусть $\tS =
-      \tS_1 + \tS_2$,\\
-      {\small $\bfS$, $\bfS_1$, $\bfS_2$ --- траекторные матрицы этих
-      сигналов с длиной окна $L$}
-      \begin{definition}[Разделимость в терминах SSA]
-        Сигналы $\tS_1$ и $\tS_2$ $L$-разделимы, если существуют
-        такие $\gI_1, \gI_2$, что
-        \[
-          \bfS = \sideset{}{_{j=1}^R}\sum\nolimits \sqrt{\lambda_j}
-          U_j V_j^{\Tp} =
-          \overbrace{\sideset{}{_{j\in \gI_1}}\sum\nolimits
-          \sqrt{\lambda_j} U_j V_j^{\rmT}}^{\bfS_1} +
-          \overbrace{\sideset{}{_{j\in \gI_2}}\sum\nolimits
-          \sqrt{\lambda_j} U_j V_j^{\rmT}}^{\bfS_2}
-        \]
-      \end{definition}
+    \item Определение ранга ряда в тензорном случае, связь с матричным случаем
+    \item Определение разделимости рядов в тензорном случае, связь с
+      матричным случаем
+    \item Преимущество SSA над T-SSA по точности для вещественных
+      рядов (выделение сигнала и разделение компонент)
+    \item Преимущество T-MSSA над MSSA по точности в задаче выделения
+      вещественных сигналов
+    \item Условия для преимущества T-MSSA над MSSA в задаче
+      разделения компонент вещественных сигналов
+  \end{itemize}\medskip
+
+  \bluetext{Текущие задачи}
+  \begin{itemize}
+    \item Сравнение методов по точности на комплексных рядах
+    \item Сравнение тензорных методов в задаче оценки параметров
+    \item Условия наибольшей точности T-MSSA
+    \item Определение собственных чисел ряда, собственные числа сигналов и шума
+    \item Нахождение трудоёмкости методов
   \end{itemize}
 \end{frame}
-\begin{frame}{HO-SSA: $n$-ранги траекторного тензора}
-  \begin{theorem}[О связи рангов рядов в SSA и HO-SSA]
-    Пусть сигнал $\tS$ имеет SSA-ранг $R$.\\
-    Тогда для любых $L$ и $K$ таких, что
-    \[
-      R \leqslant \min(L, K, N-L-K+2),
-    \]
-    $\rank_1(\calS)=\rank_2(\calS)=\rank_3(\calS)=R$,
-    где $\calS$ --- траекторный тензор $\tS$, построенный по длинам
-    окна $L$, $K$.
-  \end{theorem}
-  \vspace{0.4cm}
 
-  Теорема позволяет использовать известные результаты о рангах
-  сигналов из теории \textup{SSA} для
-  аппроксимации траекторного тензора на шагах разложения и
-  группировки в методе \textup{HO-SSA}.
-\end{frame}
-\begin{frame}{HO-SSA: разделимость}
-  Пусть $\tS = \tS_1 + \tS_2$,\\
-  $\calS$, $\calS_1$, $\calS_2$ --- траекторные тензоры этих сигналов
-  с длинами окна $L$ и $K$
-  \begin{theorem}[О связи разделимости в SSA и HO-SSA]
-    HOSVD тензора $\mathcal{S}$ можно представить в виде
-    суммы HOSVD тензоров $\calS_1$ и $\calS_2$ тогда и только тогда,
-    когда сигналы $\tS_1$ и $\tS_2$ $L$- и $K$-разделимы в терминах SSA.
-  \end{theorem}
-  \vspace{0.4cm}
-  Теорема позволяет выделить класс сигналов, которые можно
-  разделить методом HO-SSA, а также даёт рекомендации к выбору
-  параметров $L$ и $K$.
-\end{frame}
-\begin{frame}{HOSVD-MSSA: $n$-ранги траекторного тензора}
-  \begin{theorem}[О $n$-рангах траекторного тензора многоканального ряда]
-    Пусть $\tS = \left(\tS^{(1)} : \ldots : \tS^{(Q)}\right)$, тогда
-    справедливы следующие утверждения.
-    \begin{enumerate}
-      \item $\tS$ имеет MSSA-ранг $R$
-        тогда и только тогда, когда для траекторного тензора $\calS$,
-        построенного по любой длине окна $L<N$ такой, что
-        $R \leqslant\min(L, N - L + 1)$ выполняется
-        \[\operatorname{rank}_1(\calS) = \operatorname{rank}_2(\calS) = R.\]
-      \item $\operatorname{rank}_3(\calS)$ равен рангу матрицы,
-        в строках которой содержатся каналы $\tS^{(q)}$ сигнала.
-    \end{enumerate}
-  \end{theorem}
-  \vspace{0.2cm}
-  Теорема позволяет использовать известные результаты о MSSA-рангах
-  сигналов из теории для аппроксимации траекторного тензора по первым двум
-  направлениям, а также даёт рекомендации к
-  выбору ранга аппроксимации по третьему направлению на шагах
-  разложения и группировки в методе HOSVD-MSSA.
+\section{Выделение сигнала и оценка параметров. Комплексные ряды}
+\begin{frame}{Применение к космплексным одноканальным рядам}
+  \vspace*{-0.3cm}
+  \[
+    x_{n} = e^{ \alpha_1 n } e^{2 \pi\mathrm{i} \omega_1 n} +
+    e^{ \alpha_2 n } e^{ 2 \pi  \mathrm{i}\omega_2 n} + \zeta_n
+  \]
+  $N = 25$, $\zeta_n$ --- комплексный белый гауссовский шум,
+  $\mathrm{D}(\zeta_n) =
+  0.04^2$, $\omega_1 = 0.2,\, \omega_2 = 0.22$, $\alpha_1=\alpha_2=0$\\
+  (результаты такие же при $\alpha_1=\alpha_2 < 0$ и при $\alpha_1 <
+  \alpha_2 < 0$).
+
+  \medskip
+
+  \begin{table}
+    \centering
+    \bluetext{Оптимальные по выбору длины окна значения RMSE}
+
+    \begin{tabular}{c|c||c}
+      \hline
+      Задача & Выделение сигнала & Оценка параметров \\\hline
+      Тензорный метод & 0.019 & \textbf{0.0012} \\\hline
+      Матричный метод & \textbf{0.018} & 0.0013 \\\hline
+    \end{tabular}
+  \end{table}
+
+  \bigskip
+
+  Увеличение ошибки при неоптимальном выборе длины окна в тензорном
+  методе существенно больше, чем в матричном
 \end{frame}
 
-\begin{frame}{HOSVD-MSSA: разделимость}
-  Пусть $\tS = \tS_1 + \tS_2$, \\
-  $\calS$, $\calS_1$, $\calS_2$ --- траекторные тензоры этих сигналов с длиной
-  окна $L$\\ \vspace{0.2cm}
-  $\Lambda^{(I)}(\tS) = \operatorname{span}\left\{\left(s_i^{(q)},
-  s_{i+1}^{(q)}, \ldots, s_{i + I - 1}^{(q)}\right)\right\}$
-  \begin{theorem}[О разделимости методом HOSVD-MSSA]
-    HOSVD тензора $\calS$ можно представить в виде суммы
-    HOSVD тензоров $\calS_1$ и
-    $\calS_2$ тогда и только тогда, когда
-    $\Lambda^{(L)}(\tS_1) \perp \Lambda^{(L)}(\tS_2)$ и
-    $\Lambda^{(K)}(\tS_1)\perp\Lambda^{(K)}(\tS_2)$
-  \end{theorem}
-  \vspace{0.2cm}
-  Теорема позволяет выделить класс сигналов, которые можно
-  разделить методом HOSVD-MSSA,
-  а также даёт рекомендации к выбору параметра $L$.
+\begin{frame}{Применение к космплексным многоканальным рядам}
+  \[
+    x_{n}^{(m)} = a_1^{(m)}
+    e^{2 \pi \mathrm{i} \omega_1 n} +
+    a_2^{(m)}
+    e^{2 \pi \mathrm{i} \omega_2 n} + \zeta_n^{(m)},
+  \]
+  $N = 25$, $M=12$, $\zeta_n^{(m)}$ --- комплексный белый гауссовский шум,
+  $\mathrm{D}\left(\zeta_n^{(m)}\right) = 0.2^2$, $\omega_1 = 0.2,\,
+  \omega_2 = 0.22$
+
+  \medskip
+
+  \begin{table}
+    \centering
+    \bluetext{Оптимальные по выбору длины окна значения RMSE}
+
+    \begin{tabular}{c|c||c}
+      \hline
+      Задача & Выделение сигнала & Оценка параметров \\\hline
+      Тензорный метод & \textbf{0.065} & \textbf{5.33e-04} \\\hline
+      Матричный метод & 0.066 & 5.36e-04 \\\hline
+    \end{tabular}
+  \end{table}
+
+  \bigskip
+
+  Увеличение ошибки при неоптимальном выборе длины окна в тензорном
+  методе в среднем меньше, чем в матричном
 \end{frame}
 
 \begin{frame}{Модификации Dstack}
@@ -695,10 +712,195 @@
   D \omega \implies$ необходимо $|\omega| \leqslant \frac{1}{2D}$
 \end{frame}
 
-\section{Полученные результаты}
-\begin{frame}[noframenumbering]
-  \centering \Large Полученные результаты
+\begin{frame}{Оценка параметров с использованием Dstack}
+  \vspace*{-0.3cm}
+  \[
+    x_{n} = \cos(2 \pi \omega_1 n) +
+    \cos(2 \pi \omega_2 n) + \xi_n
+  \]
+  $N = 1000$, $D=10$, $\omega_1 = 0.02,\, \omega_2 = 0.0205$, $\xi_n$ --- белый
+  гауссовский шум, $\mathrm{D}(\xi_n) = \sigma^2$
+
+  \medskip
+
+  \begin{table}
+    \centering
+    \bluetext{Оптимальные по выбору длины окна значения RMSE}
+
+    \begin{tabular}{c|c||c}
+      \hline
+      & $\sigma = 0.2$ & $\sigma = 0.6$ \\\hline
+      ESPRIT & \textbf{4.98e-05} & 0.101 \\\hline
+      Dstack-ESPRIT & 5.30e-05 & 0.009 \\\hline
+      T-Dstack-ESPRIT & 5.40e-05 & \textbf{0.003} \\\hline
+    \end{tabular}
+  \end{table}
 \end{frame}
+
+\section{Условия наибольшей точности T-MSSA}
+\begin{frame}{3-ранг многоканального ряда}
+  $\tX = \left(\tX^{(1)},\, \tX^{(2)}, \, \ldots,\,
+  \tX^{(M)}\right),\quad\tX^{(m)} = \left(x_1^{(m)}, \, x_2^{(m)},\,\ldots,\,
+  x_N^{(m)}\right)$
+  \begin{definition}[3-ранг]
+    3-рангом ряда $\tX$ называется число $r_3$ такое, что
+    $\rank_3\left(\calX\right) = r_3$, где $\calX$ --- траекторный
+    тензор $\tX$ (не зависит от длины окна)
+  \end{definition}
+
+  \medskip
+
+  Известно, что $r_3 = \rank\left(\bfX_{\mathrm{ts}}\right)$, где
+  \[
+    \bfX_{\mathrm{ts}} =
+    \begin{pmatrix}
+      x_1^{(1)} & x_2^{(1)} & \dots & x_N^{(1)}\\
+      x_1^{(2)} & x_2^{(2)} & \dots & x_N^{(2)}\\
+      \vdots & \vdots & \ddots & \vdots\\
+      x_1^{(M)} & x_2^{(M)} & \dots & x_N^{(M)}
+    \end{pmatrix}
+  \]
+\end{frame}
+
+\begin{frame}{Зависимость точности T-MSSA от числа каналов}
+  \[
+    x_n^{(m)} = (A_m (n - 1) + B_m) e^{-0.04 (n - 1)}\cos (2 \pi (n -
+    1) / 5) + \xi_n^{(m)},
+  \]
+  $N = 25$, $r=4$, $r_3 = 2$, $A_m$, $B_m$ --- фиксированные
+  константы, $\xi_n^{(m)}$ --- белый гауссовский шум
+
+  \begin{table}[!ht]
+    \centering
+    \small
+    \bluetext{Зависимость RMSE оценки сигнала от количества каналов и
+    стандартного отклонения шума для методов MSSA (M) и T-MSSA (T)}
+    \begin{tabular}{c|c|ccccccc}
+      $\sigma$ & Метод & $M = 2$ & $M = 8$ & $M = 12$ & $M = 16$ & $M
+      = 20$ & $M = 40$ \\ \hline
+      \multirow{2}{1.3em}{0.2} & M & .11 & .10 &
+      .10 & .10 & .09 & .09 \\
+      & T & .11 & .08 & .08 & .07 & .07
+      & .07 \\
+      \hline
+      \multirow{2}{1.3em}{0.4} & M & .23 & .20 &
+      .19 & .19 & .19 & .19 \\
+      & T & .23 & .18 & .16 & .15 & .15
+      & .14 \\
+      \hline
+      \multirow{2}{1.3em}{0.6} & M & .34  & .30 &
+      .29 & .29 & .28 & .28 \\
+      & T & .34 & .26 & .22 & .24 & .23
+      & .21 \\
+      \hline
+    \end{tabular}
+  \end{table}
+\end{frame}
+
+% \begin{frame}{Разделимость и ранги рядов в терминах SSA}
+%   \begin{itemize}
+%     \item \bluetext{Выделение сигнала:} нахождение ранга
+% ряда\\ \vspace{0.1cm}
+%       {\small
+%         Пусть $\tS$ --- сигнал, $\bfS_L$ --- его траекторная матрица с
+%       длиной окна $L$.}
+%       \begin{definition}[Ранг сигнала в терминах SSA]
+%         $\tS$ имеет ранг $R$, если $R \leqslant N/2$ и $\forall L$:
+%         $R\leqslant \min(L, N-L+1)$\\
+%         $\operatorname{rank}(\bfS_L)=R$
+%       \end{definition}
+%     \item \bluetext{Разделение составляющих сигнала} пусть $\tS =
+%       \tS_1 + \tS_2$,\\
+%       {\small $\bfS$, $\bfS_1$, $\bfS_2$ --- траекторные матрицы этих
+%       сигналов с длиной окна $L$}
+%       \begin{definition}[Разделимость в терминах SSA]
+%         Сигналы $\tS_1$ и $\tS_2$ $L$-разделимы, если существуют
+%         такие $\gI_1, \gI_2$, что
+%         \[
+%           \bfS = \sideset{}{_{j=1}^R}\sum\nolimits \sqrt{\lambda_j}
+%           U_j V_j^{\Tp} =
+%           \overbrace{\sideset{}{_{j\in \gI_1}}\sum\nolimits
+%           \sqrt{\lambda_j} U_j V_j^{\rmT}}^{\bfS_1} +
+%           \overbrace{\sideset{}{_{j\in \gI_2}}\sum\nolimits
+%           \sqrt{\lambda_j} U_j V_j^{\rmT}}^{\bfS_2}
+%         \]
+%       \end{definition}
+%   \end{itemize}
+% \end{frame}
+% \begin{frame}{HO-SSA: $n$-ранги траекторного тензора}
+%   \begin{theorem}[О связи рангов рядов в SSA и HO-SSA]
+%     Пусть сигнал $\tS$ имеет SSA-ранг $R$.\\
+%     Тогда для любых $L$ и $K$ таких, что
+%     \[
+%       R \leqslant \min(L, K, N-L-K+2),
+%     \]
+%     $\rank_1(\calS)=\rank_2(\calS)=\rank_3(\calS)=R$,
+%     где $\calS$ --- траекторный тензор $\tS$, построенный по длинам
+%     окна $L$, $K$.
+%   \end{theorem}
+%   \vspace{0.4cm}
+
+%   Теорема позволяет использовать известные результаты о рангах
+%   сигналов из теории \textup{SSA} для
+%   аппроксимации траекторного тензора на шагах разложения и
+%   группировки в методе \textup{HO-SSA}.
+% \end{frame}
+% \begin{frame}{HO-SSA: разделимость}
+%   Пусть $\tS = \tS_1 + \tS_2$,\\
+%   $\calS$, $\calS_1$, $\calS_2$ --- траекторные тензоры этих сигналов
+%   с длинами окна $L$ и $K$
+%   \begin{theorem}[О связи разделимости в SSA и HO-SSA]
+%     HOSVD тензора $\mathcal{S}$ можно представить в виде
+%     суммы HOSVD тензоров $\calS_1$ и $\calS_2$ тогда и только тогда,
+%     когда сигналы $\tS_1$ и $\tS_2$ $L$- и $K$-разделимы в терминах SSA.
+%   \end{theorem}
+%   \vspace{0.4cm}
+%   Теорема позволяет выделить класс сигналов, которые можно
+%   разделить методом HO-SSA, а также даёт рекомендации к выбору
+%   параметров $L$ и $K$.
+% \end{frame}
+% \begin{frame}{HOSVD-MSSA: $n$-ранги траекторного тензора}
+%   \begin{theorem}[О $n$-рангах траекторного тензора многоканального ряда]
+%     Пусть $\tS = \left(\tS^{(1)} : \ldots : \tS^{(Q)}\right)$, тогда
+%     справедливы следующие утверждения.
+%     \begin{enumerate}
+%       \item $\tS$ имеет MSSA-ранг $R$
+%         тогда и только тогда, когда для траекторного тензора $\calS$,
+%         построенного по любой длине окна $L<N$ такой, что
+%         $R \leqslant\min(L, N - L + 1)$ выполняется
+%         \[\operatorname{rank}_1(\calS) =
+% \operatorname{rank}_2(\calS) = R.\]
+%       \item $\operatorname{rank}_3(\calS)$ равен рангу матрицы,
+%         в строках которой содержатся каналы $\tS^{(q)}$ сигнала.
+%     \end{enumerate}
+%   \end{theorem}
+%   \vspace{0.2cm}
+%   Теорема позволяет использовать известные результаты о MSSA-рангах
+%   сигналов из теории для аппроксимации траекторного тензора по первым двум
+%   направлениям, а также даёт рекомендации к
+%   выбору ранга аппроксимации по третьему направлению на шагах
+%   разложения и группировки в методе HOSVD-MSSA.
+% \end{frame}
+
+% \begin{frame}{HOSVD-MSSA: разделимость}
+%   Пусть $\tS = \tS_1 + \tS_2$, \\
+%   $\calS$, $\calS_1$, $\calS_2$ --- траекторные тензоры этих
+% сигналов с длиной
+%   окна $L$\\ \vspace{0.2cm}
+%   $\Lambda^{(I)}(\tS) = \operatorname{span}\left\{\left(s_i^{(q)},
+%   s_{i+1}^{(q)}, \ldots, s_{i + I - 1}^{(q)}\right)\right\}$
+%   \begin{theorem}[О разделимости методом HOSVD-MSSA]
+%     HOSVD тензора $\calS$ можно представить в виде суммы
+%     HOSVD тензоров $\calS_1$ и
+%     $\calS_2$ тогда и только тогда, когда
+%     $\Lambda^{(L)}(\tS_1) \perp \Lambda^{(L)}(\tS_2)$ и
+%     $\Lambda^{(K)}(\tS_1)\perp\Lambda^{(K)}(\tS_2)$
+%   \end{theorem}
+%   \vspace{0.2cm}
+%   Теорема позволяет выделить класс сигналов, которые можно
+%   разделить методом HOSVD-MSSA,
+%   а также даёт рекомендации к выбору параметра $L$.
+% \end{frame}
 
 \section{Полученные результаты. Сравнение методов}
 \begin{frame}{Сравнение точности одноканальных методов}
@@ -745,18 +947,23 @@
   $\calX \in \bbC^{\widetilde{L}\times \widetilde{K} \times M}$ ---
   траекторный тензор\\
   \medskip
-  \bluetext{Трудоёмкости алгоритмов} (задача восстановления сигнала)
+  \bluetext{Трудоёмкости алгоритмов} (задача восстановления сигнала)\\
   \begin{itemize}
-    \item \bluetext{SSA}/\bluetext{MSSA}:\\
+    \item \bluetext{SSA}/\bluetext{MSSA}: сводится к нахождению первых
+      $R$ компонент SVD ганкелевой матрицы за
       $O(R N^* \log (N^*) + R^2 N^*)$ \medskip
-    \item \bluetext{T-SSA} с использованием HOSVD:\\
+    \item \bluetext{T-SSA} с использованием HOSVD: сводится к
+      нахождению первых $R_1$, $R_2$ и $R_3$ компонент SVD трёх
+      ганкелевых матриц за
       $O((R_1 + R_2 + R_3)N^*\log(N^*) + (R_1^2 + R_2^2 + R_3^2)N^*)$ \medskip
-    \item \bluetext{T-MSSA} с использованием HOSVD:\\
+    \item \bluetext{T-MSSA} с использованием HOSVD: сводится к
+      нахождению первых $R_1$ и $R_2$ компонент SVD двух ганкелевых
+      матриц и первых $R_3$ компонент SVD матрицы размера $M \times N$ за
       $O((R_1 + R_2)N^*\log(N^*) + (R_1^2 + R_2^2 + R_3)N^* + R_3^2(M + N))$
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Собственные числа в тензорных методах}
+\begin{frame}{Сингулярные числа в тензорных методах}
   $\calX\in\bbC^{L\times K\times M}$ --- траекторный тензор ряда\smallskip
 
   $\|\calX\|_\rmF^2$ можно представить как сумму собственных чисел\smallskip
@@ -774,7 +981,8 @@
       \[
         \left(\sigma_1^{(d)}\right)^2 = C^2 LKM
       \] \smallskip
-    \item Многоканальный ряд $x_n^{(m)} = C_m$, $1 \leqslant n \leqslant N$:\\
+    \item Многоканальный ряд $x_n^{(m)} = C_m$, $1 \leqslant n
+      \leqslant N$:\\
       \[
         \left(\sigma_1^{(d)}\right)^2 = \overline{C^2} LKM, \quad
         \overline{C^2} =
@@ -784,7 +992,7 @@
   В обоих случаях $\sigma_i^{(d)} = 0$ при $i > 1$
 \end{frame}
 
-\begin{frame}{Собственные числа. Связь с матрицами}
+\begin{frame}{Сингулярные числа. Связь с матрицами}
   $\tX$ --- многоканальный ряд, $\calX_L\in\bbC^{L\times K\times M}$
   --- траекторный тензор,
   $\bfX_L\in \bbC^{L\times KM}$ --- траекторная матрица, тогда\smallskip
@@ -793,17 +1001,7 @@
     \item $\sigma_i^{(1)}(\calX) = \sigma_i(\bfX_L)$\smallskip
     \item $\sigma_i^{(2)}(\calX) = \sigma_i(\bfX_K)$\smallskip
     \item $\sigma_i^{(3)}(\calX) \leqslant
-      \sigma_i(\bfX_{\mathrm{ts}})\sqrt{\min(L,\, K)}$,
-      где
-      \[
-        \bfX_{\mathrm{ts}} =
-        \begin{pmatrix}
-          x_1^{(1)} & x_2^{(1)} & \dots & x_N^{(1)}\\
-          x_1^{(2)} & x_2^{(2)} & \dots & x_N^{(2)}\\
-          \vdots & \vdots & \ddots & \vdots\\
-          x_1^{(M)} & x_2^{(M)} & \dots & x_N^{(M)}
-        \end{pmatrix}
-      \]
+      \sigma_i(\bfX_{\mathrm{ts}})\sqrt{\min(L,\, K)}$
   \end{enumerate}
 \end{frame}
 
