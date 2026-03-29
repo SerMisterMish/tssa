@@ -6,21 +6,30 @@ progressr::handlers(global = TRUE)
 progressr::handlers(progressr::handler_progress)
 plan(multisession)
 
-create_ts <- function (ampl, N, freqs, C = 1) {
+create_ts <- function(ampl, N, freqs, C = 1) {
   C + rowSums(ampl * cos(2 * pi * (1:N) %o% freqs))
 }
 
-calc_rec_mse <- function(ts, noise_m, noise_sd, L, r) {
+calc_rec_mse <- function(ts, noise_m, noise_sd, L, r, method=c("tssa", "ssa")) {
+  method <- match.arg(method)
   N <- length(ts)
   noise <- rnorm(N, noise_m, noise_sd)
-  rec <- tens_ssa_reconstruct(
-    ts + noise,
-    L,
-    list(1:r),
-    svd.method = 'primme',
-    decomp = "HOSVD",
-    status = FALSE
-  )$F1
+  if (identical(method, "tssa")) {
+    rec <- tens_ssa_reconstruct(
+      ts + noise,
+      L,
+      list(1:r),
+      svd.method = 'primme',
+      decomp = "HOSVD",
+      status = FALSE
+    )$F1
+  } else if (identical(method, "ssa")) {
+    rec <- reconstruct(ssa(
+      ts + noise,
+      L),
+      groups = list(1:r),
+    )$F1
+  }
 
   if (is.complex(ts)){
     return(mse(ts, rec))
@@ -38,7 +47,9 @@ rep_calc_mses <- function(repeats,
                          noise_m = 0,
                          noise_sd = 1,
                          C = 1,
+                         method = c("tssa", "ssa"),
                          seed = TRUE) {
+  method <- match.arg(method)
   if (is.null(freqs))
     freqs <- seq(from = 0.2,
                  by = 0.02,
@@ -48,7 +59,7 @@ rep_calc_mses <- function(repeats,
 
   prog <- progressr::progressor(steps = repeats)
   future_replicate(repeats, {
-    res <- calc_rec_mse(ts, noise_m, noise_sd, L, r)
+    res <- calc_rec_mse(ts, noise_m, noise_sd, L, r, method)
     prog()
     res
   }, future.seed = seed)
@@ -63,13 +74,16 @@ rep_calc_mean_mse <- function(repeats,
                               noise_m = 0,
                               noise_sd = 1,
                               C = 1,
+                              method = c("tssa", "ssa"),
                               seed = TRUE) {
-  mean(rep_calc_mses(repeats, cos_num, ampl, L, N, freqs, noise_m, noise_sd, C, seed))
+  method <- match.arg(method)
+  mean(rep_calc_mses(repeats, cos_num, ampl, L, N, freqs, noise_m, noise_sd, C, method, seed))
 }
 
 repeats <- 500
 N <- 499
 
+# Approx equal dimensions
 {
   L <- c(167, 167)
   sapply(0:4,
@@ -94,6 +108,7 @@ N <- 499
   # 0.01833671
 }
 
+# One small dimension
 {
   L <- c(10, 245)
   sapply(0:4,
@@ -116,4 +131,54 @@ N <- 499
     seed = 5
   ) |> print()
   # 0.0176269
+}
+
+# No signal
+{
+  L <- c(10, 245)
+  sapply(0:4,
+         \(cn) rep_calc_mean_mse(
+           repeats = repeats,
+           cos_num = cn,
+           ampl = 0,
+           L = L,
+           N = N,
+           C = 0,
+           seed = 5
+         )) |> print()
+  # 0: 0.001515748, 1: 0.017708967, 2: 0.043529113, 3: 0.074340952, 4: 0.109641057  
+}
+
+# W/ signal, ssa
+{
+  L <- 250
+  sapply(0:4,
+         \(cn) rep_calc_mean_mse(
+           repeats = repeats,
+           cos_num = cn,
+           ampl = 1,
+           L = L,
+           N = N,
+           seed = 5,
+           method = "ssa"
+         )) |> print()
+  # 0: 0.005974265, 1: 0.017909527, 2: 0.030242741, 3: 0.042285118, 4: 0.053698167
+}
+
+
+# No signal, ssa
+{
+  L <- 250
+  sapply(0:4,
+         \(cn) rep_calc_mean_mse(
+           repeats = repeats,
+           cos_num = cn,
+           ampl = 0,
+           L = L,
+           N = N,
+           C = 0,
+           seed = 5,
+           method = "ssa"
+         )) |> print()
+  # 0: 0.009972133, 1: 0.043918724, 2: 0.073297362, 3: 0.100151884, 4: 0.125720295 
 }

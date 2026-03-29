@@ -1,3 +1,4 @@
+library(ggplot2)
 library(shiny)
 library(Rssa)
 
@@ -11,6 +12,9 @@ function(input, output, session) {
     output$L_slider_ssa <- renderUI({
         sliderInput("L_ssa", "L:", 2, input$N - 1, (input$N + 1) %/% 2, step = 1)
     })
+    
+    mse <- function(true, pred) mean(abs(true - pred)^2)
+    squared_errors <- function(true, pred) abs(true - pred)^2
     
     create_sliders <- reactive({
         if (is.null(input$K_tssa)) {
@@ -51,25 +55,28 @@ function(input, output, session) {
         }
     })
     
-    get_res_ssa <- function(tsid) {
+    results <- list()
+    
+    calc_res_ssa <- function(tsid) {
         N <- input$N
         eps <- input$epsilon
         L <- input$L_ssa
         if (is.null(L))
             L <- (N + 1) %/% 2
         K <- N - L + 1
+        set.seed(5)
         ts <- eval(str2expression(input[[tsid]]))
         evs <- ssa(ts, L = L, neig = min(L, K))$sigma ^ 2
         min_ev <- min(evs[evs >= eps]) 
         max_ev <- max(evs)
         
-        data.frame(
+        results$ssa[[tsid]] <<- data.frame(
             name = c("L", "K", "Min EV", "Max EV"),
             value = c(L, K, min_ev, max_ev)
         )
     }
     
-    get_res_tssa <- function(tsid) {
+    calc_res_tssa <- function(tsid) {
         create_sliders()
         N <- input$N
         eps <- input$epsilon
@@ -80,6 +87,7 @@ function(input, output, session) {
             K <- (N + 2) %/% 3
         }
         M <- N - L - K + 2
+        set.seed(5)
         ts <- eval(str2expression(input[[tsid]]))
         h <- tens_ssa_decompose(ts, L = c(L, K), status = FALSE, neig = c(L, K, M))
         evs_list <- lapply(get_tensor_eigenvalues(h), \(x) x^2)
@@ -92,7 +100,7 @@ function(input, output, session) {
         bounds2 <- round(c(min(evs_bound_K[evs_bound_K >= eps]), max(evs_bound_K)), 2)
         bounds3 <- round(c(min(evs_bound_M[evs_bound_M >= eps]), max(evs_bound_M)), 2)
         
-        data.frame(
+        results$tssa[[tsid]] <<- data.frame(
             name = c(
                 "L",
                 "K",
@@ -129,26 +137,45 @@ function(input, output, session) {
         )
     }
     
-    get_ratio_ssa <- function() {
-        ts_table <- get_res_ssa("series")
-        noise_table <- get_res_ssa("noise")
+    calc_ratio_ssa <- function() {
+        # ts_table <- get_res_ssa("series")
+        # noise_table <- get_res_ssa("noise")
+        N <- input$N; L_ssa <- input$L_ssa
+        ts_table <- results$ssa[["series"]]
+        noise_table <- results$ssa[["noise"]]
         
-        ts_table$value[3] / noise_table$value[4]
+        results$ssa_ratio <<- ts_table$value[3] / noise_table$value[4]
     }
     
-    get_ratio_tssa <- function() {
-        ts_table <- get_res_tssa("series")
-        noise_table <- get_res_tssa("noise")
+    calc_ratio_tssa <- function() {
+        # ts_table <- get_res_tssa("series")
+        # noise_table <- get_res_tssa("noise")
+        N <- input$N; L_tssa <- input$L_tssa; K_tssa <- input$K_tssa
+        ts_table <- results$tssa[["series"]]
+        noise_table <- results$tssa[["noise"]]
         
-        paste0(round(ts_table$value[c(4, 6, 8)] / noise_table$value[c(5, 7, 9)], 4), sep = ", ")
+        results$tssa_ratio <<- paste0(
+            round(ts_table$value[c(4, 6, 8)] / 
+                  noise_table$value[c(5, 7, 9)], 
+                  4),
+            collapse = ", ")
     }
-
-    result_ssa <- reactive({get_res_ssa("series")})
-    result_noise_ssa <- reactive({get_res_ssa("noise")})
-    result_tssa <- reactive({get_res_tssa("series")})
-    result_noise_tssa <- reactive({get_res_tssa("noise")})  
-    ratio_ssa <- reactive({get_ratio_ssa()})
-    ratio_tssa <- reactive({get_ratio_tssa()})
+    
+    get_res <- function(id1, id2=NULL) {
+        switch(id1,
+               ssa = calc_res_ssa(id2),
+               tssa = calc_res_tssa(id2),
+               ssa_ratio = calc_ratio_ssa(),
+               tssa_ratio = calc_ratio_tssa())
+        return(results[[id1]][[ifelse(is.null(id2), TRUE, id2)]])
+    }
+    
+    result_ssa <- reactive({get_res("ssa", "series")}) 
+    result_noise_ssa <- reactive({get_res("ssa", "noise")})
+    result_tssa <- reactive({get_res("tssa", "series")})
+    result_noise_tssa <- reactive({get_res("tssa", "noise")})
+    ratio_ssa <- reactive({get_res("ssa_ratio")})
+    ratio_tssa <- reactive({get_res("tssa_ratio")})
     
     output$ssa_result <- renderTable(result_ssa(), colnames = FALSE)
     output$tssa_result <- renderTable(result_tssa(), colnames = FALSE)
@@ -157,4 +184,70 @@ function(input, output, session) {
     
     output$ssa_ratio <- renderText(ratio_ssa())
     output$tssa_ratio <- renderText(ratio_tssa())
+    
+    observe({
+        withProgress( 
+            message = 'MSE calculation in progress',
+            value = 0, 
+            {
+                mses_ssa <- numeric(input$repeats)
+                mses_tssa <- numeric(input$repeats)
+                
+                N <- input$N
+                sq_err_ssa <- matrix(numeric(input$repeats * N), nrow = input$repeats)
+                sq_err_tssa <- matrix(numeric(input$repeats * N), nrow = input$repeats)
+                
+                L_ssa <- input$L_ssa
+                if (is.null(L_ssa))
+                    L_ssa <- (N + 1) %/% 2
+                
+                L_tssa <- input$L_tssa
+                K_tssa <- input$K_tssa
+                if (is.null(L_tssa)) {
+                    L_tssa <- (N + 2) %/% 3
+                    K_tssa <- (N + 2) %/% 3
+                }
+                
+                ts <- eval(str2expression(input$series))
+
+                set.seed(5)
+                for (i in 1:input$repeats) {
+                    noise <- eval(str2expression(input$noise))
+                    ts_noised <- ts + noise
+
+                    ssa_rec <- reconstruct(
+                                  ssa(ts_noised, L = L_ssa),
+                                  groups = list(1:input$rank)
+                               )$F1
+                    mses_ssa[i] <- mse(ts, ssa_rec)
+                    sq_err_ssa[i, ] <- squared_errors(ts, ssa_rec)
+                    
+                    tssa_rec <- tens_ssa_reconstruct(ts_noised, L = c(L_tssa, K_tssa),
+                        groups = list(1:input$rank), status = FALSE)$F1
+                    sq_err_tssa[i, ] <- squared_errors(ts, tssa_rec)
+                    mses_tssa[i] <- mse(ts, tssa_rec)
+                    
+                    incProgress(1/input$repeats)
+                }
+                output$ssa_mse <- renderText(mean(mses_ssa))
+                output$tssa_mse <- renderText(mean(mses_tssa))
+                
+                output$sq_err <- renderPlot({
+                    ggplot(data = rbind(
+                        data.frame(
+                            mse = colMeans(sq_err_ssa),
+                            x = 1:N,
+                            method = "SSA"
+                        ),
+                        data.frame(
+                            mse = colMeans(sq_err_tssa),
+                            x = 1:N,
+                            method = "T-SSA"
+                        )
+                    ), aes(x = x, y = mse, color = method)) +
+                        geom_line()
+                }) 
+            } 
+        ) 
+    }) |> bindEvent(input$calc_mses)
 }

@@ -48,7 +48,8 @@ fluidPage(
         ),
 
         mainPanel(
-            layout_column_wrap(
+            layout_column_wrap(column(
+                width = 12,
                 card(
                     card_header("SSA Results"),
                     card_header("Series:"),
@@ -57,7 +58,9 @@ fluidPage(
                     tableOutput("ssa_noise_result"),
                     card_header("Min TS EV / Max Noise EV:"),
                     textOutput("ssa_ratio")
-                ),
+                )
+            ), column(
+                width = 12,
                 card(
                     card_header("T-SSA Results"),
                     card_header("Series:"),
@@ -68,6 +71,37 @@ fluidPage(
                     textOutput("tssa_ratio")
                 )
             )
+            )
         )
-    )
+    ),
+    absolutePanel(top = "40%",
+                  left = "50px",
+                  fluidRow(h3("MSE")),
+                  fluidRow(layout_column_wrap(
+                      width = 1 / 12,
+                      card(
+                          numericInput(
+                              "repeats",
+                              "Repeats",
+                              value = 100,
+                              min = 1,
+                              step = 1
+                          ),
+                          numericInput(
+                              "rank",
+                              "Rank",
+                              value = 2,
+                              min = 1,
+                              step = 1
+                          ),
+                          actionButton("calc_mses", "Calculate MSEs"),
+                      ),
+                      card(
+                          h5("SSA:"),
+                          textOutput("ssa_mse"),
+                          h5("T-SSA:"),
+                          textOutput("tssa_mse")
+                      )
+                  ))), 
+    fluidRow(column(width = 8, plotOutput("sq_err", height = "600px")))
 )
