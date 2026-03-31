@@ -67,22 +67,34 @@ construct_ts <- function(N,
   apply(ts_arr, 1:(length(dim(ts_arr)) - 1), sum)
 }
 
-calc_rank <- function(ampl, rate, freq, phase, complex = TRUE, poly_ampl_coefs = NULL, tol = 1e-6) {
+calc_rank <- function(ampl,
+                      rate,
+                      freq,
+                      phase,
+                      complex = TRUE,
+                      poly_ampl_coefs = NULL,
+                      tol = 1e-6) {
   if (any(c(length(ampl), length(rate), length(freq)) != length(phase))) {
     stop("Amplitudes, rates, frequencies and phases all must have the same length")
   }
   if (is.null(poly_ampl_coefs)) {
     pac_rank <- rep(1, length(ampl))
   } else {
-    pac_rank <- apply(poly_ampl_coefs, 2:length(dim(poly_ampl_coefs)), function(v) max(which(v != 0)))
+    pac_rank <- apply(poly_ampl_coefs, 2:length(dim(poly_ampl_coefs)), function(v)
+      max(which(v != 0)))
   }
   
-  fr_df <- data.frame(freq = as.vector(freq), rate = as.vector(rate), pac = as.vector(pac_rank))
+  fr_df <- data.frame(
+    freq = as.vector(freq),
+    rate = as.vector(rate),
+    pac = as.vector(pac_rank)
+  )
   fr_unique <- fr_df |>
     group_by(freq, rate) |>
     summarise(pac = max(pac))
   (2 - complex) *
-    (sum(ampl != 0) + sum(fr_unique$pac) - length(ampl)) - sum(abs(fr_unique[, 1] - 0.5) < tol)
+    (sum(ampl != 0) + sum(fr_unique$pac) - length(ampl)) - sum(abs(fr_unique[, 1] - 0.5) < tol |
+                                                                 abs(fr_unique[, 1]) < tol)
 }
 
 

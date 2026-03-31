@@ -72,6 +72,8 @@ function(input, output, session) {
     .create_sliders()
     .create_sliders(pref = "distr_")
   })
+  
+  observe({create_sliders()})
 
   results <- list()
 
@@ -96,7 +98,6 @@ function(input, output, session) {
   }
 
   calc_res_tssa <- function(tsid) {
-    create_sliders()
     N <- input$N
     eps <- input$epsilon
     L <- input$L_tssa
@@ -286,17 +287,18 @@ function(input, output, session) {
               method = "T-SSA"
             )
           ), aes(x = x, y = mse, color = method)) +
-            geom_line()
+            geom_line() + theme_minimal()
         })
       }
     )
   }) |> bindEvent(input$calc_mses)
-
+  
   observe({
     withProgress(
       message = "EV sampling in progress",
       value = 0,
       {
+        create_sliders()
         evs_ssa <- numeric(input$distr_repeats)
         evs_tssa <- list(
           dim1 = numeric(input$distr_repeats),
@@ -341,6 +343,7 @@ function(input, output, session) {
         output$distr_hist_ssa <- renderPlot({
           ggplot(data.frame(Max_EV = evs_ssa)) +
             geom_histogram(aes(y = ..density.., x = Max_EV, fill = "1"), bins = input$distr_bins, colour = "white") +
+            theme_minimal() +
             xlim(0, max_ev) +
             ggtitle("SSA spectral norm histogram")
         })
@@ -357,11 +360,27 @@ function(input, output, session) {
               position = position_dodge2(preserve = "single"),
             ) +
             geom_density(aes(x = rep(evs_ssa, 3)), linetype = "dashed") +
+            theme_minimal() +
             xlim(0, max_ev) +
-            ggtitle("T-SSA spectral norm histogram",
-              subtitle = "Dashed line is density estimate for SSA EV"
+            ggtitle(sprintf("T-SSA spectral norm histogram (L = %d, K = %d)", L_tssa, K_tssa),
+              subtitle = sprintf("Dashed line is density estimate for SSA EV (L = %d)", L_ssa)
             )
         })
+        kstests <- sapply(evs_tssa, \(t_sample) ks.test(evs_ssa, t_sample)$p.value)
+        kstests_std <- sapply(evs_tssa, \(t_sample)
+                              ks.test(scale(evs_ssa), scale(t_sample))$p.value)
+        output$distr_kstest <- renderTable(
+            data.frame(Dim = 1:3, 
+                       p.value = kstests,
+                       Bonferroni.Corrected = pmin(kstests * 3, 1)),
+            digits = 4
+        )
+        output$distr_std_kstest <- renderTable(
+          data.frame(Dim = 1:3, 
+                     p.value = kstests_std,
+                     Bonferroni.Corrected = pmin(kstests_std * 3, 1)),
+          digits = 4
+        )
       }
     )
   }) |> bindEvent(input$calc_distr)

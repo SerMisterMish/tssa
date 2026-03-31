@@ -53,6 +53,7 @@ pred_hossa_rec <- function() {
     unlist(L_hossa),
     groups = groups_hossa,
     decomp = "hooi",
+    svd.method = "primme",
     trunc_dims = unlist(td_hossa),
     status = FALSE
   )
@@ -76,7 +77,8 @@ pred_homssa_rec <- function() {
     L_homssa,
     groups = groups_homssa,
     groups3 = groups3_homssa,
-    decomp = "hooi",
+    decomp = tmssa_method,
+    svd.method = "primme",
     status = FALSE
   )
   
@@ -368,10 +370,10 @@ S.true <- 1
 # S.true <- 2
 S_case <- sprintf("%s_periodic%s", as.english(S.true), ifelse(S.true > 1, "s", ""))
 
-P <- 2
+# P <- 2
 # P <- 4
 # P <- 8
-# P <- 12
+P <- 12
 # P <- 16
 # P <- 20
 # P <- 40
@@ -388,13 +390,17 @@ rates_case <- "_nr"
 # ), each = P), nrow = P)
 # rates_case <- "_dsr"
 
-freqs.true <- matrix(rep(0.2, P * S.true), nrow = P)
-freqs_case <- "_ef"
+freqs.true <- matrix(rep(0, P * S.true), nrow = P)
+freqs_case <- "_nf"
+# freqs.true <- matrix(rep(0.2, P * S.true), nrow = P)
+# freqs_case <- "_ef"
 # freqs.true <- rep(1/8, P) %o% seq(from = 1, to = 8 / 6, length.out = S.true)
 # freqs_case <- "_dsf"
 
-A <- matrix(rnorm(P * S.true), nrow = P)
-A_case <- "_da"
+A <- matrix(rep(1, P * S.true), nrow = P)
+A_case <- "_ea"
+# A <- matrix(rnorm(P * S.true), nrow = P)
+# A_case <- "_da"
 
 poly.true <- 1 %o% rep(1, P) %o% rep(1, S.true)
 poly_case <- ""
@@ -409,10 +415,10 @@ phases_case <- "_ep"
 complex.signal <- FALSE
 complex_case <- "_r" # real
 
-N <- 25
-n_case <- ""
-# N <- 99
-# n_case <- "_long"
+# N <- 25
+# n_case <- ""
+N <- 99
+n_case <- "_long"
 ```
 
 ## Constructing Signal
@@ -526,6 +532,7 @@ R <- 500
 
 if (is.matrix(signal)) {
   ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_mssa_rec, rmse_ts_nd, signal, seed = 5)
+  tmssa_method <- "HOOI"
   tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_homssa_rec, rmse_ts_nd, signal, seed = 5)
   save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/", S_case, "_mv", full_case, ".RData"))
 } else {
@@ -534,6 +541,16 @@ if (is.matrix(signal)) {
   save(ssa_err, tssa_err, file = paste0("./Research/comp_results/cases_errors/", S_case, full_case, ".RData"))
 }
 ```
+
+```{r}
+R <- 100
+max.r <- 6
+tmssa_method <- "tsvd"
+params_grid_hossa$L_homssa <- c(3, seq(from = 10, to = N %/% 2, by = 10))
+tsvd_tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_homssa_rec, rmse_ts_nd, signal, seed = 5)
+  save(tsvd_tssa_err, file = paste0("./Research/comp_results/cases_errors/", S_case, "_mv", full_case, "_tsvd.RData"))
+```
+
 
 # Results
 ```{r}
@@ -559,6 +576,10 @@ if (is.matrix(signal)) {
 (tssa_err_summ <- summarise_errors(rename(tssa_err, L = L_homssa)))
 ```
 
+```{r}
+print_errors_m(tsvd_tssa_err)
+(tsvd_tssa_err_summ <- summarise_errors(rename(tsvd_tssa_err, L = L_homssa)))
+```
 
 ```{r}
 ((ssa_err_summ[-1, 2] - tssa_err_summ[-1, 2]) / ssa_err_summ[-1, 1]) |> rename(err_diff = best) |> cbind(ssa_err_summ[-1, 1])

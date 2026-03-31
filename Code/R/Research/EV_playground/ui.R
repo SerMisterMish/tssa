@@ -135,7 +135,7 @@ fluidPage(
               numericInput(
                 "distr_bins",
                 "Number of Hist bins",
-                value = 20,
+                value = 35,
                 min = 2,
               ),
               numericInput(
@@ -154,7 +154,12 @@ fluidPage(
               uiOutput("distr_K_slider_tssa"),
             )
           ),
-          actionButton("calc_distr", "Calculate Histograms")
+          actionButton("calc_distr", "Calculate Histograms"),
+          p(strong("Kolmogorov-Smirnov two-sided p-values"), 
+            br(), "(H_0: SSA EV and T-SSA EV have the same distribution):"),
+          tableOutput("distr_kstest"),
+          p("(H_0: Standardized SSA EV and T-SSA EV have the same distribution):"),
+          tableOutput("distr_std_kstest")
         ),
         mainPanel(
           fluidRow(plotOutput("distr_hist_ssa", height = "600px")),
