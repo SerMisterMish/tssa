@@ -52,7 +52,7 @@ pred_hossa_rec <- function() {
     x,
     unlist(L_hossa),
     groups = groups_hossa,
-    decomp = "hooi",
+    # decomp = "hooi",
     svd.method = "primme",
     trunc_dims = unlist(td_hossa),
     status = FALSE
@@ -112,12 +112,10 @@ calc_errors_by_params <- function(params_grid_list, R, comp_func, err_func, sign
   results <- params_grid
   results$error <- numeric(nrow(params_grid))
   q <- progressor(nrow(params_grid) * R)
-  # q <- progressor(nrow(params_grid))
   for (i in seq(nrow(params_grid))) {
     # print(paste0(names(params_grid), " = ", params_grid[i,], collapse = ", "))
     list2env(params_grid[i,], envir = parent.frame())
     results[i,]$error <- calc_errors(R, comp_func, err_func, signal, q, seed)
-    # q()
   }
   return(results)
 }
@@ -422,7 +420,6 @@ n_case <- "_long"
 ```
 
 ## Constructing Signal
-
 ```{r}
 full_case <- paste0(n_case, P_case, rates_case, freqs_case, A_case, poly_case, phases_case, complex_case)
 max.r <- calc_rank(A, rates.true, freqs.true, phases.true, complex.signal, poly.true)
@@ -430,8 +427,6 @@ max.r <- calc_rank(A, rates.true, freqs.true, phases.true, complex.signal, poly.
 stopifnot(N > max.r * 2 + 1)
 signal <- construct_ts(N, A, rates.true, freqs.true, phases.true, complex.signal, poly.true)
 ```
-
-
 
 ## Parameters grid for 1d case
 ```{r}

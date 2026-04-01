@@ -261,7 +261,7 @@ hosvd_mod <- function(tnsr,
         }
         U_list[[m]] <- PRIMME::svds(
           A,
-          NSvals = ranks[m],
+          NSvals = min(ranks[m], ncol(R)),
           m = nrow(R),
           n = ncol(R),
           isreal = TRUE
@@ -280,7 +280,7 @@ hosvd_mod <- function(tnsr,
         }
         U_list[[m]] <- PRIMME::svds(
           A,
-          NSvals = ranks[m],
+          NSvals = min(ranks[m], ncol(R)),
           m = nrow(R),
           n = ncol(R),
           isreal = FALSE

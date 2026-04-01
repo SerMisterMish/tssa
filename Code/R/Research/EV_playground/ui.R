@@ -75,7 +75,7 @@ fluidPage(
         )
       ),
       absolutePanel(
-        top = "40%",
+        top = "45%",
         left = "50px",
         fluidRow(h3("MSE")),
         fluidRow(layout_column_wrap(

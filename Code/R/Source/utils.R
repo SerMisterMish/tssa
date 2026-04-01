@@ -12,14 +12,20 @@ rmse <- function(true, pred) {
 }
 
 # true is vector, pred is matrix with predictions for each parameter in rows
-rmse_params_mat <- function(true, pred) {
-  apply(cbind(true, pred), 1, \(v) rmse(v[1], v[-1]))
+mse_params_mat <- function(true, pred) {
+  rowMeans(abs(pred - true %o% rep(1, tail(dim(pred), 1))) ^ 2)
 }
+rmse_params_mat <- function(true, pred) {sqrt(mse_params_mat(true, pred))}
+
+# also a point-wise mse for time series
+mse_ts_pw <- mse_params_mat
+rmse_ts_pw <- rmse_params_mat
 
 # true is nd-array, pred is (n+1)d-array with n+1-mode slices as predictions
-rmse_ts_nd <- function(true, pred) {
-  sqrt(mean(apply(pred, length(dim(pred)), \(p) mse(true, p))))
+mse_ts_nd <- function(true, pred) {
+  mean(abs(pred - true %o% rep(1, tail(dim(pred), 1))) ^ 2)
 }
+rmse_ts_nd <- function(true, pred) {sqrt(mse_ts_nd(true, pred))}
 
 mixing_rate <- function(x, r, ...)
   UseMethod("mixing_rate")

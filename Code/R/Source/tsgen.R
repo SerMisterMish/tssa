@@ -94,7 +94,7 @@ calc_rank <- function(ampl,
     summarise(pac = max(pac))
   (2 - complex) *
     (sum(ampl != 0) + sum(fr_unique$pac) - length(ampl)) - sum(abs(fr_unique[, 1] - 0.5) < tol |
-                                                                 abs(fr_unique[, 1]) < tol)
+                                                                 abs(fr_unique[, 1]) < tol) * sum(fr_unique$pac)
 }
 
 
