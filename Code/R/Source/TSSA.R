@@ -203,6 +203,7 @@ setMethod("get_tensor_eigenvalues", "list", function(X, dims = seq(X$Z@num_modes
 hosvd_mod <- function(tnsr,
                       ranks = NULL,
                       svd.method = c("svd", "primme"),
+                      delete.repeated = FALSE,
                       status = TRUE)
 {
   stopifnot(is(tnsr, "Tensor"))
@@ -228,7 +229,11 @@ hosvd_mod <- function(tnsr,
   U_list <- vector("list", num_modes)
   for (m in 1:num_modes) {
     if (identical(svd.method, "svd")) {
-      U_list[[m]] <- svd(rs_unfold(tnsr, m = m)@data, nu = ranks[m])$u
+      if (!delete.repeated) {
+        U_list[[m]] <- svd(rs_unfold(tnsr, m = m)@data, nu = ranks[m])$u
+      } else {
+        U_list[[m]] <- svd(as.matrix(attributes(tnsr)$unfolds_r[[m]]), nu = ranks[m])$u
+      }
     } else if (identical(svd.method, "primme")) {
       R <- attr(tnsr, "unfolds_r")[[m]]
       
@@ -720,7 +725,8 @@ tens_ssa_decompose <- function(s,
       H,
       ranks = neig,
       svd.method = svd.method,
-      status = status
+      status = status,
+      ...
     ),
     HOOI = tucker_mod(H, ranks = neig, status = status, ...),
     CP = cp_mod(H, num_components = neig, status = status, ...)
@@ -765,7 +771,8 @@ tens_ssa_reconstruct <- function(s,
       H,
       ranks = trunc_ranks,
       svd.method = svd.method,
-      status = status
+      status = status,
+      ...
     ),
     HOOI = tucker_mod(
       H,

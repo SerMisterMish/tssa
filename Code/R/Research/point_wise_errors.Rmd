@@ -7,6 +7,7 @@ output: html_document
 setwd(rprojroot::find_rstudio_root_file())
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_current$set(root.dir = rprojroot::find_rstudio_root_file())
 
 library(Rssa)
 library(svd)
@@ -49,8 +50,8 @@ pred_hossa_rec <- function() {
     unlist(L_hossa),
     groups = groups_hossa,
     # decomp = "hooi",
-    svd.method = "primme",
-    # svd.method = "svd",
+    # svd.method = "primme",
+    svd.method = "svd",
     trunc_dims = unlist(td_hossa),
     status = FALSE
   )
@@ -138,8 +139,8 @@ summarise_errors <- function(err_df) {
 # Parameters for 1d series
 ```{r}
 P_case <- ""
-S.true <- 1
-# S.true <- 2
+# S.true <- 1
+S.true <- 2
 S_case <- paste0("s", S.true)
 
 # no rates
@@ -159,13 +160,13 @@ rates_case <- "_nr"
 # rates_case <- "_dr"
 
 # no freqs
-# freqs.true <- rep(0, S.true)
-# freqs_case <- "_nf"
+freqs.true <- rep(0, S.true)
+freqs_case <- "_nf"
 # same freqs
 # freqs.true <- rep(0.2, S.true)
 # freqs_case <- "_sf"
-freqs.true <- rep(1/12, S.true)
-freqs_case <- "_sf"
+# freqs.true <- rep(1/12, S.true)
+# freqs_case <- "_sf"
 # different freqs
 # freqs.true <- c(0.2, 0.22)
 # freqs_case <- "_df"
@@ -173,11 +174,12 @@ freqs_case <- "_sf"
 # freqs.true <- c(0.02, 0.0205)
 # freqs_case <- "_cdf"
 
+
 # equal amplitudes
-# A <- rep(1, S.true)
-# A_case <- "_ea"
-A <- rep(30, S.true)
+A <- rep(1, S.true)
 A_case <- "_ea"
+# A <- rep(30, S.true)
+# A_case <- "_ea"
 # different amplitudes
 # A <- c(1, 2)
 # A_case <- "_da"
@@ -201,8 +203,8 @@ complex_case <- "_r" # real
 
 # N <- 25
 # n_case <- ""
-# N <- 100
-N <- 71
+N <- 100
+# N <- 71
 n_case <- "_long"
 ```
 
@@ -277,7 +279,8 @@ params_grid_hossa <- list(sd = sds,
 ```
 
 ```{r}
-R <- 500
+# R <- 500
+R <- 100
 
 # if (is.matrix(signal)) {
 #   ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_mssa_rec, rmse_ts_nd, signal, seed = 5)
@@ -285,26 +288,26 @@ R <- 500
 #   tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_homssa_rec, rmse_ts_nd, signal, seed = 5)
 #   save(ssa_err, tssa_err, file = paste0("./Research/comp_results/point_wise_errors/", S_case, "_mv", full_case, ".RData"))
 # } else {
-params_grid_ssa <- list(sd = 5, L_ssa = c(12, 24, 30, 36))
-params_grid_hossa <- list(sd = 5,
-                          td_hossa =  trunc_dims,
-                          L_hossa = list(c(12, 49), c(12, 37), c(7, 36), c(12, 31), c(19, 30), c(24, 25)))
+# params_grid_ssa <- list(sd = 5, L_ssa = c(12, 24, 30, 36))
+# params_grid_hossa <- list(sd = 5,
+#                           td_hossa =  trunc_dims,
+#                           L_hossa = list(c(12, 49), c(12, 37), c(7, 36), c(12, 31), c(19, 30), c(24, 25)))
   ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_rec, rmse_ts_nd, signal, seed = 5)
   tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
-#   R <- 500
-#   sd <- 0.6
-#   L_ssa <- ssa_err |> filter(sd == 0.6) |> filter(error == min(error)) |> getElement("L_ssa")
-#   td_hossa <- trunc_dims
-#   L_hossa <- tssa_err |> filter(sd == 0.6) |> filter(error == min(error)) |> getElement("L_hossa")
-#   ssa_err_pw <- (\() {
-#     q <- progressor(R)
-#     calc_errors(R, pred_ssa_rec, rmse_ts_pw, signal, q, seed = 5)
-#   })()
-#   tssa_err_pw <- (\() {
-#     q <- progressor(R)
-#     calc_errors(R, pred_hossa_rec, rmse_ts_pw, signal, q, seed = 5)
-#   })()
-# save(ssa_err, tssa_err, ssa_err_pw, tssa_err_pw, file = paste0(rprojroot::find_rstudio_root_file(), "/Research/comp_results/point_wise_errors/", S_case, full_case, ".RData"))
+  R <- 500
+  sd <- 0.6
+  L_ssa <- ssa_err |> filter(sd == 0.6) |> filter(error == min(error)) |> getElement("L_ssa")
+  td_hossa <- trunc_dims
+  L_hossa <- tssa_err |> filter(sd == 0.6) |> filter(error == min(error)) |> getElement("L_hossa")
+  ssa_err_pw <- (\() {
+    q <- progressor(R)
+    calc_errors(R, pred_ssa_rec, rmse_ts_pw, signal, q, seed = 5)
+  })()
+  tssa_err_pw <- (\() {
+    q <- progressor(R)
+    calc_errors(R, pred_hossa_rec, rmse_ts_pw, signal, q, seed = 5)
+  })()
+save(ssa_err, tssa_err, ssa_err_pw, tssa_err_pw, file = paste0(rprojroot::find_rstudio_root_file(), "/Research/comp_results/point_wise_errors/", S_case, full_case, ".RData"))
 # }
 ```
 
