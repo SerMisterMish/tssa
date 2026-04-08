@@ -17,6 +17,7 @@
 \usepackage{mathtools}
 \usepackage{nicematrix}
 \usepackage{multirow}
+\usepackage{xcolor}
 \usepackage{tikz}
 \usetikzlibrary{tikzmark, calc, fit}
 
@@ -32,6 +33,21 @@
 \newcommand{\bluetext}[1]{{\usebeamercolor[fg]{bluetext_color}#1}}
 \setbeamercolor{redtext_color}{fg=red}
 \newcommand{\redtext}[1]{{\usebeamercolor[fg]{redtext_color}#1}}
+
+\makeatletter
+\NewDocumentCommand{\overcolor}{mm}{\mathpalette\overundercolor@{\overline{#1}{#2}}}
+\NewDocumentCommand{\undercolor}{mm}{\mathpalette\overundercolor@{\underline{#1}{#2}}}
+\newcommand{\overundercolor@}[2]{\overundercolor@@#1#2}
+\newcommand{\overundercolor@@}[4]{%
+  % #1 = math style
+  % #2 = command
+  % #3 = math material
+  % #4 = color
+  \sbox\z@{$\m@th#1#3$}%
+  \mathcolor{#4}{#2{\usebox\z@}}%
+}
+\makeatother
+
 \newcommand{\iu}{\mathbf{i}}
 \newcommand{\Tp}{\mathrm{T}}
 \newcommand{\Hp}{\mathrm{H}}
@@ -286,10 +302,10 @@
 
   Тензорные разложения, обобщающие SVD:
   \begin{itemize}
-    \item \bluetext{Higher-Order SVD (HOSVD)}
-    \item Canonical Polyadic Decomposition (CPD)
+    \item Разложение Таккера (в частности \bluetext{Higher-Order SVD (HOSVD)})
+    \item Каноническое Полиадическое Разложение (CPD)
     \item T-SVD
-    \item $(L_r, L_r, 1)$-Decomposition
+    \item $(L_r, L_r, 1)$-Разложение
   \end{itemize}
 \end{frame}
 
@@ -339,7 +355,7 @@
 
   \medskip
 
-  \bluetext{Canonical Polyadic Decomposition (CPD)} --- представление
+  \bluetext{Каноническое Полиадическое Разложение (CPD)} --- представление
   тензора в виде суммы $R$ одноранговых тензоров.
 
   \smallskip
@@ -356,11 +372,14 @@
   \begin{definition}
     \bluetext{$n$-векторами} тензора $\calA$ называются векторы,
     получаемые из $\calA$ варьированием индекса $n$-го направления
-    при фиксированных остальных (аналог строк и столбцов матрицы).\\ \medskip
+    при фиксированных остальных (аналог строк и столбцов матрицы).\\ \smallskip
+
+    \bluetext{$n$-развёрткой} тензора $\calA$ называется матрица
+    $[\bfA_n]$, некоторым образом составленная из всех $n$-векторов
+    тензора $\calA$.\\ \smallskip
 
     \bluetext{$n$-рангом} тензора $\calA$, обозначаемым $R_n =
-    \rank_n(\calA)$, называется размерность линейного пространства,
-    порождённого $n$-векторами.
+    \rank_n(\calA)$, называется ранг $n$-развёртки этого тензора.
   \end{definition}
 
   \medskip
@@ -510,13 +529,113 @@
 
 \end{frame}
 
+\begin{frame}{Вычисление HOSVD}
+  Вычисление HOSVD тензора $\calA$ сводится к следующим шагам: \medskip
+
+  \begin{enumerate}
+    \item Применение SVD к $n$-развёрткам $[\bfA_n]$ для нахождения
+      матриц левых сингулярных векторов $\bfU_n$ \smallskip
+    \item Нахождение <<ядерного>> тензора:
+      \[
+        \calZ = \calA \times_1 \bfU_1^{\Hp} \times_2 \bfU_2^{\Hp}
+        \times_3 \bfU_3^{\Hp}
+      \]
+  \end{enumerate} \medskip
+
+  $\times_n$ обозначает умножение тензора на матрицу в направлении
+  $n$\\
+  В матричном случае для $\bfB \in \bbC^{I_b\times J_b}$, $\bfC \in
+  \bbC^{I_c\times I_b}$, $\bfD \in \bbC^{I_d\times J_b}$:
+  \[
+    \bfB \times_1 \bfC = \bfC \bfB \in \bbC^{I_c \times J_b}
+  \]
+  \[
+    \bfB \times_2 \bfD = \bfB \bfD^{\Tp} \in \bbC^{I_b \times J_d}
+  \]
+\end{frame}
+
+\section{Pseudo-HOSVD}
+\begin{frame}{HOSVD ганкелевого тензора}
+  \begin{itemize}
+    \item HOSVD произвольного тензора $\calA$ сводится к SVD его
+      $n$-развёрток $[\bfA_n]$\smallskip
+
+    \item Если $\calA\in\bbC^{L\times K \times M}$ --- ганкелевый, то
+      есть $\calA_{lkm} = x_{l + k + m - 2}$, то\\
+      {
+        \small\arraycolsep=0.35\arraycolsep
+        \[
+          [\bfA_1] =
+          \left(
+            \begin{array}{ccccc|ccccc|c}
+              x_1 & x_2 & x_3 & \ldots & x_{K} & x_2 & x_3 & x_4 &
+              \ldots & x_{K + 1} & \ldots\\
+              x_2 & x_3 & x_4 & \ldots & x_{K + 1} & x_3 & x_4 & x_5 &
+              \ldots & x_{K + 2} & \ldots\\
+              x_3 & x_4 & x_5 & \ldots & x_{K + 2} & x_4 & x_5 & x_6 &
+              \ldots & x_{K + 3} & \ldots\\
+              \vdots & \vdots&\vdots & \ddots& \vdots&\vdots& \vdots&
+              \vdots&\ddots & \vdots& \ddots\\
+              x_L & \underline{x_{L + 1}} & \undercolor{x_{L+2}}{red}
+              & \ldots & x_{K +
+              L + 1} & \underline{x_{L
+              + 1}} & \undercolor{x_{L+2}}{red} & x_{L + 3} &
+              \ldots & x_{L + K + 2} & \ldots\\
+            \end{array}
+          \right)
+        \]
+      }\smallskip
+
+    \item SVD $[\bfA_1]$ можно свести к взвешенному SVD
+      {\small
+        \[
+          \widetilde{[\bfA_1]} = \left(
+            \begin{array}{ccccc|c|c}
+              x_1 & x_2 & x_3 & \ldots & x_{K} & x_{K + 1} & \ldots\\
+              x_2 & x_3 & x_4 & \ldots & x_{K + 1} & x_{K + 2} & \ldots\\
+              \vdots & \vdots & \vdots & \ddots & \vdots & \vdots & \ddots\\
+              x_L & x_{L + 1} & x_{L + 2} & \ldots & x_{K + L + 1} &
+              x_{K + L + 2} & \ldots\\
+            \end{array}
+          \right)
+        \]
+      }
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Pseudo-HOSVD для ганкелевых тензоров}
+  \begin{itemize}
+    \item Пусть $U_i^{(n)}$ --- левые сингулярные векторы из SVD
+      $[\bfA_n]$, соответствующие ненулевым сингулярным числам,
+      $\widetilde{U}_i^{(n)}$ --- из SVD $\widetilde{[\bfA_1]}$ (не
+      взвешенного) \smallskip
+    \item Пространства столбцов $[\bfA_n]$ и $\widetilde{[\bfA_n]}$
+      совпадают $\Rightarrow$ базисы $U_i^{(n)}$ и
+      $\widetilde{U}_i^{(n)}$ образуют одинаковые пространства и
+      справедливо равенство
+      \[
+        \calA = \widetilde{\calZ} \times_1
+        \widetilde{\bfU}_1 \times_2 \widetilde{\bfU}_2 \times_3
+        \widetilde{\bfU}_3,
+      \]
+      которое является разложением Таккера с ядерным тензором
+      \[
+        \widetilde{\calZ} = \calA \times_1 \widetilde{\bfU}_1^{\Hp}
+        \times_2 \widetilde{\bfU}_2^{\Hp}
+        \times_3 \widetilde{\bfU}_3^{\Hp}
+      \]\smallskip
+
+    \item Полученное разложение \textbf{не является} HOSVD
+  \end{itemize}
+\end{frame}
+
 \section{Известные результаты. Алгоритмы T-SSA}
 \begin{frame}{T-SSA, T-MSSA и T-ESPRIT с использованием HOSVD}
   \bluetext{Входные данные} временной ряд $\tX$,
   длина окна: $(L, K)$ для одноканальных рядов или $L$ для многоканальных,
   количество компонент сигнала для каждого направления
-  $(R_1,\, R_2,\, R_3)$, номер направления оценки для HO-ESPRIT $d$.
-  \vspace{0.4cm}\\
+  $(R_1,\, R_2,\, R_3)$, номер направления оценки для T-ESPRIT $d$.
+  \vspace{0.2cm}\\
   \begin{enumerate}
     \item \bluetext{Вложение}.
       \begin{tabular}{r|l}
@@ -525,15 +644,17 @@
         Многоканальный &
         $\tX \mapsto \calT_{\mathrm{T-MSSA}}^{(L)}(\tX) = \calX$
       \end{tabular}
-      \vspace{0.2cm}
+      \vspace{0.15cm}
 
     \item \bluetext{Разложение и Приближение}. Используя $(R_1,\,
       R_2,\, R_3)$\\\smallskip
-      $\calX \mapsto
-      \operatorname{Trunc}(\operatorname{HOSVD}(\calX)) =
-      \widetilde{\calS}$ или
-      $\calX \mapsto \operatorname{HOOI}(\calX) = \widetilde{\calS}$
-      \vspace{0.2cm}
+      $\calX \mapsto \operatorname{Dec} (\calX) = \widetilde{\calS}$,
+      где $\operatorname{Dec}(\calX) =
+      \operatorname{Trunc}(\operatorname{HOSVD}(\calX))$ или
+      $\operatorname{HOOI}(\calX)$ или
+      $\operatorname{Trunc}(\operatorname{Pseudo-HOSVD}(\calX))$
+      (только для одноканального $\tX$)
+      \vspace{0.15cm}
 
     \item \bluetext{Восстановление или Оценивание}. \\
       \begin{itemize}
@@ -583,7 +704,7 @@
 \end{frame}
 
 \begin{frame}{Цели и необходимые результаты}
-  \small
+  \scriptsize
   \bluetext{Известные результаты}
   \begin{itemize}
     \item Определение ранга ряда в тензорном случае, связь с матричным случаем
@@ -601,24 +722,42 @@
   \begin{itemize}
     \item Сравнение методов по точности на комплексных рядах
     \item Сравнение тензорных методов в задаче оценки параметров
+    \item Сравнение SSA и T-SSA с применением Pseudo-HOSVD
     \item Условия наибольшей точности T-MSSA
-    \item Определение собственных чисел ряда, собственные числа сигналов и шума
+    \item Определение собственных чисел ряда, собственные числа
+      сигналов и шума
     \item Нахождение трудоёмкости методов
   \end{itemize}
 \end{frame}
 
+\begin{frame}{Методология сравнения методов}
+  \begin{itemize}
+    \item Метрика точности --- \textrm{RMSE}:\\
+      $\tX$ --- объект из $N$ элементов, $\tS_i$ --- оценка $\tX$,
+      полученная в $i$-м эксперименте, тогда
+      \begin{gather*}
+        \widehat{\operatorname{RMSE}}(M)=\sqrt{\frac{1}{M}
+        \sum_{i=1}^{M} \widehat{\operatorname{MSE}}(\tS_i, \tX)},\\
+        \widehat{\operatorname{MSE}}(\tS, \tX)=\frac 1 N
+        \sum_{k=1}^{N} (s_i-x_i)^2.
+      \end{gather*}
+
+    \item Во всех тестах $M = 500$
+    \item Методы применяются к одинаковым реализациям шума
+  \end{itemize}
+\end{frame}
+
 \section{Выделение сигнала и оценка параметров. Комплексные ряды}
-\begin{frame}{Применение к космплексным одноканальным рядам}
+\begin{frame}{T-SSA для космплексных одноканальных рядов}
   \vspace*{-0.3cm}
   \[
     x_{n} = e^{ \alpha_1 n } e^{2 \pi\mathrm{i} \omega_1 n} +
     e^{ \alpha_2 n } e^{ 2 \pi  \mathrm{i}\omega_2 n} + \zeta_n
   \]
-  $N = 25$, $\zeta_n$ --- комплексный белый гауссовский шум,
+  $N = 100$, $\zeta_n$ --- комплексный белый гауссовский шум,
   $\mathrm{D}(\zeta_n) =
-  0.04^2$, $\omega_1 = 0.2,\, \omega_2 = 0.22$, $\alpha_1=\alpha_2=0$\\
-  (результаты такие же при $\alpha_1=\alpha_2 < 0$ и при $\alpha_1 <
-  \alpha_2 < 0$).
+  0.6^2$, $\omega_1 = 0.2,\, \omega_2 = 0.22$, $\alpha_1=0.01$,
+  $\alpha_2=0.02$.
 
   \medskip
 
@@ -629,27 +768,43 @@
     \begin{tabular}{c|c||c}
       \hline
       Задача & Выделение сигнала & Оценка параметров \\\hline
-      Тензорный метод & 0.019 & \textbf{0.0012} \\\hline
-      Матричный метод & \textbf{0.018} & 0.0013 \\\hline
+      Матричный метод & 0.137 & 6.40e-4 \\\hline
+      Тензорный метод & 0.143 & 6.71e-4 \\\hline
+      \begin{tabular}{c}Тензорный метод \\ (Pseudo-HOSVD)
+      \end{tabular} & \textbf{0.134} &
+      \textbf{6.38e-4} \\\hline
     \end{tabular}
   \end{table}
+\end{frame}
 
-  \bigskip
+\begin{frame}{Поточечное сравнение точности для постоянного ряда}
+  $x_n = C$, $N = 100$
+  \begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{pw_const.pdf}
+  \end{figure}
+\end{frame}
 
-  Увеличение ошибки при неоптимальном выборе длины окна в тензорном
-  методе существенно больше, чем в матричном
+\begin{frame}{Поточечное сравнение точности для сложного ряда}
+  $x_{n} = e^{ \alpha_1 n } e^{2 \pi\mathrm{i} \omega_1 n} +
+  e^{ \alpha_2 n } e^{ 2 \pi  \mathrm{i}\omega_2 n}$, $N = 100$
+  \begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{pw_complex_2_cos.pdf}
+  \end{figure}
 \end{frame}
 
 \begin{frame}{Применение к космплексным многоканальным рядам}
   \[
-    x_{n}^{(m)} = a_1^{(m)}
+    x_{n}^{(m)} = a_1^{(m)} e^{ \alpha_1 n }
     e^{2 \pi \mathrm{i} \omega_1 n} +
-    a_2^{(m)}
+    a_2^{(m)} e^{ \alpha_2 n }
     e^{2 \pi \mathrm{i} \omega_2 n} + \zeta_n^{(m)},
   \]
-  $N = 25$, $M=12$, $\zeta_n^{(m)}$ --- комплексный белый гауссовский шум,
-  $\mathrm{D}\left(\zeta_n^{(m)}\right) = 0.2^2$, $\omega_1 = 0.2,\,
-  \omega_2 = 0.22$
+  $N = 100$, $M=12$, $\zeta_n^{(m)}$ --- комплексный белый гауссовский шум,
+  $\mathrm{D}\left(\zeta_n^{(m)}\right) = 0.6^2$, $\omega_1 = 0.2,\,
+  \omega_2 = 0.22$, $\alpha_1=0.01$,
+  $\alpha_2=0.02$.
 
   \medskip
 
@@ -660,15 +815,10 @@
     \begin{tabular}{c|c||c}
       \hline
       Задача & Выделение сигнала & Оценка параметров \\\hline
-      Тензорный метод & \textbf{0.065} & \textbf{5.33e-04} \\\hline
-      Матричный метод & 0.066 & 5.36e-04 \\\hline
+      Матричный метод & 0.101 & 1.022e-04 \\\hline
+      Тензорный метод & \textbf{0.070} & \textbf{1.017e-04} \\\hline
     \end{tabular}
   \end{table}
-
-  \bigskip
-
-  Увеличение ошибки при неоптимальном выборе длины окна в тензорном
-  методе в среднем меньше, чем в матричном
 \end{frame}
 
 \begin{frame}{Модификации Dstack}
@@ -718,7 +868,8 @@
     x_{n} = \cos(2 \pi \omega_1 n) +
     \cos(2 \pi \omega_2 n) + \xi_n
   \]
-  $N = 1000$, $D=10$, $\omega_1 = 0.02,\, \omega_2 = 0.0205$, $\xi_n$ --- белый
+  $N = 1000$, $D=10$, $\omega_1 = 0.02,\, \omega_2 = 0.0205$,
+  $\xi_n$ --- белый
   гауссовский шум, $\mathrm{D}(\xi_n) = \sigma^2$
 
   \medskip
@@ -905,15 +1056,15 @@
 \section{Полученные результаты. Сравнение методов}
 \begin{frame}{Сравнение точности одноканальных методов}
   \begin{itemize}
-    \item Как и в случае вещественных рядов, базовый метод SSA точнее
-      T-SSA почти во всех рассмотренных случаях комплексных рядов\smallskip
-    \item При оптимальном выборе длины окна точности HO-ESPRIT и
-      ESPRIT очень близки;\\
-      При неоптимальном выборе длины окна ошибка HO-ESPRIT может
-      оказаться гораздо выше, чем ошибка ESPRIT \smallskip
+    \item T-SSA и T-ESPRIT с использованием HOSVD существенно менее
+      точны, чем SSA
+      во всех рассмотренных случаях комплексных рядов\smallskip
+    \item T-SSA и T-ESPRIT с использованием Pseudo-HOSVD более
+      точны, чем SSA в задачах выделения сигнала и оценки параметров
+      в рассмотренных случаях\smallskip
     \item При достаточно близких частотах и высоком уровне шума
       ESPRIT перестаёт идентифицировать все параметры сигнала;\\
-      HO-ESPRIT с использованием Dstack даёт возможность в этих
+      T-ESPRIT с использованием Dstack даёт возможность в этих
       условиях оценивать параметры с более высокой точностью.
   \end{itemize}
 \end{frame}
@@ -952,7 +1103,7 @@
     \item \bluetext{SSA}/\bluetext{MSSA}: сводится к нахождению первых
       $R$ компонент SVD ганкелевой матрицы за
       $O(R N^* \log (N^*) + R^2 N^*)$ \medskip
-    \item \bluetext{T-SSA} с использованием HOSVD: сводится к
+    \item \bluetext{T-SSA} с использованием HOSVD или Pseudo-HOSVD: сводится к
       нахождению первых $R_1$, $R_2$ и $R_3$ компонент SVD трёх
       ганкелевых матриц за
       $O((R_1 + R_2 + R_3)N^*\log(N^*) + (R_1^2 + R_2^2 + R_3^2)N^*)$ \medskip
@@ -1007,17 +1158,18 @@
 
 \section{Заключение}
 \begin{frame}{Дальнейшая работа}
-  Наиболее перспективно --- изучение свойств T-MSSA\bigskip
+  Наиболее перспективно --- изучение свойств T-SSA с использованием
+  Pseudo-HOSVD и свойств T-MSSA\bigskip
   \begin{itemize}
+    \item Сравнение Pseudo-HO-SSA в задаче разделения компонент,
+      вложенный вариант Pseudo-HO-SSA $\rightarrow$ HO-SSA\medskip
     \item Дальнейшее изучение поведения сингулярных чисел сигналов\medskip
-    \item Сравнение методов по уровеню шума, при котором
+    \item Сравнение методов по уровню шума, при котором
       происходит смешивание компонент сигнала с шумом\medskip
     \item Определение разделимости по вкладам и сильной
       разделимости на языке тензорных методов\medskip
     \item Исследование ошибок первого порядка при
       аппроксимации тензора разложением\medskip
-    \item Исследование возможности применения разложения T-SVD
-      [Le~Thanh~et~al.~2024]
   \end{itemize}
 \end{frame}
 \end{document}
