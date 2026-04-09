@@ -502,6 +502,69 @@ calc_errors(R, pred_hossa_rec, rmse_ts_pw, signal, q, seed = 5)
 save(ssa_err, tssa_err, ssa_err_pw, tssa_err_pw, file = paste0(rprojroot::find_rstudio_root_file(), "/Research/comp_results/point_wise_errors/", S_case, full_case, ".RData"))
 ```
 
+```{r}
+R <- 500
+sd <- 0.6
+L_ssa <- ssa_parest_err |> filter(sd == 0.6) |> filter(error == min(error)) |> getElement("L_ssa")
+
+ssa_est_err_sample <- (\() {
+  q <- progressor(R)
+  calc_errors(R, pred_ssa_est, \(true, pred) colMeans(abs(pred - true %o% rep(1, tail(dim(pred), 1))) ^ 2), true_params, q, seed = 5)
+})()
+
+td_hossa <- trunc_dims
+L_hossa <- tssa_parest_err |> filter(sd == 0.6) |> filter(error == min(error)) |> getElement("L_hossa")
+est_dim_hossa <- tssa_parest_err |> filter(sd == 0.6) |> filter(error == min(error)) |> getElement("est_dim_hossa")
+pseudo_hosvd = FALSE
+tssa_est_err_sample <- (\() {
+  q <- progressor(R)
+  calc_errors(R, pred_hossa_est, \(true, pred) colMeans(abs(pred - true %o% rep(1, tail(dim(pred), 1))) ^ 2), true_params, q, seed = 5)
+})()
+
+
+L_hossa <- pseudo_tssa_parest_err |> filter(sd == 0.6) |> filter(error == min(error)) |> getElement("L_hossa")
+L_hossa <- L_hossa[1]
+est_dim_hossa <- pseudo_tssa_parest_err |> filter(sd == 0.6) |> filter(error == min(error)) |> getElement("est_dim_hossa")
+est_dim_hossa <- est_dim_hossa[1]
+pseudo_hosvd = TRUE
+pseudo_tssa_est_err_sample <- (\() {
+  q <- progressor(R)
+  calc_errors(R, pred_hossa_est, \(true, pred) colMeans(abs(pred - true %o% rep(1, tail(dim(pred), 1))) ^ 2), true_params, q, seed = 5)
+})()
+
+t.test(pseudo_tssa_est_err_sample, ssa_est_err_sample, paired = TRUE, var.equal = TRUE)
+```
+
+```{r}
+R <- 500
+sd <- 0.6
+L_ssa <- ssa_err |> filter(sd == 0.6) |> filter(error == min(error)) |> getElement("L_ssa")
+
+ssa_err_sample <- (\() {
+  q <- progressor(R)
+  calc_errors(R, pred_ssa_rec, \(true, pred) colMeans(abs(pred - true %o% rep(1, tail(dim(pred), 1))) ^ 2), signal, q, seed = 5)
+})()
+
+td_hossa <- trunc_dims
+L_hossa <- tssa_err |> filter(sd == 0.6) |> filter(error == min(error)) |> getElement("L_hossa")
+pseudo_hosvd = FALSE
+tssa_err_sample <- (\() {
+  q <- progressor(R)
+  calc_errors(R, pred_hossa_rec, \(true, pred) colMeans(abs(pred - true %o% rep(1, tail(dim(pred), 1))) ^ 2), signal, q, seed = 5)
+})()
+
+
+L_hossa <- pseudo_tssa_err |> filter(sd == 0.6) |> filter(error == min(error)) |> getElement("L_hossa")
+L_hossa <- L_hossa[1]
+pseudo_hosvd = TRUE
+pseudo_tssa_err_sample <- (\() {
+  q <- progressor(R)
+  calc_errors(R, pred_hossa_rec, \(true, pred) colMeans(abs(pred - true %o% rep(1, tail(dim(pred), 1))) ^ 2), signal, q, seed = 5)
+})()
+
+t.test(pseudo_tssa_err_sample, ssa_err_sample, paired = TRUE, var.equal = TRUE)
+```
+
 ## Results
 ```{r}
 rbind(

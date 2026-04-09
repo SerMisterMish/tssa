@@ -16,7 +16,7 @@ library(progressr)
 
 setwd(rprojroot::find_rstudio_root_file())
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
-source(file = "./Research/TSSA.R")
+source(file = "./Source/TSSA.R")
 ```
 
 ```{r enable progressr, eval = FALSE}
