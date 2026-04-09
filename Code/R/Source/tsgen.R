@@ -18,7 +18,8 @@ construct_ts <- function(N,
                          complex = TRUE,
                          poly_ampl_coefs = NULL,
                          from = 0,
-                         by = 1) {
+                         by = 1,
+                         sep = FALSE) {
   if (any(c(length(ampl), length(rate), length(freq)) != length(phase))) {
     stop("Amplitudes, rates, frequencies and phases all must have the same length")
   }
@@ -64,6 +65,7 @@ construct_ts <- function(N,
   ts_arr <- poly_ampl * (N_ones %o% ampl) * exp(ts_range %o% rate) *
     period_f(N_ones %o% phase + 2 * pi * unit * ts_range %o% freq)
   
+  if (sep) return(ts_arr)
   apply(ts_arr, 1:(length(dim(ts_arr)) - 1), sum)
 }
 

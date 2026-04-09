@@ -21,6 +21,9 @@ rmse_params_mat <- function(true, pred) {sqrt(mse_params_mat(true, pred))}
 mse_ts_pw <- mse_params_mat
 rmse_ts_pw <- rmse_params_mat
 
+mmse_params_mat <- function(true, pred) mean(mse_params_mat(true, pred))
+rmmse_params_mat <- function(true, pred) sqrt(mean(mse_params_mat(true, pred)))
+
 # true is nd-array, pred is (n+1)d-array with n+1-mode slices as predictions
 mse_ts_nd <- function(true, pred) {
   mean(abs(pred - true %o% rep(1, tail(dim(pred), 1))) ^ 2)
