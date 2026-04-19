@@ -27,6 +27,53 @@ if (!exists("reconstruct_group_t3", mode = "function")) {
   }
 }
 
+get_unfolds <- function(s, L, rm.repeated = FALSE) {
+  N <- length(s)
+  I <- L[1]
+  L <- L[2]
+  K <- N - I - L + 2
+  unfolds_r <- list()
+  if (!rm.repeated) {
+    h12 <- hankel(s, I + L - 1)
+    h3 <- hankel(s, I + K - 1)
+    sR12 <- Re(h12)
+    sR3 <- Re(h3)
+    
+    unfolds_r[[1]] <- Rssa::new.hbhmat(sR12, c(I, 1))
+    unfolds_r[[2]] <- Rssa::new.hbhmat(sR12, c(L, 1))
+    unfolds_r[[3]] <- Rssa::new.hbhmat(sR3, c(K, 1))
+  } else {
+    unfolds_r[[1]] <- Rssa::new.hmat(Re(s), I)
+    unfolds_r[[2]] <- Rssa::new.hmat(Re(s), L)
+    unfolds_r[[3]] <- Rssa::new.hmat(Re(s), K)
+  }
+  
+  if (is.complex(s)) {
+    unfolds_i <- list()
+    
+    if (!rm.repeated) {
+      sI12 <- Im(h12)
+      sI3 <- Im(h3)
+      
+      unfolds_i[[1]] <- Rssa::new.hbhmat(sI12, c(I, 1))
+      unfolds_i[[2]] <- Rssa::new.hbhmat(sI12, c(L, 1))
+      unfolds_i[[3]] <- Rssa::new.hbhmat(sI3, c(K, 1))
+    } else {
+      unfolds_i[[1]] <- Rssa::new.hmat(Im(s), I)
+      unfolds_i[[2]] <- Rssa::new.hmat(Im(s), L)
+      unfolds_i[[3]] <- Rssa::new.hmat(Im(s), K)
+    }
+  } else unfolds_i <- NULL
+  invisible(list(Re = unfolds_r, Im = unfolds_i))
+}
+
+setMethod("get_unfolds", "Tensor", function(s, L = NULL, rm.repeated = NULL) {
+  unfolds <- lapply(1:3, \(i) rs_unfold(s, i))
+  unfolds_r <- lapply(unfolds, \(x) Re(x@data))
+  if (is.complex(s@data)) unfolds_i <- lapply(unfolds, \(x) Im(x@data)) else unfolds_i <- NULL
+  invisible(list(Re = unfolds_r, Im = unfolds_i))
+})
+
 # Embedding series into tensor
 tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP"), rm.repeated = FALSE) {
   kind <- toupper(kind)
@@ -42,40 +89,11 @@ tens3 <- function(s, L, kind = c("SSA", "MSSA", "CP"), rm.repeated = FALSE) {
       outer(1:K, function(il, j)
         s[il + j - 2]) |> as.tensor()
     
-    unfolds_r <- list()
-    if (!rm.repeated) {
-      h12 <- hankel(s, I + L - 1)
-      h3 <- hankel(s, I + K - 1)
-      sR12 <- Re(h12)
-      sR3 <- Re(h3)
-  
-      unfolds_r[[1]] <- Rssa::new.hbhmat(sR12, c(I, 1))
-      unfolds_r[[2]] <- Rssa::new.hbhmat(sR12, c(L, 1))
-      unfolds_r[[3]] <- Rssa::new.hbhmat(sR3, c(K, 1))
-    } else {
-      unfolds_r[[1]] <- Rssa::new.hmat(Re(s), I)
-      unfolds_r[[2]] <- Rssa::new.hmat(Re(s), L)
-      unfolds_r[[3]] <- Rssa::new.hmat(Re(s), K)
-    }
-    attr(X, "unfolds_r") <- unfolds_r
+    unf <- get_unfolds(s, c(I, L), rm.repeated)
+    attr(X, "unfolds_r") <- unf$Re
     
     if (is.complex(s)) {
-      unfolds_i <- list()
-      
-      if (!rm.repeated) {
-        sI12 <- Im(h12)
-        sI3 <- Im(h3)
-        
-        unfolds_i[[1]] <- Rssa::new.hbhmat(sI12, c(I, 1))
-        unfolds_i[[2]] <- Rssa::new.hbhmat(sI12, c(L, 1))
-        unfolds_i[[3]] <- Rssa::new.hbhmat(sI3, c(K, 1))
-      } else {
-        unfolds_i[[1]] <- Rssa::new.hmat(Im(s), I)
-        unfolds_i[[2]] <- Rssa::new.hmat(Im(s), L)
-        unfolds_i[[3]] <- Rssa::new.hmat(Im(s), K)
-      }
-      
-      attr(X, "unfolds_i") <- unfolds_i
+      attr(X, "unfolds_i") <- unf$Im
     }
   }
   else if (kind == "CP") {
@@ -241,7 +259,7 @@ hosvd_mod <- function(tnsr,
       if (is.null(I)) {
         unfld <- as.matrix(R)
       } else {
-        unfld <- as.matrix(R) + as.matrix(I)
+        unfld <- as.matrix(R) + 1i * as.matrix(I)
       }
       
       U_list[[m]] <- svd(unfld, nu = ranks[m])$u
@@ -350,7 +368,7 @@ tucker_mod <- function(tnsr,
       if (is.null(I)) {
         unfld <- as.matrix(R)
       } else {
-        unfld <- as.matrix(R) + as.matrix(I)
+        unfld <- as.matrix(R) + 1i * as.matrix(I)
       }
       
       U_list[[m]] <- svd(unfld, nu = ranks[m])$u
@@ -690,10 +708,17 @@ tens_esprit <- function(s,
                           status = status)
   }
   estimates <- list()
+  if (is.list(est_dim)) est_dim <- unlist(est_dim)
+
   for (i in seq(groups)) {
-    U <- H.decomp$U[[est_dim]][, groups[[i]], drop = FALSE]
-    Z <- qr.solve(U[-nrow(U), ], U[-1, ], qrtol)
-    poles <- as.complex(eigen(Z, only.values = TRUE)$values)
+    poles <- sapply(est_dim, \(ed) {
+      U <- H.decomp$U[[ed]][, groups[[i]], drop = FALSE]
+      Z <- qr.solve(U[-nrow(U), ], U[-1, ], qrtol)
+      as.complex(eigen(Z, only.values = TRUE)$values)
+    })
+    if (is.matrix(poles)) {
+      poles <- rowMeans(poles)
+    }
     estimates[[i]] <- list(
       poles = poles,
       rates = Re(log(poles)),
@@ -767,20 +792,9 @@ tens_ssa_reconstruct <- function(s,
   } else {
     H <- s
     if (is.null(attr(H, "unfolds_r"))) {
-      cmpl <- is.complex(H@data)
-      unfolds <- list()
-      unfolds_r <- list()
-      unfolds_i <- list()
-      for (m in 1:3) {
-        unfolds[[m]] <- rs_unfold(H, m)@data
-        unfolds_r[[m]] <- Re(unfolds[[m]])
-        
-        if (cmpl) {
-          unfolds_i[[m]] <- Im(unfolds[[m]])
-        }
-      }
-      attr(H, "unfolds_r") <- unfolds_r
-      if (cmpl) attr(H, "unfolds_i") <- unfolds_i
+      unfolds <- get_unfolds(H)
+      attr(H, "unfolds_r") <- unfolds$Re
+      if (is.complex(H@data)) attr(H, "unfolds_i") <- unfolds$Im
     }
   }
   

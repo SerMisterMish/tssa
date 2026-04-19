@@ -81,7 +81,7 @@ pred_hossa_rec <- function() {
   rec <- tens_ssa_reconstruct(
     x,
     unlist(L_hossa),
-    groups = groups_hossa,
+    groups = unlist(groups_hossa, recursive = FALSE),
     svd.method = "primme",
     rm.repeated = pseudo_hosvd,
     trunc_dims = unlist(td_hossa),
@@ -119,7 +119,7 @@ pred_nest_hossa_sep <- function() {
     noise <- rnorm(N, 0, sd)
   }
   x <- signal + noise
-  neig <- max(sapply(groups_hossa, max))
+  neig <- max(sapply(groups_nested_hossa, max))
   
   dec <- tens_ssa_decompose(
     x,
@@ -308,7 +308,12 @@ summarise_errors <- function(err_df) {
     best_L = L[which.min(zapped_error)],
     avg = mean(zapped_error),
     worst = max(zapped_error)
-  )
+  ) |> arrange(sd)
+}
+
+min_errors <- function(err_df) {
+  err_df |> mutate(zapped_error = zapsmall(error)) |> group_by(sd) |> 
+    filter(zapped_error == min(zapped_error)) |> arrange(sd)
 }
 ```
 
@@ -320,14 +325,14 @@ S.true <- 2
 S_case <- paste0("s", S.true)
 
 # no rates
-# rates.true <- rep(0, S.true)
-# rates_case <- "_nr"
+rates.true <- rep(0, S.true)
+rates_case <- "_nr"
 # positive small equal rates
 # rates.true <- rep(0.01, S.true)
 # rates_case <- "_pser"
 # positive small different rates
-rates.true <- c(0.01, 0.02)
-rates_case <- "_psdr"
+# rates.true <- c(0.01, 0.02)
+# rates_case <- "_psdr"
 # small equal rated
 # rates.true <- c(-0.01, -0.01)
 # rates_case <- "_ser"
@@ -346,24 +351,24 @@ rates_case <- "_psdr"
 # freqs_case <- "_sf"
 # freqs.true <- rep(1/12, S.true)
 # freqs_case <- "_sf"
-# different freqs
-freqs.true <- c(0.2, 0.22)
+freqs.true <- c(1/12, 1/6)
 freqs_case <- "_df"
+# different freqs
+# freqs.true <- c(0.2, 0.22)
+# freqs_case <- "_df"
 # close different freqs
 # freqs.true <- c(0.02, 0.0205)
 # freqs_case <- "_cdf"
 
-true_params <- c(sort(freqs.true), sort(rates.true))
-
 
 # equal amplitudes
-A <- rep(1, S.true)
-A_case <- "_ea"
+# A <- rep(1, S.true)
+# A_case <- "_ea"
 # A <- rep(30, S.true)
 # A_case <- "_ea"
 # different amplitudes
-# A <- c(1, 2)
-# A_case <- "_da"
+A <- c(2, 1)
+A_case <- "_da"
 
 poly.true <- 1 %o% rep(1, S.true)
 poly_case <- ""
@@ -377,10 +382,23 @@ phases_case <- "_ep"
 # phases.true <- c(0, pi / 3)
 # phases_case <- "_dp"
 
-complex.signal <- TRUE
-complex_case <- "_c" # complex
-# complex.signal <- FALSE
-# complex_case <- "_r" # real
+# complex.signal <- TRUE
+# complex_case <- "_c" # complex
+complex.signal <- FALSE
+complex_case <- "_r" # real
+
+if (complex.signal) {
+  true_params <- c(sort(freqs.true), sort(rates.true))
+} else {
+  half_idx <- which(freqs.true == 1 / 2)
+  if (length(half_idx) > 0) {
+    true_params <- c(sort(c(
+      freqs.true[half_idx], rep(freqs.true[-half_idx], each = 2) * c(1, -1)
+    )), sort(c(rates.true[half_idx], rep(rates.true[-half_idx], 2))))
+  } else {
+    true_params <- c(sort(rep(freqs.true, each = 2) * c(1, -1)), sort(rep(rates.true, 2)))
+  }
+}
 
 # N <- 25
 # n_case <- ""
@@ -414,9 +432,10 @@ if (n_case == "") {
                 by = 5)
 }
 
-groups_hossa <- list(1:max.r)
+# groups_hossa <- list(1:max.r)
+groups_hossa <- list(list(1:max.r), list(1:2, 3:4))
 trunc_dims <- list(1:3)
-est_dim_hossa <- seq(3)
+est_dim_hossa <- list(1:2, c(1, 3), 2:3, 1:3)
 
 # I >= L >= J
 if (n_case == "") {
@@ -452,12 +471,13 @@ tens.dims_list <- apply(tens.dims, 1, \(v) v[1:2], simplify = list)
 
 
 # sds <- seq(0, 0.6, by = 0.2)
-sds <- 0.6
+sds <- c(0.6, 1.2, 1.8)
 
 params_grid_ssa <- list(sd = sds, L_ssa = Ls_ssa)
 params_grid_hossa <- list(sd = sds,
                           td_hossa =  trunc_dims,
-                          L_hossa = tens.dims_list)
+                          L_hossa = tens.dims_list,
+                          groups_hossa = groups_hossa)
 params_grid_hoesprit <- list(sd = sds,
                           est_dim_hossa = est_dim_hossa,
                           L_hossa = tens.dims_list)
@@ -469,19 +489,30 @@ params_grid_hoesprit <- list(sd = sds,
 R <- 500
 
 ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_rec, rmse_ts_nd, signal, seed = 5)
-ssa_parest_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_est, rmmse_params_mat, true_params, seed = 5)
+# ssa_parest_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_est, rmmse_params_mat, true_params, seed = 5)
 
-pseudo_hosvd = FALSE
-tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
-tssa_parest_err <- calc_errors_by_params(params_grid_hoesprit, R, pred_hossa_est, rmmse_params_mat, true_params, seed = 5)
+# pseudo_hosvd = FALSE
+# tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
+# tssa_parest_err <- calc_errors_by_params(params_grid_hoesprit, R, pred_hossa_est, rmmse_params_mat, true_params, seed = 5)
 
 pseudo_hosvd = TRUE
 pseudo_tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
-pseudo_tssa_parest_err <- calc_errors_by_params(params_grid_hoesprit, R, pred_hossa_est, rmmse_params_mat, true_params, seed = 5)
+# pseudo_tssa_parest_err <- calc_errors_by_params(params_grid_hoesprit, R, pred_hossa_est, rmmse_params_mat, true_params, seed = 5)
 
-save(ssa_err, ssa_parest_err, tssa_err, tssa_parest_err, pseudo_tssa_err, pseudo_tssa_parest_err, file = paste0(rprojroot::find_rstudio_root_file(), "/Research/comp_results/cases_errors/", S_case, full_case, ".RData"))
+# save(ssa_err, ssa_parest_err, tssa_err, tssa_parest_err, pseudo_tssa_err, pseudo_tssa_parest_err, file = paste0(rprojroot::find_rstudio_root_file(), "/Research/comp_results/cases_errors/", S_case, full_case, ".RData"))
+# save(ssa_err, ssa_parest_err, pseudo_tssa_err, pseudo_tssa_parest_err, file = paste0(rprojroot::find_rstudio_root_file(), "/Research/comp_results/cases_errors/", S_case, full_case, ".RData"))
+save(ssa_err, pseudo_tssa_err, file = paste0(rprojroot::find_rstudio_root_file(), "/Research/comp_results/cases_errors/", S_case, full_case, ".RData"))
 ```
 
+```{r}
+min_errors(ssa_err)
+min_errors(ssa_parest_err)
+```
+
+```{r}
+min_errors(pseudo_tssa_err)
+min_errors(pseudo_tssa_parest_err)
+```
 
 ## Calculating pointwise errors
 ```{r}
@@ -774,7 +805,9 @@ rates_case <- "_nr"
 # freqs.true <- rep(1/12, S.true)
 # freqs_case <- "_sf"
 # different freqs
-freqs.true <- c(0.1, 0.2)
+# freqs.true <- c(0.1, 0.2)
+# freqs_case <- "_df"
+freqs.true <- c(1/12, 1/6)
 freqs_case <- "_df"
 # close different freqs
 # freqs.true <- c(0.02, 0.0205)
@@ -802,14 +835,14 @@ phases_case <- "_ep"
 # phases.true <- c(0, pi / 3)
 # phases_case <- "_dp"
 
-complex.signal <- TRUE
-complex_case <- "_c" # complex
-# complex.signal <- FALSE
-# complex_case <- "_r" # real
+# complex.signal <- TRUE
+# complex_case <- "_c" # complex
+complex.signal <- FALSE
+complex_case <- "_r" # real
 
 # N <- 25
 # n_case <- ""
-N <- 99
+N <- 95
 # N <- 71
 n_case <- "_long"
 ```
@@ -828,20 +861,20 @@ signal <- apply(signal_sep, 1, sum)
 ## Parameters grid for 1d case
 ```{r}
 if (!is.matrix(signal)) {
-groups_ssa <- as.list(1:max.r)
+groups_ssa <- list(1:2, 3:4)
 
 if (n_case == "") {
   Ls_ssa <- seq(from = max.r + 1,
                 to = (N + 1) %/% 2,
                 by = 1)
 } else {
-  Ls_ssa <- seq(from = max.r + 6 - (max.r + 1) %% 5,
+  Ls_ssa <- c(seq(from = max.r + 6 - (max.r + 1) %% 5,
                 to = (N + 1) %/% 2,
-                by = 5)
+                by = 5), 48)
 }
 
-groups_hossa <- as.list(1:max.r)
-groups_nested_hossa <- lapply(1:max.r, \(r) (2 * r - 1):(2 * r))
+groups_hossa <- list(1:2, 3:4)
+groups_nested_hossa <- list(1:2, 3:4)
 trunc_dims <- list(1:3)
 est_dim_hossa <- seq(3)
 
