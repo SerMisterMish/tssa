@@ -22,9 +22,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// reconstruct_group_tn
+Rcpp::ComplexVector reconstruct_group_tn(const Rcpp::ComplexVector& data);
+RcppExport SEXP _TssaCppDev_reconstruct_group_tn(SEXP dataSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::ComplexVector& >::type data(dataSEXP);
+    rcpp_result_gen = Rcpp::wrap(reconstruct_group_tn(data));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_TssaCppDev_reconstruct_group_t3", (DL_FUNC) &_TssaCppDev_reconstruct_group_t3, 1},
+    {"_TssaCppDev_reconstruct_group_tn", (DL_FUNC) &_TssaCppDev_reconstruct_group_tn, 1},
     {NULL, NULL, 0}
 };
 

@@ -5,3 +5,7 @@ reconstruct_group_t3 <- function(data) {
     .Call(`_TssaCppDev_reconstruct_group_t3`, data)
 }
 
+reconstruct_group_tn <- function(data) {
+    .Call(`_TssaCppDev_reconstruct_group_tn`, data)
+}
+
