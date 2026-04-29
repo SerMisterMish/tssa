@@ -18,7 +18,7 @@ static inline Rcomplex ndarr_get_elem(const Rcpp::ComplexVector& data, const std
   return data[lin];
 }
 
-static inline bool idx_inc(std::vector<size_t>& idx, const Rcpp::IntegerVector& upper_bounds) {
+bool idx_inc(std::vector<size_t>& idx, const Rcpp::IntegerVector& upper_bounds) {
   size_t n = idx.size();
   if (static_cast<size_t>(upper_bounds.size()) != n)
     throw std::length_error("Idx and Upper Bounds lengths not equal");
@@ -52,7 +52,7 @@ Rcpp::ComplexVector reconstruct_group_tn(const Rcpp::ComplexVector& data) {
   for (size_t i = 0; i < n; ++i) 
     N += dims[i] - 1;
   ++N;
-
+  
   Rcpp::ComplexVector result(N, 0);
   std::vector<size_t> idx(n, 0), counts(N, 0);
   
@@ -61,6 +61,9 @@ Rcpp::ComplexVector reconstruct_group_tn(const Rcpp::ComplexVector& data) {
     for (size_t i = 0; i < n; ++i) 
       idx_flat += idx[i];
     
+    if (idx_flat < 0 || idx_flat >= N)
+      throw std::out_of_range(std::format("Somehow out of range index was encountered: `{}`", idx_flat));
+      
     result[idx_flat] = result[idx_flat] + ndarr_get_elem(data, idx);
     ++counts[idx_flat];
   } while (idx_inc(idx, dims));

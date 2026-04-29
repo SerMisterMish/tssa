@@ -402,9 +402,11 @@ if (complex.signal) {
 
 # N <- 25
 # n_case <- ""
-N <- 100
+# N <- 100
 # N <- 71
-n_case <- "_long"
+# n_case <- "_long"
+N <- 150
+n_case <- "_longer"
 ```
 
 
@@ -432,9 +434,9 @@ if (n_case == "") {
                 by = 5)
 }
 
-# groups_hossa <- list(1:max.r)
-groups_hossa <- list(list(1:max.r), list(1:2, 3:4))
-trunc_dims <- list(1:3)
+groups_hossa <- list(1:max.r)
+# groups_hossa <- list(list(1:max.r), list(1:2, 3:4))
+td_hossa <- 1:3
 est_dim_hossa <- list(1:2, c(1, 3), 2:3, 1:3)
 
 # I >= L >= J
@@ -445,6 +447,9 @@ if (n_case == "") {
   Ls_tmp <- seq(from = max.r + 1,
                 to = N - max.r - 1,
                 by = 1)
+  Ks_tmp <- seq(from = max.r + 1,
+                to = N - max.r - 1,
+                by = 1)
 } else {
   Is_tmp <- seq(from = max.r + 1,
                 to = N - max.r - 1,
@@ -452,14 +457,19 @@ if (n_case == "") {
   Ls_tmp <- seq(from = max.r + 1,
                 to = N - max.r - 1,
                 by = 5)
+  Ks_tmp <- seq(from = max.r + 1,
+                to = N - max.r - 1,
+                by = 5)
 }
-correct.dims <- which(outer(Is_tmp, Ls_tmp, (\(i, l) ifelse((i >= l) &
-                                                      (N - i - l + 2 > max.r) &
-                                                      (N - i - l + 2 <= l), TRUE, FALSE
-))), arr.ind = TRUE)
+
+correct.dims <- which(
+  outer(Is_tmp, 
+        Ls_tmp, 
+        (\(i, l)ifelse((i >= l) & (N - i - l + 2 > max.r) & (N - i - l + 2 <= l), TRUE, FALSE))
+        ), 
+  arr.ind = TRUE)
 
 len.out <- nrow(correct.dims)
-
 tens.dims <- matrix(ncol = 3, nrow = len.out)
 colnames(tens.dims) <- c("I", "L", "J")
 tens.dims[, "I"] <- Is_tmp[correct.dims[, 1]]
@@ -469,15 +479,30 @@ tens.dims[, "J"] <- N - tens.dims[, "I"] - tens.dims[, "L"] + 2
 tens.dims <- tens.dims[order(tens.dims[, 1], tens.dims[, 2], decreasing = TRUE), ]
 tens.dims_list <- apply(tens.dims, 1, \(v) v[1:2], simplify = list)
 
+# TODO: Could come up with something better
+tens.dims_list_4d <- list()
+for (i in Is_tmp) {
+  for (l in Ls_tmp) {
+    if (l > i) next
+    for (k in Ks_tmp) {
+      j <- N - i - l - k + 3
+      if (k > l || j > k || j <= max.r) next
+      tens.dims_list_4d <- c(tens.dims_list_4d, list(c(i, l, k)))
+    }
+  }
+}
 
 # sds <- seq(0, 0.6, by = 0.2)
-sds <- c(0.6, 1.2, 1.8)
+# sds <- c(0.6, 1.2, 1.8)
+sds <- 0.6
 
 params_grid_ssa <- list(sd = sds, L_ssa = Ls_ssa)
 params_grid_hossa <- list(sd = sds,
-                          td_hossa =  trunc_dims,
                           L_hossa = tens.dims_list,
                           groups_hossa = groups_hossa)
+params_grid_hossa_4d <- list(sd = sds,
+                              L_hossa = tens.dims_list_4d,
+                              groups_hossa = groups_hossa)
 params_grid_hoesprit <- list(sd = sds,
                           est_dim_hossa = est_dim_hossa,
                           L_hossa = tens.dims_list)
@@ -486,7 +511,8 @@ params_grid_hoesprit <- list(sd = sds,
 
 ## Calculating errors per parameters
 ```{r}
-R <- 500
+# R <- 500
+R <- 100
 
 ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_rec, rmse_ts_nd, signal, seed = 5)
 # ssa_parest_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_est, rmmse_params_mat, true_params, seed = 5)
@@ -497,11 +523,13 @@ ssa_err <- calc_errors_by_params(params_grid_ssa, R, pred_ssa_rec, rmse_ts_nd, s
 
 pseudo_hosvd = TRUE
 pseudo_tssa_err <- calc_errors_by_params(params_grid_hossa, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
+
+pseudo_tssa_4d_err <- calc_errors_by_params(params_grid_hossa_4d, R, pred_hossa_rec, rmse_ts_nd, signal, seed = 5)
 # pseudo_tssa_parest_err <- calc_errors_by_params(params_grid_hoesprit, R, pred_hossa_est, rmmse_params_mat, true_params, seed = 5)
 
 # save(ssa_err, ssa_parest_err, tssa_err, tssa_parest_err, pseudo_tssa_err, pseudo_tssa_parest_err, file = paste0(rprojroot::find_rstudio_root_file(), "/Research/comp_results/cases_errors/", S_case, full_case, ".RData"))
 # save(ssa_err, ssa_parest_err, pseudo_tssa_err, pseudo_tssa_parest_err, file = paste0(rprojroot::find_rstudio_root_file(), "/Research/comp_results/cases_errors/", S_case, full_case, ".RData"))
-save(ssa_err, pseudo_tssa_err, file = paste0(rprojroot::find_rstudio_root_file(), "/Research/comp_results/cases_errors/", S_case, full_case, ".RData"))
+save(ssa_err, pseudo_tssa_err, pseudo_tssa_4d_err, file = paste0(rprojroot::find_rstudio_root_file(), "/Research/comp_results/cases_errors/", S_case, full_case, ".RData"))
 ```
 
 ```{r}
@@ -511,8 +539,12 @@ min_errors(ssa_parest_err)
 
 ```{r}
 min_errors(pseudo_tssa_err)
-min_errors(pseudo_tssa_parest_err)
 ```
+
+```{r}
+min_errors(pseudo_tssa_4d_err)
+```
+
 
 ## Calculating pointwise errors
 ```{r}

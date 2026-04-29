@@ -12,7 +12,8 @@ library(rTensor)
 library(Rcpp)
 library(RcppArmadillo)
 
-if (!exists("reconstruct_group_t3", mode = "function")) {
+if (!(exists("reconstruct_group_t3", mode = "function") &&
+      exists("reconstruct_group_tn", mode = "function"))) {
   if (!require("TssaCppDev")) {
     if (!require("devtools")) {
       install.packages("devtools")
@@ -90,7 +91,7 @@ get_unfolds <- function(x, L, rm.repeated = TRUE) {
     unfolds_r <- lapply(L[-n], \(l) Rssa::new.hbhmat(Re(hn), c(l, 1)))
     unfolds_r[[n]] <- Rssa::new.hbhmat(Re(hlast), c(L[n], 1))
   } else {
-    unfolds_r <- lapply(L, Rssa::new.hmat, F = Re(x))
+    unfolds_r <- lapply(L, FUN = Rssa::new.hmat, F = Re(x))
   }
   
   if (is.complex(x)) {
@@ -100,7 +101,7 @@ get_unfolds <- function(x, L, rm.repeated = TRUE) {
       unfolds_i <- lapply(L[-n], \(l) Rssa::new.hbhmat(Im(hn), c(l, 1)))
       unfolds_i[[n]] <- Rssa::new.hbhmat(Im(hlast), c(L[n], 1))
     } else {
-      unfolds_i <- lapply(L, Rssa::new.hmat, F = Im(x))
+      unfolds_i <- lapply(L, Fun = Rssa::new.hmat, F = Im(x))
     }
   } else unfolds_i <- NULL
   invisible(list(Re = unfolds_r, Im = unfolds_i))
