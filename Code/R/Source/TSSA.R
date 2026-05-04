@@ -101,7 +101,7 @@ get_unfolds <- function(x, L, rm.repeated = TRUE) {
       unfolds_i <- lapply(L[-n], \(l) Rssa::new.hbhmat(Im(hn), c(l, 1)))
       unfolds_i[[n]] <- Rssa::new.hbhmat(Im(hlast), c(L[n], 1))
     } else {
-      unfolds_i <- lapply(L, Fun = Rssa::new.hmat, F = Im(x))
+      unfolds_i <- lapply(L, FUN = Rssa::new.hmat, F = Im(x))
     }
   } else unfolds_i <- NULL
   invisible(list(Re = unfolds_r, Im = unfolds_i))
@@ -268,34 +268,13 @@ tens <- function(x, L, kind = c("SSA", "MSSA", "CP"), rm.repeated = FALSE) {
   return(X)
 }
 
-.USE.R.RECONSTRUCT <- FALSE
 reconstruct.group3 <- function(X.tens, kind = c("SSA", "MSSA", "CP")) {
   stopifnot(is(X.tens, "Tensor"))
   X <- X.tens@data
   kind <- toupper(kind)
   kind <- match.arg(kind)
   if (kind == "SSA") {
-    if (!.USE.R.RECONSTRUCT)
-      s <- reconstruct_group_t3(X)
-    else {
-      I <- length(X[, 1, 1])
-      L <- length(X[1, , 1])
-      K <- length(X[1, 1, ])
-      s <- vector(mode = "numeric", length = I + L + K - 2)
-      for (C in 3:(I + L + K)) {
-        sum <- 0
-        count <- 0
-        for (i in 1:(C - 2)) {
-          for (l in 1:(C - 1 - i)) {
-            if (i <= I && l <= L && C - i - l <= K) {
-              sum <- sum + X[i, l, C - i - l]
-              count <- count + 1
-            }
-          }
-        }
-        s[C - 2] <- sum / count
-      }
-    }
+    s <- reconstruct_group_t3(X)
   } else if (kind == "CP") {
     s <- Reduce(c, lapply(seq(dim(X)[1]), function(i)
       hankel(as.matrix(X[i, , ]))))
@@ -308,6 +287,7 @@ reconstruct.group3 <- function(X.tens, kind = c("SSA", "MSSA", "CP")) {
 reconstruct.group <- function(X.tens, kind = c("SSA", "MSSA", "CP")) {
   stopifnot(is(X.tens, "Tensor"))
   X <- X.tens@data
+  modes <- X.tens@modes
   kind <- toupper(kind)
   kind <- match.arg(kind)
   if (kind == "SSA") {
@@ -319,6 +299,53 @@ reconstruct.group <- function(X.tens, kind = c("SSA", "MSSA", "CP")) {
     s <- Reduce(cbind, apply(X, 3, Rssa::hankel, simplify = FALSE))
   }
   if (is.complex(X)) return(s) else return(Re(s))
+}
+
+.pad0 <- function(x, N) c(x, rep(0, N - length(x)))
+.mvpad0 <- function(x, N) rbind(x, matrix(0, nrow = N - nrow(x), ncol = ncol(x)))
+
+reconstruct.rank1.from.decomp <- function(dec, idx) {
+  modes <- attr(dec, "modes")
+  if (is.null(modes)) modes <- sapply(dec$U, dim)[1,]
+  nm <- length(modes)
+  stopifnot(nm == length(idx) && all(modes >= idx))
+  
+  N <- attr(dec, "N")
+  if (is.null(N)) N <- sum(modes) - nm + 1
+  
+  us_fft <- attr(dec, "us_fft")
+  if (is.null(us_fft)) {
+    u_fft <- lapply(seq(nm), \(j) fft(.pad0(dec$U[[j]][, idx[j]], N)))
+  } else {
+    u_fft <- lapply(seq(nm), \(j) us_fft[[j]][, idx[j]])
+  }
+  
+  gp <- fft(Reduce(`*`, u_fft), inverse = TRUE)
+  
+  # TODO: find formula for weights
+  w <- attr(dec, "w")
+  if (is.null(w)) w <- 1 / as.vector(table(tens(seq(N), modes[-nm])@data)) / N
+  
+  sig <- do.call(`[`, c(list(dec$Z@data), as.list(idx)))
+  
+  if (is.complex(dec$Z@data)) return(sig * gp * w) else return(Re(sig * gp * w))
+}
+
+reconstruct.group.from.decomp <- function(dec, group) {
+  w <- attr(dec, "w")
+  if (is.null(w)) {
+    modes <- sapply(dec$U, dim)[1,]
+    nm <- length(dec$U)
+    N <- sum(modes) - nm + 1
+    w <- 1 / as.vector(table(tens(seq(N), modes[-nm])@data)) / N
+  }
+  
+  group_grid <- expand.grid(group)
+  res <- 0
+  for (i in seq(nrow(group_grid))) {
+    res <- res + reconstruct.rank1.from.decomp(dec, unlist(group_grid[i,]))
+  }
+  res
 }
 
 # Complex norm
@@ -355,7 +382,8 @@ setMethod("get_tensor_eigenvalues", "list", function(X, dims = seq(X$Z@num_modes
 hosvd_mod <- function(tnsr,
                       ranks = NULL,
                       svd.method = c("svd", "primme"),
-                      status = FALSE)
+                      status = FALSE,
+                      calc.est = FALSE)
 {
   stopifnot(is(tnsr, "Tensor"))
   if (sum(ranks <= 0) != 0)
@@ -454,14 +482,22 @@ hosvd_mod <- function(tnsr,
   Z <- ttl(tnsr, lapply(U_list, (\(.) Conj(t(
     .
   )))), ms = 1:num_modes)
-  est <- ttl(Z, U_list, ms = 1:num_modes)
-  resid <- fnorm_complex(est - tnsr)
-  list(
-    Z = Z,
-    U = U_list,
-    est = est,
-    fnorm_resid = resid
-  )
+  if (calc.est) {
+    est <- ttl(Z, U_list, ms = 1:num_modes)
+    resid <- fnorm_complex(est - tnsr)
+    ret <- list(
+      Z = Z,
+      U = U_list,
+      est = est,
+      fnorm_resid = resid
+    )
+  } else {
+    ret <- list(
+      Z = Z,
+      U = U_list
+    ) 
+  }
+  ret
 }
 
 tucker_mod <- function(tnsr,
@@ -801,41 +837,47 @@ tens_esprit <- function(s,
   decomp <- toupper(decomp)
   decomp <- match.arg(decomp)
   svd.method <- match.arg(svd.method)
+  is.decomposition <- attr(s, "is.decomposition")
   
-  if (identical(kind[1], "TSSA"))
-    H <- tens(s, L, kind = "SSA", rm.repeated = rm.repeated)
-  else
-  {
-    if (is.null(r3)) {
-      simpleWarning("r3 argument was not provided, setting
-                    r3 as maximum across groups")
-      r3 <- max_rank
+  if (is.null(is.decomposition) || !is.decomposition) {
+    if (identical(kind[1], "TSSA"))
+      H <- tens(s, L, kind = "SSA", rm.repeated = rm.repeated)
+    else
+    {
+      if (is.null(r3)) {
+        simpleWarning("r3 argument was not provided, setting
+                      r3 as maximum across groups")
+        r3 <- max_rank
+      }
+      H <- tens(s, L, kind = "MSSA")
     }
-    H <- tens(s, L, kind = "MSSA")
-  }
-  
-  max_ranks <- pmin(max_rank, H@modes)
-  
-  if (identical(kind[1], "TMSSA")) {
-    max_ranks[3] <- min(max_ranks[3], r3)
-    if (identical(decomp[1], "HOOI")) {
+    
+    max_ranks <- pmin(max_rank, H@modes)
+    
+    if (identical(kind[1], "TMSSA")) {
+      max_ranks[3] <- min(max_ranks[3], r3)
+      if (identical(decomp[1], "HOOI")) {
+        H.decomp <- tucker_mod(H, max_ranks, status = status)
+      } else {
+        H.decomp <- hosvd_mod(
+          H,
+          max_ranks,
+          svd.method = svd.method,
+          status = status
+        )
+      }
+    } else if (identical(decomp[1], "HOOI")) {
       H.decomp <- tucker_mod(H, max_ranks, status = status)
     } else {
-      H.decomp <- hosvd_mod(
-        H,
-        max_ranks,
-        svd.method = svd.method,
-        status = status
-      )
+      H.decomp <- hosvd_mod(H,
+                            max_ranks,
+                            svd.method = svd.method,
+                            status = status)
     }
-  } else if (identical(decomp[1], "HOOI")) {
-    H.decomp <- tucker_mod(H, max_ranks, status = status)
   } else {
-    H.decomp <- hosvd_mod(H,
-                          max_ranks,
-                          svd.method = svd.method,
-                          status = status)
+    H.decomp <- s
   }
+  
   estimates <- list()
   if (is.list(est_dim)) est_dim <- unlist(est_dim)
 
@@ -897,6 +939,7 @@ tens_ssa_decompose <- function(s,
     HOOI = tucker_mod(H, ranks = neig, status = status, ...),
     CP = cp_mod(H, num_components = neig, status = status, ...)
   )
+  attr(H.dec, "is.decomposition") <- TRUE
   H.dec
 }
 
@@ -906,66 +949,89 @@ tens_ssa_reconstruct <- function(s,
                                  decomp = c("HOSVD", "HOOI", "CP"),
                                  svd.method = c("svd", "primme"),
                                  rm.repeated = FALSE,
+                                 rec.from.decomp = TRUE,
                                  trunc_dims = NULL,
                                  status = FALSE,
                                  cp_span = c("mean", "last"),
                                  ...) {
+  is.decomposition <- attr(s, "is.decomposition")
   decomp <- toupper(decomp)
   decomp <- match.arg(decomp)
   svd.method <- match.arg(svd.method)
-  if (!is(s, "Tensor")) {
-    if (decomp == "CP")
-      H <- tens(s, L, kind = "CP")
-    else
-      H <- tens(s, L, kind = "SSA", rm.repeated = rm.repeated)
-  } else {
-    H <- s
-    if (is.null(attr(H, "unfolds_r"))) {
-      unfolds <- get_unfolds(H)
-      attr(H, "unfolds_r") <- unfolds$Re
-      if (is.complex(H@data)) attr(H, "unfolds_i") <- unfolds$Im
+  if (is.null(is.decomposition) || !is.decomposition) {
+    if (!is(s, "Tensor")) {
+      if (decomp == "CP")
+        H <- tens(s, L, kind = "CP")
+      else
+        H <- tens(s, L, kind = "SSA", rm.repeated = rm.repeated)
+    } else {
+      H <- s
+      L <- H@modes[-(H@num_modes)]
+      if (is.null(attr(H, "unfolds_r"))) {
+        unfolds <- get_unfolds(H)
+        attr(H, "unfolds_r") <- unfolds$Re
+        if (is.complex(H@data))
+          attr(H, "unfolds_i") <- unfolds$Im
+      }
     }
+    
+    H.dec <- switch(
+      decomp,
+      HOSVD = hosvd_mod(
+        H,
+        ranks = trunc_ranks,
+        svd.method = svd.method,
+        status = status,
+        ...
+      ),
+      HOOI = tucker_mod(
+        H,
+        ranks = trunc_ranks,
+        svd.method = svd.method,
+        status = status,
+        ...
+      ),
+      CP = cp_mod(H, num_components = max_rank, status = status, ...)
+    )
+  } else {
+    H.dec <- s  
   }
   
+  modes <- sapply(H.dec$U, dim)[1,]
+  nm <- length(H.dec$U)
+
   if (missing(groups)) {
-    groups = as.list(seq(min(dim(H))))
+    groups = as.list(seq(min(modes)))
   }
   max_rank <- max(sapply(groups, max))
-  
+
   if (decomp != "CP") {
     if (is.null(trunc_dims)) {
-      trunc_dims <- seq(length(L) + 1)
-      trunc_ranks <- rep(max_rank, length(L) + 1)
+      trunc_dims <- seq(nm)
+      trunc_ranks <- rep(max_rank, nm)
     } else {
-      trunc_ranks <- dim(H)
+      trunc_ranks <- modes
       trunc_ranks[trunc_dims] <- max_rank
     }
   }
-  
-  H.dec <- switch(
-    decomp,
-    HOSVD = hosvd_mod(
-      H,
-      ranks = trunc_ranks,
-      svd.method = svd.method,
-      status = status,
-      ...
-    ),
-    HOOI = tucker_mod(
-      H,
-      ranks = trunc_ranks,
-      svd.method = svd.method,
-      status = status,
-      ...
-    ),
-    CP = cp_mod(H, num_components = max_rank, status = status, ...)
-  )
+    
   
   rec <- list()
   if (is.null(names(groups)))
     group.names <- paste0("F", seq_along(groups))
   else
     group.names <- names(groups)
+  
+  if (rec.from.decomp) {
+    N <- sum(modes) - nm + 1
+    attr(H.dec, "w") <- 1 / as.vector(table(tens(seq(N), modes[-nm])@data)) / N
+    attr(H.dec, "N") <- N
+    attr(H.dec, "modes") <- modes
+    
+    attr(H.dec, "us_fft") <- lapply(seq(nm), \(j) {
+      mvfft(.mvpad0(H.dec$U[[j]][, seq(trunc_ranks[j]), drop = FALSE], N))
+    })
+  }
   
   for (i in seq_along(groups)) {
     if (decomp == "CP") {
@@ -988,15 +1054,19 @@ tens_ssa_reconstruct <- function(s,
         }
       }
     } else {
-      group <- rep(list(groups[[i]]), length(L) + 1)
-      group[-trunc_dims] <- lapply(dim(H)[-trunc_dims], seq)
+      group <- rep(list(groups[[i]]), nm)
+      group[-trunc_dims] <- lapply(modes[-trunc_dims], seq)
       
-      H.rec <- ttl(
-        do.call(`[`, c(list(H.dec$Z), group, list(drop = FALSE))), 
-        lapply(seq(length(L) + 1), \(i) as.matrix(H.dec$U[[i]][, group[[i]]])), 
-        seq(length(L) + 1))
-      
-      rec[[i]] <- reconstruct.group(H.rec, kind = "SSA")
+      if (rec.from.decomp) {
+        rec[[i]] <- reconstruct.group.from.decomp(H.dec, group = group)
+      } else {
+        H.rec <- ttl(
+          do.call(`[`, c(list(H.dec$Z), group, list(drop = FALSE))), 
+          lapply(seq(nm), \(i) as.matrix(H.dec$U[[i]][, group[[i]]])), 
+          seq(nm))
+        
+        rec[[i]] <- reconstruct.group(H.rec, kind = "SSA")
+      }
     }
   }
   

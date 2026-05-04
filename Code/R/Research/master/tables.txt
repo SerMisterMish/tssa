@@ -1,0 +1,154 @@
+\begin{table}[!ht]
+\centering
+\caption{Оптимальные значения RMSE и соответствующие параметры для ряда~\ref{enum:compcase-1d-1_1_1}} 
+\label{tab:compcase-1d-1_1_1}
+\begin{tabular}{ccccc}
+  \hline
+Задача & HOSSA & SSA & 3D UTSSA & 4D UTSSA \\ 
+  \hline
+Выделение & \begin{tabular}{c}0.1013\\ $L = (57, 42)$\end{tabular} & \begin{tabular}{c}0.1005\\ $L = (42)$\end{tabular} & \begin{tabular}{c}0.0969\\ $L = (52, 27)$\end{tabular} & \begin{tabular}{c}0.0969\\ $L = (52, 27, 17)$\end{tabular} \\ 
+  Оценка & --- & --- & --- & --- \\ 
+  Разделение & --- & --- & --- & --- \\ 
+   \hline
+\end{tabular}
+\end{table}
+\begin{table}[!ht]
+\centering
+\caption{Оптимальные значения RMSE и соответствующие параметры для ряда~\ref{enum:compcase-1d-1_1_2}} 
+\label{tab:compcase-1d-1_1_2}
+\begin{tabular}{ccccc}
+  \hline
+Задача & HOSSA & SSA & 3D UTSSA & 4D UTSSA \\ 
+  \hline
+Выделение & \begin{tabular}{c}0.1017\\ $L = (57, 42)$\end{tabular} & \begin{tabular}{c}0.1009\\ $L = (42)$\end{tabular} & \begin{tabular}{c}0.0967\\ $L = (47, 32)$\end{tabular} & \begin{tabular}{c}0.0971\\ $L = (52, 32, 12)$\end{tabular} \\ 
+  Оценка & \begin{tabular}{c}6.316e-04\\ $L = (57, 42), d = 3$\end{tabular} & \begin{tabular}{c}6.283e-04\\ $L = (42)$\end{tabular} & --- & --- \\ 
+  Разделение & --- & --- & --- & --- \\ 
+   \hline
+\end{tabular}
+\end{table}
+\begin{table}[!ht]
+\centering
+\caption{Оптимальные значения RMSE и соответствующие параметры для ряда~\ref{enum:compcase-1d-1_1_3}} 
+\label{tab:compcase-1d-1_1_3}
+\begin{tabular}{ccccc}
+  \hline
+Задача & HOSSA & SSA & 3D UTSSA & 4D UTSSA \\ 
+  \hline
+Выделение & \begin{tabular}{c}0.1449\\ $L = (58, 38)$\end{tabular} & \begin{tabular}{c}0.1406\\ $L = (38)$\end{tabular} & \begin{tabular}{c}0.1366\\ $L = (53, 28)$\end{tabular} & \begin{tabular}{c}0.1369\\ $L = (53, 28, 18)$\end{tabular} \\ 
+  Оценка & \begin{tabular}{c}2.274e-03\\ $L = (63, 33), d = 1$\end{tabular} & \begin{tabular}{c}2.322e-03\\ $L = (33)$\end{tabular} & --- & --- \\ 
+  Разделение & --- & --- & --- & --- \\ 
+   \hline
+\end{tabular}
+\end{table}
+\begin{table}[!ht]
+\centering
+\caption{Оптимальные значения RMSE и соответствующие параметры для ряда~\ref{enum:compcase-1d-1_1_4}} 
+\label{tab:compcase-1d-1_1_4}
+\begin{tabular}{ccccc}
+  \hline
+Задача & HOSSA & SSA & 3D UTSSA & 4D UTSSA \\ 
+  \hline
+Выделение & \begin{tabular}{c}0.1441\\ $L = (58, 38)$\end{tabular} & \begin{tabular}{c}0.1397\\ $L = (43)$\end{tabular} & \begin{tabular}{c}0.1339\\ $L = (48, 33)$\end{tabular} & \begin{tabular}{c}0.1340\\ $L = (48, 33, 18)$\end{tabular} \\ 
+  Оценка & \begin{tabular}{c}8.911e-04\\ $L = (63, 33), d = 1$\end{tabular} & \begin{tabular}{c}8.981e-04\\ $L = (38)$\end{tabular} & --- & --- \\ 
+  Разделение & --- & --- & --- & --- \\ 
+   \hline
+\end{tabular}
+\end{table}
+\begin{table}[!ht]
+\centering
+\caption{Оптимальные значения RMSE и соответствующие параметры для ряда~\ref{enum:compcase-1d-1_1_5}} 
+\label{tab:compcase-1d-1_1_5}
+\begin{tabular}{ccccc}
+  \hline
+Задача & HOSSA & SSA & 3D UTSSA & 4D UTSSA \\ 
+  \hline
+Выделение & \begin{tabular}{c}0.1814\\ $L = (54, 39)$\end{tabular} & \begin{tabular}{c}0.1726\\ $L = (44)$\end{tabular} & \begin{tabular}{c}0.1675\\ $L = (49, 29)$\end{tabular} & \begin{tabular}{c}0.1683\\ $L = (49, 24, 24)$\end{tabular} \\ 
+  Оценка & --- & --- & --- & --- \\ 
+  Разделение & \begin{tabular}{c}0.1325\\ $L = (59, 29)$\end{tabular} & \begin{tabular}{c}0.1213\\ $L = (39)$\end{tabular} & \begin{tabular}{c}0.1169\\ $L = (49, 29)$\end{tabular} & \begin{tabular}{c}0.1185\\ $L = (49, 24, 19)$\end{tabular} \\ 
+   \hline
+\end{tabular}
+\end{table}
+\begin{table}[!ht]
+\centering
+\caption{Оптимальные значения RMSE и соответствующие параметры для ряда~\ref{enum:compcase-1d-1_1_6}} 
+\label{tab:compcase-1d-1_1_6}
+\begin{tabular}{ccccc}
+  \hline
+Задача & HOSSA & SSA & 3D UTSSA & 4D UTSSA \\ 
+  \hline
+Выделение & \begin{tabular}{c}0.2090\\ $L = (55, 40)$\end{tabular} & \begin{tabular}{c}0.2014\\ $L = (40)$\end{tabular} & \begin{tabular}{c}0.1948\\ $L = (50, 35)$\end{tabular} & \begin{tabular}{c}0.1953\\ $L = (50, 30, 15)$\end{tabular} \\ 
+  Оценка & \begin{tabular}{c}1.838e-03\\ $L = (65, 30), d = 1$\end{tabular} & \begin{tabular}{c}1.767e-03\\ $L = (30)$\end{tabular} & --- & --- \\ 
+  Разделение & \begin{tabular}{c}0.1531\\ $L = (50, 40)$\end{tabular} & \begin{tabular}{c}0.1416\\ $L = (40)$\end{tabular} & \begin{tabular}{c}0.1363\\ $L = (50, 30)$\end{tabular} & \begin{tabular}{c}0.1435\\ $L = (50, 20, 20)$\end{tabular} \\ 
+   \hline
+\end{tabular}
+\end{table}
+\begin{table}[!ht]
+\centering
+\caption{Оптимальные значения RMSE и соответствующие параметры для ряда~\ref{enum:compcase-1d-1_1_7}} 
+\label{tab:compcase-1d-1_1_7}
+\begin{tabular}{ccccc}
+  \hline
+Задача & HOSSA & SSA & 3D UTSSA & 4D UTSSA \\ 
+  \hline
+Выделение & \begin{tabular}{c}0.1472\\ $L = (53, 43)$\end{tabular} & \begin{tabular}{c}0.1422\\ $L = (43)$\end{tabular} & \begin{tabular}{c}0.1370\\ $L = (58, 38)$\end{tabular} & \begin{tabular}{c}0.1375\\ $L = (58, 38, 3)$\end{tabular} \\ 
+  Оценка & --- & --- & --- & --- \\ 
+  Разделение & --- & --- & --- & --- \\ 
+   \hline
+\end{tabular}
+\end{table}
+\begin{table}[!ht]
+\centering
+\caption{Оптимальные значения RMSE и соответствующие параметры для ряда~\ref{enum:compcase-1d-1_2_1}} 
+\label{tab:compcase-1d-1_2_1}
+\begin{tabular}{ccccc}
+  \hline
+Задача & HOSSA & SSA & 3D UTSSA & 4D UTSSA \\ 
+  \hline
+Выделение & \begin{tabular}{c}0.0992\\ $L = (62, 37)$\end{tabular} & \begin{tabular}{c}0.0985\\ $L = (37)$\end{tabular} & \begin{tabular}{c}0.0951\\ $L = (52, 32)$\end{tabular} & \begin{tabular}{c}0.0950\\ $L = (52, 27, 17)$\end{tabular} \\ 
+  Оценка & \begin{tabular}{c}1.141e-03\\ $L = (67, 32), d = 1$\end{tabular} & \begin{tabular}{c}1.144e-03\\ $L = (37)$\end{tabular} & --- & --- \\ 
+  Разделение & --- & --- & --- & --- \\ 
+   \hline
+\end{tabular}
+\end{table}
+\begin{table}[!ht]
+\centering
+\caption{Оптимальные значения RMSE и соответствующие параметры для ряда~\ref{enum:compcase-1d-1_2_2}} 
+\label{tab:compcase-1d-1_2_2}
+\begin{tabular}{ccccc}
+  \hline
+Задача & HOSSA & SSA & 3D UTSSA & 4D UTSSA \\ 
+  \hline
+Выделение & \begin{tabular}{c}0.0991\\ $L = (57, 42)$\end{tabular} & \begin{tabular}{c}0.0983\\ $L = (42)$\end{tabular} & \begin{tabular}{c}0.0941\\ $L = (47, 32)$\end{tabular} & \begin{tabular}{c}0.0942\\ $L = (47, 32, 17)$\end{tabular} \\ 
+  Оценка & \begin{tabular}{c}4.382e-04\\ $L = (62, 37), d = 2$\end{tabular} & \begin{tabular}{c}4.338e-04\\ $L = (37)$\end{tabular} & --- & --- \\ 
+  Разделение & --- & --- & --- & --- \\ 
+   \hline
+\end{tabular}
+\end{table}
+\begin{table}[!ht]
+\centering
+\caption{Оптимальные значения RMSE и соответствующие параметры для ряда~\ref{enum:compcase-1d-1_2_3}} 
+\label{tab:compcase-1d-1_2_3}
+\begin{tabular}{ccccc}
+  \hline
+Задача & HOSSA & SSA & 3D UTSSA & 4D UTSSA \\ 
+  \hline
+Выделение & \begin{tabular}{c}0.1464\\ $L = (58, 38)$\end{tabular} & \begin{tabular}{c}0.1422\\ $L = (43)$\end{tabular} & \begin{tabular}{c}0.1370\\ $L = (48, 33)$\end{tabular} & \begin{tabular}{c}0.1372\\ $L = (48, 33, 18)$\end{tabular} \\ 
+  Оценка & --- & --- & --- & --- \\ 
+  Разделение & \begin{tabular}{c}0.1118\\ $L = (53, 38)$\end{tabular} & \begin{tabular}{c}0.1037\\ $L = (38)$\end{tabular} & \begin{tabular}{c}0.1022\\ $L = (48, 33)$\end{tabular} & \begin{tabular}{c}0.1312\\ $L = (38, 23, 23)$\end{tabular} \\ 
+   \hline
+\end{tabular}
+\end{table}
+\begin{table}[!ht]
+\centering
+\caption{Оптимальные значения RMSE и соответствующие параметры для ряда~\ref{enum:compcase-1d-1_2_4}} 
+\label{tab:compcase-1d-1_2_4}
+\begin{tabular}{ccccc}
+  \hline
+Задача & HOSSA & SSA & 3D UTSSA & 4D UTSSA \\ 
+  \hline
+Выделение & \begin{tabular}{c}0.1442\\ $L = (58, 38)$\end{tabular} & \begin{tabular}{c}0.1402\\ $L = (43)$\end{tabular} & \begin{tabular}{c}0.1355\\ $L = (53, 33)$\end{tabular} & \begin{tabular}{c}0.1356\\ $L = (53, 28, 13)$\end{tabular} \\ 
+  Оценка & \begin{tabular}{c}9.196e-04\\ $L = (63, 33), d = 1$\end{tabular} & \begin{tabular}{c}9.449e-04\\ $L = (38)$\end{tabular} & --- & --- \\ 
+  Разделение & \begin{tabular}{c}0.1070\\ $L = (53, 38)$\end{tabular} & \begin{tabular}{c}0.1000\\ $L = (38)$\end{tabular} & \begin{tabular}{c}0.0980\\ $L = (48, 33)$\end{tabular} & \begin{tabular}{c}0.1307\\ $L = (33, 28, 23)$\end{tabular} \\ 
+   \hline
+\end{tabular}
+\end{table}
