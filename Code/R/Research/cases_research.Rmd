@@ -15,7 +15,7 @@ library(Rssa)
 library(svd)
 library(scales)
 library(rTensor)
-library(english)
+# library(english)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -579,3 +579,32 @@ print_errors_m(tsvd_tssa_err)
 ```{r}
 ((ssa_err_summ[-1, 2] - tssa_err_summ[-1, 2]) / ssa_err_summ[-1, 1]) |> rename(err_diff = best) |> cbind(ssa_err_summ[-1, 1])
 ```
+
+```{r}
+P <- 20
+load_name <- sprintf("Research/comp_results/cases_errors/one_periodic_mv_c%d_nr_ef_da_ep_r.RData", P)
+load(load_name)
+summarise_errors(rename(ssa_err, L = L_mssa)) |> select(sd, best, best_L) |> round(3)
+summarise_errors(rename(tssa_err, L = L_homssa)) |> select(sd, best, best_L) |> round(3)
+```
+
+```{r}
+P <- 40
+load_name <- sprintf("Research/comp_results/cases_errors/one_periodic_mv_c%d_Ler_ef_dap1_ep_r.RData", P)
+load(load_name)
+summarise_errors(rename(ssa_err, L = L_mssa)) |> select(sd, best, best_L) |> round(3)
+summarise_errors(rename(tssa_err, L = L_homssa)) |> select(sd, best, best_L) |> round(3)
+```
+
+
+```{r}
+P <- 40
+load_name <- sprintf("Research/comp_results/cases_errors/two_periodics_mv_long_c%d_dsr_dsf_dap1_ep_r.RData", P)
+load(load_name)
+summarise_errors(rename(ssa_err, L = L_mssa)) |> select(sd, best, best_L) |> round(3)
+summarise_errors(rename(tssa_err, L = L_homssa)) |> select(sd, best, best_L) |> round(3)
+```
+
+
+
+
