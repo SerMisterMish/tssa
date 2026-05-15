@@ -41,7 +41,7 @@ get_true_params <- function() {
   true_params
 }
 
-get_param_grids <- function(groups_sep = NULL, est_dim = NULL) {
+get_param_grids <- function(groups_sep = NULL, est_dim = NULL, trunc_dims = NULL) {
   .groups_ssa <- list(list(1:max.r))
   .Ls_ssa <- seq(from = max.r + 1,
                 to = (N + 1) %/% 2,
@@ -97,6 +97,9 @@ get_param_grids <- function(groups_sep = NULL, est_dim = NULL) {
     }
   }
   
+  if (is.null(trunc_dims)) .td_hossa <- list(NULL)
+  else .td_hossa <- trunc_dims
+  
   .sds <- 0.6
   
   params_grid_ssa <<- list(sd = .sds, L_ssa = .Ls_ssa, groups_ssa = .groups_ssa)
@@ -105,14 +108,16 @@ get_param_grids <- function(groups_sep = NULL, est_dim = NULL) {
                              L_hossa = .tens.dims_list,
                              use.hutd = FALSE,
                              groups_hossa = .groups_hossa,
-                             groups_hossa_sep = .groups_hossa_sep)
+                             groups_hossa_sep = .groups_hossa_sep,
+                             td_hossa = .td_hossa)
   if (!is.null(est_dim)) params_grid_hossa <<- c(params_grid_hossa, list(est_dim_hossa = est_dim))
   
   params_grid_utssa <<- list(sd = .sds,
                             L_hossa = .tens.dims_list,
                             use.hutd = TRUE,
                             groups_hossa = .groups_hossa,
-                            groups_hossa_sep = .groups_hossa_sep)
+                            groups_hossa_sep = .groups_hossa_sep,
+                            td_hossa = .td_hossa)
   
   params_grid_utssa_4d <<- list(sd = .sds,
                                use.hutd = TRUE,
@@ -127,7 +132,7 @@ get_signal <- function() {
   signal <<- apply(signal_sep, 1, sum)
 }
 
-run_num <- function(groups_sep = NULL, est_dim = NULL, rec = FALSE, sep = FALSE, sep_nest = FALSE, est = FALSE) {
+run_num <- function(groups_sep = NULL, est_dim = NULL, rec = FALSE, sep = FALSE, sep_nest = FALSE, est = FALSE, trunc_dims = NULL) {
   snapshot_path_ssa      <- paste0("Research/master/snapshots/", num, "_ssa.RData")
   snapshot_path_hossa    <- paste0("Research/master/snapshots/", num, "_hossa.RData")
   snapshot_path_utssa    <- paste0("Research/master/snapshots/", num, "_utssa.RData")
@@ -135,7 +140,7 @@ run_num <- function(groups_sep = NULL, est_dim = NULL, rec = FALSE, sep = FALSE,
   
   get_signal()
   true_all <- list(rec = signal, sep = signal_sep, est = get_true_params())
-  get_param_grids(groups_sep = groups_sep, est_dim = est_dim)
+  get_param_grids(groups_sep = groups_sep, est_dim = est_dim, trunc_dims = trunc_dims)
   
   print(num)
   if (.RECALCULATE || !file.exists(snapshot_path_ssa)) {
@@ -278,3 +283,10 @@ S.true <- 2; rates.true <- c(0, 0); freqs.true <- c(1/5, 1/10); A <- c(2, 1)
 poly.true <- 1 %o% c(1, 1); phases.true <- c(0, 0); complex.signal <- TRUE
 N <- 99
 run_num(rec = TRUE, est = TRUE, est_dim = as.list(1:3), sep = TRUE, groups_sep = list(1, 2))
+
+# 1.2.4 (with truncation dimensions)
+num <- "1_2_4_td"
+S.true <- 2; rates.true <- c(0, 0); freqs.true <- c(1/5, 1/10); A <- c(2, 1)
+poly.true <- 1 %o% c(1, 1); phases.true <- c(0, 0); complex.signal <- TRUE
+N <- 99
+run_num(rec = TRUE, trunc_dims = list(1, 2, 3, 1:2, 2:3))

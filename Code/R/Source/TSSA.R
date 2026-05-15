@@ -421,7 +421,7 @@ hosvd_mod <- function(tnsr,
         unfld <- as.matrix(R) + 1i * as.matrix(I)
       }
       
-      U_list[[m]] <- svd(unfld, nu = ranks[m])$u
+      U_list[[m]] <- svd(unfld, nu = min(ranks[m], ncol(unfld)))$u
     } else if (identical(svd.method, "primme")) {
       matmul <- function(x, y) {
         if (is.matrix(y))
@@ -975,6 +975,25 @@ tens_ssa_reconstruct <- function(s,
       }
     }
     
+    .modes.mat <- sapply(attr(H, "unfolds_r"), dim)
+    modes <- pmin(.modes.mat[1,], .modes.mat[2,])
+    nm <- length(modes)
+    
+    if (missing(groups)) {
+      groups = as.list(seq(min(modes)))
+    }
+    max_rank <- max(sapply(groups, max))
+    
+    if (decomp != "CP") {
+      if (is.null(trunc_dims)) {
+        trunc_dims <- seq(nm)
+        trunc_ranks <- rep(max_rank, nm)
+      } else {
+        trunc_ranks <- modes
+        trunc_ranks[trunc_dims] <- max_rank
+      }
+    }
+    
     H.dec <- switch(
       decomp,
       HOSVD = hosvd_mod(
@@ -995,25 +1014,28 @@ tens_ssa_reconstruct <- function(s,
     )
   } else {
     H.dec <- s  
-  }
-  
-  modes <- sapply(H.dec$U, dim)[1,]
-  nm <- length(H.dec$U)
-
-  if (missing(groups)) {
-    groups = as.list(seq(min(modes)))
-  }
-  max_rank <- max(sapply(groups, max))
-
-  if (decomp != "CP") {
-    if (is.null(trunc_dims)) {
-      trunc_dims <- seq(nm)
-      trunc_ranks <- rep(max_rank, nm)
-    } else {
-      trunc_ranks <- modes
-      trunc_ranks[trunc_dims] <- max_rank
+    
+    .modes.mat <- sapply(H.dec$U, dim)
+    modes <- pmin(.modes.mat[1,], .modes.mat[2,])
+    nm <- length(H.dec$U)
+    
+    if (missing(groups)) {
+      groups = as.list(seq(min(modes)))
+    }
+    max_rank <- max(sapply(groups, max))
+    
+    if (decomp != "CP") {
+      if (is.null(trunc_dims)) {
+        trunc_dims <- seq(nm)
+        trunc_ranks <- rep(max_rank, nm)
+      } else {
+        trunc_ranks <- modes
+        trunc_ranks[trunc_dims] <- max_rank
+      }
     }
   }
+  
+  
     
   
   rec <- list()
@@ -1023,7 +1045,7 @@ tens_ssa_reconstruct <- function(s,
     group.names <- names(groups)
   
   if (rec.from.decomp) {
-    N <- sum(modes) - nm + 1
+    N <- sum(.modes.mat[1,]) - nm + 1
     attr(H.dec, "w") <- 1 / as.vector(table(tens(seq(N), modes[-nm])@data)) / N
     attr(H.dec, "N") <- N
     attr(H.dec, "modes") <- modes

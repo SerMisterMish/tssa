@@ -155,29 +155,50 @@ pred_hossa_several <- function(rec = FALSE,
     noise <- rnorm(N, 0, sd)
   }
   x <- signal + noise
-  neig <- max(sapply(unlist(groups_hossa, recursive = FALSE), max))
+  Lvec <- unlist(L_hossa)
+  neig <- rep(max(sapply(unlist(groups_hossa, recursive = FALSE), max)), length(Lvec) + 1)
   result <- list()
   
-  Lvec <- unlist(L_hossa)
+  td <- unlist(td_hossa)
+  neig[-td] <- c(Lvec, length(x) - sum(Lvec) + 2)[-td]
+  
+  if (max(neig) >= 55) .svd.method <- "svd"
+  else .svd.method <- "primme"
+  
   x.dec <- tens_ssa_decompose(
     x,
     L = Lvec,
     neig = neig,
-    svd.method = "primme",
+    svd.method = .svd.method,
     rm.repeated = use.hutd
   )
   
   if (rec)
-    result$rec <- Reduce('+', tens_ssa_reconstruct(x.dec, groups = unlist(groups_hossa, recursive = FALSE)))
+    result$rec <- Reduce('+',
+                         tens_ssa_reconstruct(
+                           x.dec,
+                           groups = unlist(groups_hossa, recursive = FALSE),
+                           trunc_dims = td
+                         ))
   if (sep)
-    result$sep <- Reduce(cbind, tens_ssa_reconstruct(x.dec, groups = unlist(groups_hossa_sep, recursive = FALSE)))
+    result$sep <- Reduce(cbind,
+                         tens_ssa_reconstruct(
+                           x.dec,
+                           groups = unlist(groups_hossa_sep, recursive = FALSE),
+                           trunc_dims = td
+                         ))
   if (est) {
-    estim <- tens_esprit(x.dec, groups = unlist(groups_hossa, recursive = FALSE), est_dim = est_dim_hossa)[[1]]
+    estim <- tens_esprit(x.dec,
+                         groups = unlist(groups_hossa, recursive = FALSE),
+                         est_dim = est_dim_hossa)[[1]]
     result$est <- c(sort(estim$freq), sort(estim$rates))
   }
   if (sep_nest) {
     x.rec <- ttl(x.dec$Z, x.dec$U, ms = seq(x.dec$Z@num_modes))
-    result$sep_nest <- Reduce(cbind, tens_ssa_reconstruct(x.rec, groups = groups_nested_hossa, svd.method = "primme"))
+    result$sep_nest <- Reduce(
+      cbind,
+      tens_ssa_reconstruct(x.rec, groups = groups_nested_hossa, svd.method = "primme")
+    )
   }
   result
 }
@@ -340,6 +361,7 @@ calc_errors_by_params <- function(params_grid_list, R, comp_func, err_func, true
   results <- list()
   q <- progressor(nrow(params_grid) * R)
   for (i in seq(nrow(params_grid))) {
+    print(params_grid[i, ])
     list2env(params_grid[i, ], envir = .GlobalEnv)
     res <- calc_errors(R, comp_func, err_func, true, q, seed)
     results[i] <- list(list(params = params_grid[i, ], errors = res$error, results = res$results))

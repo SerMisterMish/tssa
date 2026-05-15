@@ -65,6 +65,21 @@ summarise_errors <- function(err_df) {
     ) |> arrange(num, method, type)
 }
 
+summarise_errors2 <- function(err_df) {
+  err_df$L <- err_df$L
+  err_df |>
+    mutate(
+      zapped_error = zapsmall(error),
+    ) |>
+    group_by(num, method, type, td_hossa) |> summarise(
+      best = min(zapped_error),
+      best_L = L[which.min(zapped_error)],
+      avg = mean(zapped_error),
+      worst = max(zapped_error),
+      .groups = "drop"
+    ) |> arrange(num, method, type)
+}
+
 min_errors <- function(err_df) {
   err_df |> 
     mutate(zapped_error = zapsmall(error)) |> 
@@ -164,6 +179,48 @@ make_plot <- function(df) {
     })
 }
 
+make_plot2 <- function(df) {
+  df$L <- sapply(df$L, \(L) if (length(L) == 1)
+    L
+    else
+      paste0("(", paste0(L, collapse = ', '), ")"))
+  df$L <- factor(df$L, levels = unique(df$L))
+  min_ssa <- df |> filter(method == "ssa") |> summarize(val = min(error), Lmin = L[which.min(error)])
+  df <- df |> filter(method != "ssa" & sapply(td_hossa, is.null))
+  df |> 
+    mutate(method = ifelse(method == "hossa", "HO-SSA", "UT-SSA")) |>
+    group_by(num) |>
+    group_map(\(.x, .y) {
+      num <- unlist(.y[, 1])
+      fname <- sprintf("Research/master/img/compcase-1d-all-%s.pdf", num)
+      plt <- ggplot(.x, aes(x = L, y = error)) +
+        geom_line(aes(
+          colour = method, group = method
+        )) +
+        geom_hline(yintercept = min_ssa$val, linetype = "dashed") +
+        annotate(
+          "label",
+          x = 1,
+          y = min_ssa$val,
+          label = sprintf("SSA min (L = %d)", min_ssa$Lmin),
+          vjust = 1.2,
+          hjust = 0,
+          size = 5
+        )+
+        theme_minimal() +
+        theme(axis.text.x = element_text(
+          angle = 90,
+          vjust = 0.1,
+          hjust = 1,
+        ), text = element_text(size=15)) +
+        guides(color = guide_legend("Метод")) +
+        ylab("RMSE")
+      cairo_pdf(fname, width = 14, height = 6.7)
+      print(plt)
+      dev.off()
+    })
+}
+
 BASE_DIR <- "Research/master/snapshots/"
 result_fnames <- dir(BASE_DIR)
 nums <- unique(substr(result_fnames, 1, 5))
@@ -177,23 +234,30 @@ if (!exists("df_all")) {
     fnames <- paste0(BASE_DIR, sort(grep(num, result_fnames, value = TRUE)))
     tmpenv <- new.env()
     for (fname in fnames) {
-      load(fname, envir = tmpenv)
-      method <- sub(".*\\/\\d+_\\d+_\\d+_(.*)\\.RData", "\\1", fname)
-      with(tmpenv, {
-        df <- results_to_df(results)
-        df$method <- method
-        df$num <- num
-        df$L <- switch(EXPR = method,
-                       ssa = as.list(df$L_ssa),
-                       df$L_hossa)
-        df_catlist[[paste0(num, method)]] <<- df
-      })
+      try({
+        load(fname, envir = tmpenv)
+        method0 <- sub(".*\\/\\d+_\\d+_\\d+_(.*)\\.RData", "\\1", fname)
+        if (startsWith(method0, "td_")) method <- substring(method0, 4)
+        else method <- method0
+        with(tmpenv, {
+          df <- results_to_df(results)
+          df$method <- method
+          df$num <- num
+          df$L <- switch(EXPR = method, ssa = as.list(df$L_ssa), df$L_hossa)
+          namestr <- paste0(num, method0)
+          df_catlist[[namestr]] <<- df
+        })
+      }, TRUE
+      )
     }
   }
   df_all <- do.call(bind_rows, df_catlist)
 }
 # if (file.exists("Research/master/tables.txt")) file.remove("Research/master/tables.txt")
 # summarise_errors(df_all) |> make_table()
-df_all |> make_plot()
+# df_all |> make_plot()
 # plts <- df_all |> make_plot()
 # print(plts[[1]])
+
+df_td <- df_all |> 
+  filter(num == "1_2_4" & method %in% c("hossa", "utssa", "ssa") & type == "rec")
