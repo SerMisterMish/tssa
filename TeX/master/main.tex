@@ -819,10 +819,12 @@ invariance technique),
 Элементы тензора $\calA \in \bbC^{I_1 \times I_2 \times \ldots \times
 I_M}$ обозначаются
 $\calA_{i_1 i_2 \ldots i_M}$.
-Все определения и утверждения из этого раздела, для которых не
-приведены доказательства, можно найти в работах~\cite{hosvd,
-Kilmer2011, Kilmer2013, tensor-bg, tensor-bg2, tensor-bg3}.
-Термины на русском языке взяты из работы~\cite{tensor-rus}.
+Все определения и утверждения из этого раздела можно найти в
+работах~\cite{hosvd, Kilmer2011, Kilmer2013, tensor-bg, tensor-bg2,
+tensor-bg3}, за исключением определения~\ref{def:all-unitarity} и
+свойства~\ref{property:tucker-basis-change}, для которого
+приведено доказательство. Термины на русском языке взяты из
+работы~\cite{tensor-rus}.
 
 \subsection{Ранги тензоров и тензорные разложения}\label{subsec:tensor-ranks}
 Для определения канонического тензорного разложения и разложения
@@ -939,11 +941,18 @@ Kilmer2011, Kilmer2013, tensor-bg, tensor-bg2, tensor-bg3}.
   высшего порядка (HOSVD).
 \end{remark}
 
+\begin{definition}\label{def:all-unitarity}
+  Разложение Такера, в котором все матрицы $\bfU^{(k)}$ являются
+  унитарными, в данной работе будем называть удовлетворяющим условию
+  полной унитарности или полноунитарным.
+\end{definition}
+
 \begin{property}\label{property:tucker-basis-change}
   Пусть разложение Такера тензора $\calA \in \bbC^{I_1 \times I_2
-  \times \ldots \times I_M}$ имеет вид~\eqref{eq:tucker-decomp}, где матрицы
-  $\bfU^{(k)}$ унитарные. Определим $\widetilde{\bfU}^{(k)} = \bfQ_k\bfU^{(k)}$,
-  где $\bfQ_k\in \bbC^{J_k\times J_k}$ "--- тоже унитарные матрицы, и
+  \times \ldots \times I_M}$ имеет вид~\eqref{eq:tucker-decomp}, и
+  удовлетворяет условию полной унитарности. Определим
+  $\widetilde{\bfU}^{(k)} = \bfQ_k\bfU^{(k)}$, где $\bfQ_k\in
+  \bbC^{J_k\times J_k}$ "--- тоже унитарные матрицы, и
   \[
     \widetilde{\calZ} = \calA \times_1
     \left(\widetilde{\bfU}^{(1)}\right)^{\rmH} \times_2
@@ -956,7 +965,7 @@ Kilmer2011, Kilmer2013, tensor-bg, tensor-bg2, tensor-bg3}.
     \times_2 \widetilde{\bfU}^{(2)} \ldots
     \times_M \widetilde{\bfU}^{(M)}
   \]
-  также является разложением Такера тензора $\calA$.
+  также является полноунитарным разложением Такера тензора $\calA$.
 \end{property}
 \begin{proof}
   Достаточно доказать, что выполнено равенство
@@ -987,7 +996,8 @@ Kilmer2011, Kilmer2013, tensor-bg, tensor-bg2, tensor-bg3}.
   \end{equation}
   в котором
   \begin{enumerate}
-    \item $\mathbf{U}^{(n)}=\left[U_1^{(n)}:\, U_2^{(n)}:\ldots:\,
+    \item Выполняется условие полной унитарности:
+      $\mathbf{U}^{(n)}=\left[U_1^{(n)}:\, U_2^{(n)}:\ldots:\,
       U_{I_n}^{(n)} \right]$ "--- унитарные матрицы,
     \item $\mathcal{Z}$ "--- комплекснозначный тензор размера
       $I_1\times I_2 \times \ldots \times I_M$, в котором
@@ -1048,17 +1058,17 @@ Kilmer2011, Kilmer2013, tensor-bg, tensor-bg2, tensor-bg3}.
 В свою очередь, многие свойства HOSVD являются аналогами свойств SVD.
 
 \begin{statement}
-Пусть $\calA$ "--- тензор размера $I_1\times I_2\times\ldots\times I_M$.
-Применением SVD ко всем матрицам сечений этого тензора вычисляются
+  Пусть $\calA$ "--- тензор размера $I_1\times I_2\times\ldots\times I_M$.
+  Применением SVD ко всем матрицам сечений этого тензора вычисляются
   $M$ матриц $\mathbf{U}^{(n)}$, составленных из левых сингулярных
   векторов соответствующих развёрток. Определим тензор $\calZ$
   следующим образом
-\[
-  \mathcal{Z}=\mathcal{A}\times_1
-  \left(\mathbf{U}^{(1)}\right)^\mathrm{H}\times_2
-  \left(\mathbf{U}^{(2)}\right)^\mathrm{H}\ldots \times_M
-  \left(\mathbf{U}^{(M)}\right)^\mathrm{H},
-\]
+  \[
+    \mathcal{Z}=\mathcal{A}\times_1
+    \left(\mathbf{U}^{(1)}\right)^\mathrm{H}\times_2
+    \left(\mathbf{U}^{(2)}\right)^\mathrm{H}\ldots \times_M
+    \left(\mathbf{U}^{(M)}\right)^\mathrm{H},
+  \]
   Тогда исходный тензор $\calA$ можно представить в
   виде разложения~\eqref{eq:hosvd}, и это разложение является
   HOSVD тензора $\calA$.
@@ -1142,6 +1152,12 @@ Kilmer2011, Kilmer2013, tensor-bg, tensor-bg2, tensor-bg3}.
     =\ldots =\sum_{i=1}^{R_M}\left( \sigma_i^{(M)} \right)^2
   \end{equation}
 \end{property}
+
+\begin{remark}
+  Равенство $\|\mathcal{A}\|^2=\|\mathcal{Z}\|^2$ справедливо для
+  любого полноунитарного разложения Такера, однако множества
+  суммирования в равенстве~\eqref{eq:hosvd-norm} могут отличаться.
+\end{remark}
 
 \subsection{Наилучшее приближение малого ранга разложением
 Такера}\label{subsec:tensor-approx}
@@ -1295,6 +1311,10 @@ SVD $[\bfA_1]$, который сводит его к вычислению SVD $
   $\widetilde{\bfU}_n$ будем называть $n$-сингулярными векторами
   тензора $\calA$ в терминах \newdecomp/.
 \end{definition}
+
+\begin{remark}
+  По построению, HUTD является полноунитарным разложением.
+\end{remark}
 
 \begin{statement}\label{state:newdecomp-ranks-rotation}
   Пусть $\bfU_n$ --- матрицы сингулярных векторов направления $n$
